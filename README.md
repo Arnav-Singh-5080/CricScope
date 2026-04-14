@@ -1,4 +1,4 @@
-# 🏏 IPL Win Probability Prediction
+# 🏏 IPL Match Intelligence Engine
 
 <p align="center">
   <img src="demo_.gif" width="600">
