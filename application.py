@@ -44,7 +44,10 @@ html, body, [class*="css"], .stApp {
     min-height: 100vh;
 }
 
-[data-testid="stHeader"] { display: none; }
+/* Hide only Streamlit branding — leave header & sidebar toggle untouched */
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+[data-testid="stDecoration"] { display: none; }
 
 /* ---- SIDEBAR ---- */
 section[data-testid="stSidebar"] {
