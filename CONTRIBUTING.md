@@ -1,9 +1,9 @@
 <h1 align="center">✨ Contributors Guide ✨</h1>
 
-<h3 align="center">Welcome to the Ai-Credit-Intelligence-Engine project! 😍<br>
+<h3 align="center">Welcome to the CricScope project! 😍<br>
 We appreciate your interest in contributing.😊<br> </h3>
 
-First off, thank you for considering contributing to **Ai-Credit-Intelligence-Engine!** We're excited to have you join our community. Every contribution, no matter how small, helps us build the best academic resource platform for students.
+First off, thank you for considering contributing to **CricScope!** We're excited to have you join our community. Every contribution, no matter how small, helps us build the best academic resource platform for students.
 
 ![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
 
@@ -41,7 +41,7 @@ By participating in this project, you agree to maintain a **respectful and inclu
 
 ## 📜 License
 
-By contributing to this project, you agree that your contributions will be licensed under the [`MIT License`](https://github.com/Arnav-Singh-5080/Ai-Credit-Intelligence-Engine/blob/main/ai-credit-intelligence-engine/LICENSE).
+By contributing to this project, you agree that your contributions will be licensed under the [`MIT License`](https://github.com/Arnav-Singh-5080/CricScope/blob/main/ai-credit-intelligence-engine/LICENSE).
 
 ![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
 
@@ -152,11 +152,11 @@ We aim to keep things smooth and transparent:
 ## How To Contribute
 
 - Drop a Star ⭐ in this repo
-- Take a look at the existing [Issues](https://github.com/Arnav-Singh-5080/Ai-Credit-Intelligence-Engine/issues). 
+- Take a look at the existing [Issues](https://github.com/Arnav-Singh-5080/CricScope/issues). 
 - Fork the Repo & create a branch for any issue that you are working on and commit your work.
 - At first raise an issue in which you want to work
 - Then after assigning only then work on that issue & make a PR 
-- Create a [**Pull Request**](https://github.com/Arnav-Singh-5080/Ai-Credit-Intelligence-Engine/pulls), which will be promptly reviewed and given suggestions for improvements by the community.
+- Create a [**Pull Request**](https://github.com/Arnav-Singh-5080/CricScope/pulls), which will be promptly reviewed and given suggestions for improvements by the community.
 - **REMINDER: Don't raise more than 2 `Issue` at a time**
 - **IMPORTANT: Don't make any type of `Pull Request` until & unless you get assigned to an `Issue`**
 - Add screenshots or screen captures to your `Pull Request` to help us understand the effects of the changes that are included in your commits.
@@ -186,6 +186,6 @@ This **CONTRIBUTING.md** follows open-source best practices and general GitHub c
 ## 👍 Thank You for Your Contribution!!
 
 <h3 align="center">
-Thank you for contributing to Ai-Credit-Intelligence-Engine 🌟<br>
+Thank you for contributing to CricScope 🌟<br>
 We can’t wait to see what you build! 🚀
 </h3>
