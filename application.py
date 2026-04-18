@@ -2,11 +2,267 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+import io
+from datetime import datetime
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+
+# -----------------------------------
+# PDF REPORT GENERATOR
+# -----------------------------------
+def generate_match_report(batting_team, bowling_team, target, score, overs, wickets,
+                           runs_left, balls_left, crr, rrr, win_pct, lose_pct,
+                           verdict, conf_label, conf_pct):
+    buffer = io.BytesIO()
+
+    GOLD       = colors.HexColor("#d4af37")
+    GOLD_LIGHT = colors.HexColor("#f0d060")
+    GOLD_DIM   = colors.HexColor("#a07820")
+    BG_PAGE    = colors.HexColor("#0d0d0d")
+    BG_CARD    = colors.HexColor("#161616")
+    BG_CARD2   = colors.HexColor("#1c1a14")
+    BORDER     = colors.HexColor("#2e2a1e")
+    TEXT_MAIN  = colors.HexColor("#e2dfd8")
+    TEXT_DIM   = colors.HexColor("#7a7060")
+    TEXT_MID   = colors.HexColor("#b0a080")
+
+    W, H = A4
+    page_w = W - 36*mm  # usable width
+
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        leftMargin=18*mm, rightMargin=18*mm,
+        topMargin=16*mm, bottomMargin=16*mm
+    )
+
+    def s(name, **kw):
+        base = dict(fontName="Helvetica", fontSize=10, textColor=TEXT_MAIN, leading=14, spaceAfter=0)
+        base.update(kw)
+        return ParagraphStyle(name, **base)
+
+    # ── styles ──────────────────────────────────────────────
+    S = {
+        "eyebrow" : s("ey", fontSize=7,  textColor=GOLD,      letterSpacing=2.5, alignment=TA_CENTER),
+        "title"   : s("ti", fontSize=30, textColor=GOLD_LIGHT, fontName="Helvetica-Bold", alignment=TA_CENTER, leading=34),
+        "sub"     : s("su", fontSize=8,  textColor=TEXT_DIM,   alignment=TA_CENTER, leading=12),
+        "sec"     : s("se", fontSize=7,  textColor=GOLD,       letterSpacing=2,   fontName="Helvetica-Bold"),
+        "lbl"     : s("lb", fontSize=7,  textColor=TEXT_DIM,   letterSpacing=1,   leading=10),
+        "val"     : s("va", fontSize=20, textColor=GOLD_LIGHT, fontName="Helvetica-Bold", leading=24),
+        "val_dim" : s("vd", fontSize=20, textColor=TEXT_MID,   fontName="Helvetica-Bold", leading=24),
+        "team_h"  : s("th", fontSize=15, textColor=GOLD_LIGHT, fontName="Helvetica-Bold", alignment=TA_CENTER, leading=18),
+        "role"    : s("ro", fontSize=7,  textColor=TEXT_DIM,   letterSpacing=1.5, alignment=TA_CENTER),
+        "vs"      : s("vs", fontSize=26, textColor=GOLD_DIM,   fontName="Helvetica-Bold", alignment=TA_CENTER),
+        "prob_win": s("pw", fontSize=36, textColor=GOLD_LIGHT, fontName="Helvetica-Bold", alignment=TA_CENTER, leading=40),
+        "prob_los": s("pl", fontSize=36, textColor=TEXT_MID,   fontName="Helvetica-Bold", alignment=TA_CENTER, leading=40),
+        "prob_lbl": s("pk", fontSize=8,  textColor=TEXT_DIM,   letterSpacing=1,   alignment=TA_CENTER),
+        "verdict" : s("ve", fontSize=14, textColor=TEXT_MAIN,  fontName="Helvetica-Bold", alignment=TA_CENTER, leading=18),
+        "conf"    : s("co", fontSize=10, textColor=GOLD,       alignment=TA_CENTER),
+        "footer"  : s("fo", fontSize=7,  textColor=TEXT_DIM,   alignment=TA_CENTER),
+    }
+
+    def hr(color=GOLD, thick=0.5, space=4):
+        return HRFlowable(width="100%", thickness=thick, color=color,
+                          spaceBefore=0, spaceAfter=space*mm)
+
+    def section_label(text):
+        return [Paragraph(text, S["sec"]), Spacer(1, 3*mm)]
+
+    story = []
+
+    # ════════════════════════════════════════════════════════
+    # HEADER
+    # ════════════════════════════════════════════════════════
+    story.append(Paragraph("CRICSCOPE  ·  IPL MATCH INTELLIGENCE", S["eyebrow"]))
+    story.append(Spacer(1, 3*mm))
+    story.append(Paragraph("Match Report", S["title"]))
+    story.append(Spacer(1, 2*mm))
+    story.append(Paragraph(datetime.now().strftime("%d %B %Y  ·  %H:%M"), S["sub"]))
+    story.append(Spacer(1, 5*mm))
+    story.append(hr(GOLD, 1, 5))
+
+    # ════════════════════════════════════════════════════════
+    # FIXTURE
+    # ════════════════════════════════════════════════════════
+    story += section_label("FIXTURE")
+
+    col = page_w / 3
+    fixture = Table(
+        [
+            [Paragraph(batting_team,  S["team_h"]),
+             Paragraph("vs",          S["vs"]),
+             Paragraph(bowling_team,  S["team_h"])],
+            [Paragraph("BATTING",     S["role"]),
+             Paragraph("",            S["role"]),
+             Paragraph("BOWLING",     S["role"])],
+        ],
+        colWidths=[col, col, col]
+    )
+    fixture.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0), (-1,-1), BG_CARD2),
+        ("BOX",           (0,0), (-1,-1), 1,   GOLD),
+        ("LINEAFTER",     (0,0), (0,-1),  0.4, BORDER),
+        ("LINEBEFORE",    (2,0), (2,-1),  0.4, BORDER),
+        ("TOPPADDING",    (0,0), (-1,-1), 10),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 10),
+        ("ALIGN",         (0,0), (-1,-1), "CENTER"),
+        ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
+    ]))
+    story.append(fixture)
+    story.append(Spacer(1, 7*mm))
+
+    # ════════════════════════════════════════════════════════
+    # MATCH STATE  (4-column grid: label | value | label | value)
+    # ════════════════════════════════════════════════════════
+    story.append(hr(BORDER, 0.4, 4))
+    story += section_label("MATCH STATE")
+
+    def kv(lbl, val):
+        return [Paragraph(lbl, S["lbl"]), Paragraph(str(val), S["val"])]
+
+    lw = page_w * 0.22   # label col
+    vw = page_w * 0.28   # value col
+    gap = page_w * 0.00  # no gap col needed — use padding
+
+    rows = [
+        kv("TARGET",            target)          + kv("CURRENT SCORE",    score),
+        kv("OVERS COMPLETED",   overs)           + kv("WICKETS FALLEN",   wickets),
+        kv("RUNS NEEDED",       runs_left)       + kv("BALLS REMAINING",  balls_left),
+        kv("CURRENT RUN RATE",  f"{crr:.2f}")    + kv("REQUIRED RUN RATE",f"{rrr:.2f}"),
+    ]
+
+    state = Table(rows, colWidths=[lw, vw, lw, vw])
+    state.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0), (-1,-1), BG_CARD),
+        ("BOX",           (0,0), (-1,-1), 0.5, BORDER),
+        ("LINEBELOW",     (0,0), (-1,-2), 0.3, colors.HexColor("#222")),
+        ("LINEAFTER",     (0,0), (1,-1),  0.3, BORDER),
+        ("TOPPADDING",    (0,0), (-1,-1), 8),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 8),
+        ("LEFTPADDING",   (0,0), (-1,-1), 10),
+        ("RIGHTPADDING",  (0,0), (-1,-1), 6),
+        ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
+    ]))
+    story.append(state)
+    story.append(Spacer(1, 7*mm))
+
+    # ════════════════════════════════════════════════════════
+    # WIN PROBABILITY
+    # ════════════════════════════════════════════════════════
+    story.append(hr(BORDER, 0.4, 4))
+    story += section_label("WIN PROBABILITY")
+
+    half = page_w / 2 - 2*mm
+    prob = Table(
+        [[
+            Table(
+                [[Paragraph(batting_team, S["prob_lbl"])],
+                 [Paragraph(f"{win_pct}%", S["prob_win"])],
+                 [Paragraph("WIN PROBABILITY", S["prob_lbl"])]],
+                colWidths=[half]
+            ),
+            Table(
+                [[Paragraph(bowling_team, S["prob_lbl"])],
+                 [Paragraph(f"{lose_pct}%", S["prob_los"])],
+                 [Paragraph("WIN PROBABILITY", S["prob_lbl"])]],
+                colWidths=[half]
+            ),
+        ]],
+        colWidths=[half + 2*mm, half + 2*mm]
+    )
+    prob.setStyle(TableStyle([
+        ("TOPPADDING",    (0,0), (-1,-1), 0),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 0),
+        ("LEFTPADDING",   (0,0), (-1,-1), 0),
+        ("RIGHTPADDING",  (0,0), (-1,-1), 0),
+        ("VALIGN",        (0,0), (-1,-1), "TOP"),
+    ]))
+
+    def prob_inner_style(is_winner):
+        return TableStyle([
+            ("BACKGROUND",    (0,0), (-1,-1), BG_CARD2 if is_winner else BG_CARD),
+            ("BOX",           (0,0), (-1,-1), 1 if is_winner else 0.4,
+                              GOLD if is_winner else BORDER),
+            ("TOPPADDING",    (0,0), (-1,-1), 12),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 12),
+            ("LEFTPADDING",   (0,0), (-1,-1), 8),
+            ("RIGHTPADDING",  (0,0), (-1,-1), 8),
+            ("ALIGN",         (0,0), (-1,-1), "CENTER"),
+            ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
+        ])
+
+    bat_wins = win_pct >= lose_pct
+    # re-build inner tables with correct styling
+    inner_bat = Table(
+        [[Paragraph(batting_team, S["prob_lbl"])],
+         [Paragraph(f"{win_pct}%", S["prob_win"])],
+         [Paragraph("WIN PROBABILITY", S["prob_lbl"])]],
+        colWidths=[half]
+    )
+    inner_bat.setStyle(prob_inner_style(bat_wins))
+
+    inner_bowl = Table(
+        [[Paragraph(bowling_team, S["prob_lbl"])],
+         [Paragraph(f"{lose_pct}%", S["prob_los"])],
+         [Paragraph("WIN PROBABILITY", S["prob_lbl"])]],
+        colWidths=[half]
+    )
+    inner_bowl.setStyle(prob_inner_style(not bat_wins))
+
+    prob2 = Table([[inner_bat, Spacer(4*mm, 1), inner_bowl]],
+                  colWidths=[half, 4*mm, half])
+    prob2.setStyle(TableStyle([
+        ("TOPPADDING",    (0,0), (-1,-1), 0),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 0),
+        ("LEFTPADDING",   (0,0), (-1,-1), 0),
+        ("RIGHTPADDING",  (0,0), (-1,-1), 0),
+        ("VALIGN",        (0,0), (-1,-1), "TOP"),
+    ]))
+    story.append(prob2)
+    story.append(Spacer(1, 7*mm))
+
+    # ════════════════════════════════════════════════════════
+    # VERDICT
+    # ════════════════════════════════════════════════════════
+    story.append(hr(GOLD, 1, 4))
+
+    verdict_table = Table(
+        [[Paragraph(f"{verdict} favoured to win", S["verdict"])],
+         [Paragraph(f"Confidence: {conf_label}  ·  {conf_pct}%", S["conf"])]],
+        colWidths=[page_w]
+    )
+    verdict_table.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0), (-1,-1), BG_CARD2),
+        ("BOX",           (0,0), (-1,-1), 0.5, GOLD),
+        ("TOPPADDING",    (0,0), (-1,-1), 14),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 14),
+        ("ALIGN",         (0,0), (-1,-1), "CENTER"),
+        ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
+    ]))
+    story.append(verdict_table)
+    story.append(Spacer(1, 7*mm))
+    story.append(hr(GOLD, 1, 4))
+
+    # ════════════════════════════════════════════════════════
+    # FOOTER
+    # ════════════════════════════════════════════════════════
+    story.append(Paragraph("CricScope  ·  IPL Match Intelligence Platform  ·  Powered by Machine Learning", S["footer"]))
+    story.append(Spacer(1, 1*mm))
+    story.append(Paragraph("Training Data: IPL 2008–2020  ·  Model: Logistic Regression  ·  NSoC 2026", S["footer"]))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
 
 # -----------------------------------
 # CONFIG
@@ -398,6 +654,31 @@ section[data-testid="stSidebar"] > div {
     filter: brightness(1.05);
     color: #0a0800;
     border: none;
+}
+
+/* ---- DOWNLOAD BUTTON ---- */
+[data-testid="stDownloadButton"] > button {
+    background: transparent !important;
+    color: #d4af37 !important;
+    border: 1px solid rgba(212,175,55,0.45) !important;
+    border-radius: 14px !important;
+    height: 52px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    box-shadow: 0 0 18px rgba(212,175,55,0.06) !important;
+}
+
+[data-testid="stDownloadButton"] > button:hover {
+    background: rgba(212,175,55,0.08) !important;
+    border-color: rgba(212,175,55,0.8) !important;
+    color: #f0d060 !important;
+    box-shadow: 0 0 32px rgba(212,175,55,0.18) !important;
+    transform: translateY(-1px) !important;
 }
 
 /* ---- PREDICTION CARD ---- */
@@ -1130,5 +1411,33 @@ if st.session_state.page == "Analysis":
                 </div>
             </div>
         """, unsafe_allow_html=True)
+
+        # ---- DOWNLOAD REPORT ----
+        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+        pdf_buffer = generate_match_report(
+            batting_team=batting_team,
+            bowling_team=bowling_team,
+            target=target,
+            score=score,
+            overs=overs,
+            wickets=wickets,
+            runs_left=runs_left,
+            balls_left=balls_left,
+            crr=crr,
+            rrr=rrr,
+            win_pct=bat_pct,
+            lose_pct=bowl_pct,
+            verdict=verdict,
+            conf_label=conf_label,
+            conf_pct=round(conf * 100)
+        )
+        filename = f"cricscope_{batting_team.replace(' ', '_')}_vs_{bowling_team.replace(' ', '_')}.pdf"
+        st.download_button(
+            label="⬇  Download Match Report PDF",
+            data=pdf_buffer,
+            file_name=filename,
+            mime="application/pdf",
+            use_container_width=True
+        )
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
