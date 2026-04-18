@@ -33,7 +33,7 @@ This guide will walk you through the entire contribution process, from setting u
 
 ## 📜 Code of Conduct
 
-We expect all contributors to follow our [`Code of Conduct`](https://github.com/Arnav-Singh-5080/Ai-Credit-Intelligence-Engine/blob/main/docs/CODEOFCONDUCT.md).
+We expect all contributors to follow our [`Code of Conduct`](https://github.com/Arnav-Singh-5080/CricScope/blob/main/docs/CODEOFCONDUCT.md).
 
 By participating in this project, you agree to maintain a **respectful and inclusive environment** for everyone.
 
