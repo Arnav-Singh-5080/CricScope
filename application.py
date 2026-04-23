@@ -635,6 +635,35 @@ team_data = {
 }
 
 # -----------------------------------
+# WIN RATE STATS
+# -----------------------------------
+@st.cache_data
+def compute_win_rates():
+    matches = pd.read_csv("matches.csv")
+    valid_teams = set(team_data.keys())
+
+    # Normalize team name aliases
+    name_map = {
+        "Delhi Daredevils": "Delhi Capitals",
+        "Kings XI Punjab": "Punjab Kings",
+        "Royal Challengers Bengaluru": "Royal Challengers Bangalore",
+    }
+    matches["team1"] = matches["team1"].replace(name_map)
+    matches["team2"] = matches["team2"].replace(name_map)
+    matches["winner"] = matches["winner"].replace(name_map)
+
+    stats = {}
+    for team in valid_teams:
+        played = matches[(matches["team1"] == team) | (matches["team2"] == team)]
+        played = played[played["result"] == "normal"]
+        wins = played[played["winner"] == team].shape[0]
+        total = played.shape[0]
+        stats[team] = {"wins": wins, "total": total, "rate": round((wins / total * 100), 1) if total > 0 else 0}
+    return stats
+
+win_stats = compute_win_rates()
+
+# -----------------------------------
 # MODEL
 # -----------------------------------
 @st.cache_resource
@@ -849,6 +878,51 @@ if st.session_state.page == "Dashboard":
                     <div style="font-size:10px; color:rgba(200,185,140,0.35); margin-top:4px;
                                 letter-spacing:0.5px;">
                         {team_name}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    # ---- WIN RATE STATS SECTION ----
+    st.markdown("""
+        <div style="padding: 40px 60px 0;">
+            <div style="font-family:'Cormorant Garamond',serif; font-size:13px; letter-spacing:3px;
+                        text-transform:uppercase; color:rgba(212,175,55,0.4); margin-bottom:20px;">
+                All-Time Win Rates
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    wr_cols = st.columns(4)
+    for i, (team_name, tdata) in enumerate(team_data.items()):
+        s = win_stats.get(team_name, {"wins": 0, "total": 0, "rate": 0})
+        bar_pct = s["rate"]
+        with wr_cols[i % 4]:
+            st.markdown(f"""
+                <div style="
+                    background:rgba(255,255,255,0.025);
+                    border:1px solid rgba(255,255,255,0.07);
+                    border-radius:16px;
+                    padding:18px 20px;
+                    margin-bottom:12px;
+                ">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;
+                                    background:#111;box-shadow:0 0 12px {tdata['color']}50;
+                                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <img src="{tdata['logo']}" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:screen;" />
+                        </div>
+                        <div>
+                            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;
+                                        font-weight:600;color:{tdata['color']};letter-spacing:1.5px;">{tdata['abbr']}</div>
+                            <div style="font-size:9px;color:rgba(200,185,140,0.3);letter-spacing:0.5px;">{s['wins']}W / {s['total']}M</div>
+                        </div>
+                        <div style="margin-left:auto;font-family:'DM Mono',monospace;
+                                    font-size:20px;font-weight:500;color:#e8d89a;">{bar_pct}%</div>
+                    </div>
+                    <div style="height:4px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;">
+                        <div style="height:100%;width:{bar_pct}%;border-radius:100px;
+                                    background:linear-gradient(90deg,{tdata['color']}80,{tdata['color']});
+                                    box-shadow:0 0 8px {tdata['color']}60;"></div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
