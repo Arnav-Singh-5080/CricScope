@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+import plotly.express as px
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -20,6 +21,8 @@ if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 if "last_prediction" not in st.session_state:
     st.session_state.last_prediction = None
+if "prob_history" not in st.session_state:
+    st.session_state.prob_history = []
 
 # -----------------------------------
 # LUXURY CSS
@@ -1018,6 +1021,7 @@ if st.session_state.page == "Analysis":
 
         win = proba[1]
         lose = proba[0]
+        st.session_state.prob_history.append(round(win * 100, 2))
 
         st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
         st.markdown("""
@@ -1131,4 +1135,22 @@ if st.session_state.page == "Analysis":
             </div>
         """, unsafe_allow_html=True)
 
+        if len(st.session_state.prob_history) > 1:
+            st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
+
+            fig = px.line(
+                x=list(range(1, len(st.session_state.prob_history)+1)),
+                y=st.session_state.prob_history,
+                labels={'x': 'Overs', 'y': 'Win Probability (%)'},
+                title="Win Probability Progression"
+            )
+
+            fig.update_layout(
+                template="plotly_dark",
+                plot_bgcolor="#080808",
+                paper_bgcolor="#080808",
+                font=dict(color="#e2dfd8")
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
