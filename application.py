@@ -8,6 +8,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
+import plotly.graph_objects as go
+
 # -----------------------------------
 # CONFIG
 # -----------------------------------
@@ -866,6 +868,57 @@ if st.session_state.page == "Dashboard":
         </div>
     """, unsafe_allow_html=True)
 
+def generate_over_progression(target, score, wickets, balls_left, batting_team, bowling_team, pipe):
+    data = []
+
+    temp_score = score
+    temp_wickets = 10 - wickets
+    temp_balls = balls_left
+
+    for i in range(0, balls_left, 6):
+        if temp_balls <= 0 or temp_wickets <= 0:
+            break
+
+        runs_left = target - temp_score
+
+        if runs_left <= 0:
+            break
+
+        overs_completed = (120 - temp_balls) // 6
+
+        crr = temp_score / (overs_completed + 1e-5)
+        rrr = (runs_left * 6) / temp_balls
+
+        input_df = pd.DataFrame({
+            'batting_team': [batting_team],
+            'bowling_team': [bowling_team],
+            'city': ['Mumbai'],
+            'runs_left': [runs_left],
+            'balls_left': [temp_balls],
+            'wickets': [temp_wickets],
+            'target': [target],
+            'crr': [crr],
+            'rrr': [rrr]
+        })
+
+        prob = pipe.predict_proba(input_df)[0][1] * 100
+
+        data.append({
+            "over": overs_completed,
+            "win_prob": prob,
+            "runs_left": runs_left,
+            "wickets": temp_wickets
+        })
+
+        # simulate next over
+        temp_balls -= 6
+        temp_score += np.random.randint(6, 15)
+
+        if np.random.rand() < 0.15:
+            temp_wickets -= 1
+
+    return pd.DataFrame(data)
+
 # -----------------------------------
 # ANALYSIS PAGE
 # -----------------------------------
@@ -1130,5 +1183,89 @@ if st.session_state.page == "Analysis":
                 </div>
             </div>
         """, unsafe_allow_html=True)
+
+    # ---- WIN PROBABILITY CHART ----
+    st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
+                    color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+            Win Probability Progression
+        </div>
+    """, unsafe_allow_html=True)
+
+    df_prog = generate_over_progression(
+        target, score, wickets, balls_left,
+        batting_team, bowling_team, pipe
+    )
+
+    if not df_prog.empty:
+        fig = go.Figure()
+
+        # Smoother curve (spline)
+        fig.add_trace(go.Scatter(
+            x=df_prog['over'],
+            y=df_prog['win_prob'],
+            mode='lines+markers',
+            line=dict(color='#d4af37', width=3, shape='spline', smoothing=1.3),
+            name=f'{batting_team} Win Probability',
+            customdata=df_prog[['runs_left', 'wickets']],
+            hovertemplate=
+                '<b>Over:</b> %{x}<br>' +
+                '<b>Win %:</b> %{y:.2f}<br>' +
+                '<b>Runs Left:</b> %{customdata[0]}<br>' +
+                '<b>Wickets:</b> %{customdata[1]}<extra></extra>',
+            fill='tozeroy',
+            fillcolor='rgba(212,175,55,0.08)'
+        ))
+
+        # Dual team probability line
+        fig.add_trace(go.Scatter(
+            x=df_prog['over'],
+            y=100 - df_prog['win_prob'],
+            mode='lines',
+            line=dict(color='rgba(180,180,180,0.5)', width=2, dash='dot', shape='spline', smoothing=1.3),
+            name=f'{bowling_team} Win Probability',
+            hovertemplate='<b>Opponent Win %:</b> %{y:.2f}<extra></extra>'
+        ))
+
+        # Wicket markers
+        df_prog['wicket_fall'] = df_prog['wickets'].diff().fillna(0) < 0
+        wickets_df = df_prog[df_prog['wicket_fall']]
+        if not wickets_df.empty:
+            fig.add_trace(go.Scatter(
+                x=wickets_df['over'],
+                y=wickets_df['win_prob'],
+                mode='markers',
+                marker=dict(size=10, color='red', symbol='x'),
+                name='Wicket',
+                hovertemplate='<b>WICKET!</b><br>Over: %{x}<extra></extra>'
+            ))
+
+        # Death overs zone (vertical highlight)
+        fig.add_vrect(
+            x0=15, x1=20,
+            fillcolor="rgba(255,0,0,0.05)",
+            layer="below",
+            line_width=0
+        )
+
+        # Dynamic title
+        fig.update_layout(
+            template='plotly_dark',
+            plot_bgcolor='#080808',
+            paper_bgcolor='#080808',
+            font=dict(color='#e2dfd8'),
+            xaxis_title='Overs',
+            yaxis_title='Win Probability (%)',
+            height=400,
+            title=dict(
+                text=f"{batting_team} Win Probability Curve",
+                font=dict(size=20, family='Cormorant Garamond, serif'),
+                x=0.5
+            )
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
