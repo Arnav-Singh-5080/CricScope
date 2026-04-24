@@ -643,7 +643,12 @@ def get_team_win_rates():
     try:
         matches = pd.read_csv("matches.csv")
         win_counts = matches['winner'].value_counts()
-        total_counts = matches['batting_team'].value_counts() + matches['bowling_team'].value_counts()
+        # Correct: count each match only once per team
+        total_matches = pd.concat([
+            matches[['team1']].rename(columns={'team1': 'team'}),
+            matches[['team2']].rename(columns={'team2': 'team'})
+        ])
+        total_counts = total_matches['team'].value_counts()
         rates = {}
         for team in team_data.keys():
             wins = win_counts.get(team, 0)
@@ -887,6 +892,7 @@ if st.session_state.page == "Dashboard":
         </div>
     """, unsafe_allow_html=True)
 
+@st.cache_data
 def generate_over_progression(target, score, wickets, balls_left, batting_team, bowling_team, pipe):
     data = []
 
@@ -899,14 +905,12 @@ def generate_over_progression(target, score, wickets, balls_left, batting_team, 
             break
 
         runs_left = target - temp_score
-
         if runs_left <= 0:
             break
 
         overs_completed = (120 - temp_balls) // 6
-
         crr = temp_score / (overs_completed + 1e-5)
-        rrr = (runs_left * 6) / temp_balls
+        rrr = (runs_left * 6) / temp_balls if temp_balls > 0 else 0
 
         input_df = pd.DataFrame({
             'batting_team': [batting_team],
@@ -929,14 +933,20 @@ def generate_over_progression(target, score, wickets, balls_left, batting_team, 
             "wickets": temp_wickets
         })
 
-        # simulate next over
+        # --- Realistic simulation ---
+        run_rate = np.clip(rrr / 6, 0.8, 2.5)
+        runs = np.random.poisson(lam=run_rate * 6)
+        temp_score += runs
         temp_balls -= 6
-        temp_score += np.random.randint(6, 15)
 
-        if np.random.rand() < 0.15:
+        wicket_prob = min(0.35, 0.08 + (rrr / 20))
+        if np.random.rand() < wicket_prob:
             temp_wickets -= 1
 
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    if not df.empty:
+        df['delta'] = df['win_prob'].diff()
+    return df
 
 # -----------------------------------
 # ANALYSIS PAGE
@@ -1213,13 +1223,14 @@ if st.session_state.page == "Analysis":
         </div>
     """, unsafe_allow_html=True)
 
+
     df_prog = generate_over_progression(
         target, score, wickets, balls_left,
         batting_team, bowling_team, pipe
     )
 
+
     if not df_prog.empty:
-        import plotly.graph_objects as go
         fig = go.Figure()
 
         # Smoother curve (spline)
@@ -1229,22 +1240,23 @@ if st.session_state.page == "Analysis":
             mode='lines+markers',
             line=dict(color='#d4af37', width=3, shape='spline', smoothing=1.3),
             name=f'{batting_team} Win Probability',
-            customdata=df_prog[['runs_left', 'wickets']],
+            customdata=df_prog[['runs_left', 'wickets', 'delta']],
             hovertemplate=
                 '<b>Over:</b> %{x}<br>' +
                 '<b>Win %:</b> %{y:.2f}<br>' +
                 '<b>Runs Left:</b> %{customdata[0]}<br>' +
-                '<b>Wickets:</b> %{customdata[1]}<extra></extra>',
+                '<b>Wickets:</b> %{customdata[1]}<br>' +
+                '<b>Δ Win %:</b> %{customdata[2]:+.2f}<extra></extra>',
             fill='tozeroy',
             fillcolor='rgba(212,175,55,0.08)'
         ))
 
-        # Dual team probability line
+        # Dual team probability line (improved color)
         fig.add_trace(go.Scatter(
             x=df_prog['over'],
             y=100 - df_prog['win_prob'],
             mode='lines',
-            line=dict(color='rgba(180,180,180,0.5)', width=2, dash='dot', shape='spline', smoothing=1.3),
+            line=dict(color='rgba(120,160,255,0.7)', width=2, dash='dot', shape='spline', smoothing=1.3),
             name=f'{bowling_team} Win Probability',
             hovertemplate='<b>Opponent Win %:</b> %{y:.2f}<extra></extra>'
         ))
@@ -1270,7 +1282,7 @@ if st.session_state.page == "Analysis":
             line_width=0
         )
 
-        # Dynamic title
+        # Chart polish: hovermode, animation, legend
         fig.update_layout(
             template='plotly_dark',
             plot_bgcolor='#080808',
@@ -1282,6 +1294,15 @@ if st.session_state.page == "Analysis":
             title=dict(
                 text=f"{batting_team} Win Probability Curve",
                 font=dict(size=20, family='Cormorant Garamond, serif'),
+                x=0.5
+            ),
+            hovermode='x unified',
+            transition=dict(duration=500),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
                 x=0.5
             )
         )
