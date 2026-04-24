@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import time
 
+
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
@@ -636,6 +637,25 @@ team_data = {
     }
 }
 
+# --- WIN RATE CALCULATION FOR DASHBOARD ---
+@st.cache_data
+def get_team_win_rates():
+    try:
+        matches = pd.read_csv("matches.csv")
+        win_counts = matches['winner'].value_counts()
+        total_counts = matches['batting_team'].value_counts() + matches['bowling_team'].value_counts()
+        rates = {}
+        for team in team_data.keys():
+            wins = win_counts.get(team, 0)
+            total = total_counts.get(team, 0)
+            rates[team] = round((wins / total) * 100, 1) if total > 0 else 0.0
+        return rates
+    except Exception:
+        # Fallback if file missing
+        return {team: 0.0 for team in team_data.keys()}
+
+team_win_rates = get_team_win_rates()
+
 # -----------------------------------
 # MODEL
 # -----------------------------------
@@ -793,24 +813,23 @@ if st.session_state.page == "Dashboard":
         </div>
     """, unsafe_allow_html=True)
 
+
+    # --- Stat pills: Team win rates ---
     st.markdown("""
         <div class="stats-row">
-            <div class="stat-pill">
-                <div class="stat-value">8</div>
-                <div class="stat-label">IPL Teams</div>
+    """, unsafe_allow_html=True)
+    for team, tdata in team_data.items():
+        st.markdown(f'''
+            <div class="stat-pill" style="min-width:120px;">
+                <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+                    <img src="{tdata['logo']}" style="width:22px;height:22px;border-radius:50%;box-shadow:0 0 8px {tdata['color']}55;" />
+                    <span class="stat-value" style="color:{tdata['color']};font-size:18px;">{tdata['abbr']}</span>
+                </div>
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value" style="font-size:20px;">{team_win_rates.get(team, 0.0)}%</div>
             </div>
-            <div class="stat-pill">
-                <div class="stat-value">ML</div>
-                <div class="stat-label">Model Type</div>
-            </div>
-            <div class="stat-pill">
-                <div class="stat-value">120</div>
-                <div class="stat-label">Balls Tracked</div>
-            </div>
-            <div class="stat-pill">
-                <div class="stat-value">6+</div>
-                <div class="stat-label">Key Signals</div>
-            </div>
+        ''', unsafe_allow_html=True)
+    st.markdown("""
         </div>
     """, unsafe_allow_html=True)
 
@@ -1200,6 +1219,7 @@ if st.session_state.page == "Analysis":
     )
 
     if not df_prog.empty:
+        import plotly.graph_objects as go
         fig = go.Figure()
 
         # Smoother curve (spline)
