@@ -54,26 +54,34 @@
 <br/>
 
 ---
-
-<br/>
-
-<div align="center">
-
 ## What is CricScope?
-
-</div>
 
 **CricScope** is a luxury-grade IPL match intelligence dashboard that computes real-time win probabilities using machine learning — trained on historical ball-by-ball delivery data spanning 2008–2020.
 
 Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradients, and a premium serif + mono type system. Every design decision was intentional: this is not a student project — it's a production-grade sports analytics product.
 
-> **NSoC 2026 — Project Admin:** [Arnav Singh](https://github.com/Arnav-Singh-5080)
+**NSoC 2026 — Project Admin:** [Arnav Singh](https://github.com/Arnav-Singh-5080)
+
+<br/>
+
+
+## 📌 Overview
+
+CricScope is designed to explore, analyze, and visualize cricket data to uncover patterns, player performance trends, and match insights.
+
+Whether you're a cricket enthusiast, data analyst, or developer, this project demonstrates how data science can enhance sports understanding.
 
 <br/>
 
 ---
 
 <br/>
+
+## 🔄 Workflow
+
+```text
+Data Collection → Data Cleaning → EDA → Visualization → Feature Engineering → Modeling → Evaluation
+```
 
 <div align="center">
 
@@ -361,6 +369,42 @@ git push origin feature/your-feature-name
 | Docs | Add screenshots/GIF demo to README | Easy |
 
 <br/>
+---
+
+## 📈 Future Improvements
+
+* 🔮 Advanced predictive models (deep learning)
+* 🌐 Web dashboard (Streamlit / React)
+* 📡 Real-time data integration
+* 📊 Interactive dashboards
+
+---
+## 🐛 Issues
+
+Found a bug or have suggestions?
+Open an issue with proper details.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## ⭐ Support
+
+If you like this project:
+
+* Star ⭐ the repository
+* Share it with others
+
+---
+
+## 🙌 Acknowledgements
+
+Inspired by the intersection of sports and data science.
+---
 
 ---
 
@@ -382,8 +426,6 @@ git push origin feature/your-feature-name
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Arnav-Singh-5080)
 
 <br/>
-
----
 
 *If this project helped you, consider leaving a star. It helps more contributors find it.*
 
