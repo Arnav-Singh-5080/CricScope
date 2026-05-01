@@ -3,10 +3,13 @@ import pandas as pd
 import numpy as np
 import time
 
+
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+
+import plotly.graph_objects as go
 
 # -----------------------------------
 # CONFIG
@@ -634,6 +637,30 @@ team_data = {
     }
 }
 
+# --- WIN RATE CALCULATION FOR DASHBOARD ---
+@st.cache_data
+def get_team_win_rates():
+    try:
+        matches = pd.read_csv("matches.csv")
+        win_counts = matches['winner'].value_counts()
+        # Correct: count each match only once per team
+        total_matches = pd.concat([
+            matches[['team1']].rename(columns={'team1': 'team'}),
+            matches[['team2']].rename(columns={'team2': 'team'})
+        ])
+        total_counts = total_matches['team'].value_counts()
+        rates = {}
+        for team in team_data.keys():
+            wins = win_counts.get(team, 0)
+            total = total_counts.get(team, 0)
+            rates[team] = round((wins / total) * 100, 1) if total > 0 else 0.0
+        return rates
+    except Exception:
+        # Fallback if file missing
+        return {team: 0.0 for team in team_data.keys()}
+
+team_win_rates = get_team_win_rates()
+
 # -----------------------------------
 # MODEL
 # -----------------------------------
@@ -791,24 +818,23 @@ if st.session_state.page == "Dashboard":
         </div>
     """, unsafe_allow_html=True)
 
+
+    # --- Stat pills: Team win rates ---
     st.markdown("""
         <div class="stats-row">
-            <div class="stat-pill">
-                <div class="stat-value">8</div>
-                <div class="stat-label">IPL Teams</div>
+    """, unsafe_allow_html=True)
+    for team, tdata in team_data.items():
+        st.markdown(f'''
+            <div class="stat-pill" style="min-width:120px;">
+                <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+                    <img src="{tdata['logo']}" style="width:22px;height:22px;border-radius:50%;box-shadow:0 0 8px {tdata['color']}55;" />
+                    <span class="stat-value" style="color:{tdata['color']};font-size:18px;">{tdata['abbr']}</span>
+                </div>
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value" style="font-size:20px;">{team_win_rates.get(team, 0.0)}%</div>
             </div>
-            <div class="stat-pill">
-                <div class="stat-value">ML</div>
-                <div class="stat-label">Model Type</div>
-            </div>
-            <div class="stat-pill">
-                <div class="stat-value">120</div>
-                <div class="stat-label">Balls Tracked</div>
-            </div>
-            <div class="stat-pill">
-                <div class="stat-value">6+</div>
-                <div class="stat-label">Key Signals</div>
-            </div>
+        ''', unsafe_allow_html=True)
+    st.markdown("""
         </div>
     """, unsafe_allow_html=True)
 
@@ -865,6 +891,62 @@ if st.session_state.page == "Dashboard":
             </div>
         </div>
     """, unsafe_allow_html=True)
+
+@st.cache_data
+def generate_over_progression(target, score, wickets, balls_left, batting_team, bowling_team, pipe):
+    data = []
+
+    temp_score = score
+    temp_wickets = 10 - wickets
+    temp_balls = balls_left
+
+    for i in range(0, balls_left, 6):
+        if temp_balls <= 0 or temp_wickets <= 0:
+            break
+
+        runs_left = target - temp_score
+        if runs_left <= 0:
+            break
+
+        overs_completed = (120 - temp_balls) // 6
+        crr = temp_score / (overs_completed + 1e-5)
+        rrr = (runs_left * 6) / temp_balls if temp_balls > 0 else 0
+
+        input_df = pd.DataFrame({
+            'batting_team': [batting_team],
+            'bowling_team': [bowling_team],
+            'city': ['Mumbai'],
+            'runs_left': [runs_left],
+            'balls_left': [temp_balls],
+            'wickets': [temp_wickets],
+            'target': [target],
+            'crr': [crr],
+            'rrr': [rrr]
+        })
+
+        prob = pipe.predict_proba(input_df)[0][1] * 100
+
+        data.append({
+            "over": overs_completed,
+            "win_prob": prob,
+            "runs_left": runs_left,
+            "wickets": temp_wickets
+        })
+
+        # --- Realistic simulation ---
+        run_rate = np.clip(rrr / 6, 0.8, 2.5)
+        runs = np.random.poisson(lam=run_rate * 6)
+        temp_score += runs
+        temp_balls -= 6
+
+        wicket_prob = min(0.35, 0.08 + (rrr / 20))
+        if np.random.rand() < wicket_prob:
+            temp_wickets -= 1
+
+    df = pd.DataFrame(data)
+    if not df.empty:
+        df['delta'] = df['win_prob'].diff()
+    return df
 
 # -----------------------------------
 # ANALYSIS PAGE
@@ -1130,5 +1212,101 @@ if st.session_state.page == "Analysis":
                 </div>
             </div>
         """, unsafe_allow_html=True)
+
+    # ---- WIN PROBABILITY CHART ----
+    st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
+                    color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+            Win Probability Progression
+        </div>
+    """, unsafe_allow_html=True)
+
+
+    df_prog = generate_over_progression(
+        target, score, wickets, balls_left,
+        batting_team, bowling_team, pipe
+    )
+
+
+    if not df_prog.empty:
+        fig = go.Figure()
+
+        # Smoother curve (spline)
+        fig.add_trace(go.Scatter(
+            x=df_prog['over'],
+            y=df_prog['win_prob'],
+            mode='lines+markers',
+            line=dict(color='#d4af37', width=3, shape='spline', smoothing=1.3),
+            name=f'{batting_team} Win Probability',
+            customdata=df_prog[['runs_left', 'wickets', 'delta']],
+            hovertemplate=
+                '<b>Over:</b> %{x}<br>' +
+                '<b>Win %:</b> %{y:.2f}<br>' +
+                '<b>Runs Left:</b> %{customdata[0]}<br>' +
+                '<b>Wickets:</b> %{customdata[1]}<br>' +
+                '<b>Δ Win %:</b> %{customdata[2]:+.2f}<extra></extra>',
+            fill='tozeroy',
+            fillcolor='rgba(212,175,55,0.08)'
+        ))
+
+        # Dual team probability line (improved color)
+        fig.add_trace(go.Scatter(
+            x=df_prog['over'],
+            y=100 - df_prog['win_prob'],
+            mode='lines',
+            line=dict(color='rgba(120,160,255,0.7)', width=2, dash='dot', shape='spline', smoothing=1.3),
+            name=f'{bowling_team} Win Probability',
+            hovertemplate='<b>Opponent Win %:</b> %{y:.2f}<extra></extra>'
+        ))
+
+        # Wicket markers
+        df_prog['wicket_fall'] = df_prog['wickets'].diff().fillna(0) < 0
+        wickets_df = df_prog[df_prog['wicket_fall']]
+        if not wickets_df.empty:
+            fig.add_trace(go.Scatter(
+                x=wickets_df['over'],
+                y=wickets_df['win_prob'],
+                mode='markers',
+                marker=dict(size=10, color='red', symbol='x'),
+                name='Wicket',
+                hovertemplate='<b>WICKET!</b><br>Over: %{x}<extra></extra>'
+            ))
+
+        # Death overs zone (vertical highlight)
+        fig.add_vrect(
+            x0=15, x1=20,
+            fillcolor="rgba(255,0,0,0.05)",
+            layer="below",
+            line_width=0
+        )
+
+        # Chart polish: hovermode, animation, legend
+        fig.update_layout(
+            template='plotly_dark',
+            plot_bgcolor='#080808',
+            paper_bgcolor='#080808',
+            font=dict(color='#e2dfd8'),
+            xaxis_title='Overs',
+            yaxis_title='Win Probability (%)',
+            height=400,
+            title=dict(
+                text=f"{batting_team} Win Probability Curve",
+                font=dict(size=20, family='Cormorant Garamond, serif'),
+                x=0.5
+            ),
+            hovermode='x unified',
+            transition=dict(duration=500),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5
+            )
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
