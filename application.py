@@ -22,7 +22,7 @@ if "last_prediction" not in st.session_state:
     st.session_state.last_prediction = None
 
 # -----------------------------------
-# LUXURY CSS
+# LUXURY CSS - RESPONSIVE DESIGN
 # -----------------------------------
 st.markdown("""
 <style>
@@ -61,14 +61,14 @@ section[data-testid="stSidebar"] > div {
 }
 
 .sidebar-brand {
-    padding: 36px 28px 24px;
+    padding: clamp(20px, 5vw, 36px) clamp(16px, 4vw, 28px) clamp(16px, 4vw, 24px);
     border-bottom: 1px solid rgba(212,175,55,0.1);
     margin-bottom: 16px;
 }
 
 .sidebar-logo-text {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 28px;
+    font-size: clamp(18px, 4vw, 28px);
     font-weight: 600;
     letter-spacing: 3px;
     background: linear-gradient(135deg, #f0d060 0%, #d4af37 40%, #a07820 100%);
@@ -80,7 +80,7 @@ section[data-testid="stSidebar"] > div {
 }
 
 .sidebar-tagline {
-    font-size: 10px;
+    font-size: clamp(8px, 2vw, 10px);
     letter-spacing: 2.5px;
     text-transform: uppercase;
     color: rgba(212,175,55,0.45);
@@ -94,11 +94,11 @@ section[data-testid="stSidebar"] > div {
 }
 
 .sidebar-section-label {
-    font-size: 9px;
+    font-size: clamp(8px, 1.5vw, 9px);
     letter-spacing: 2px;
     text-transform: uppercase;
     color: rgba(180,160,100,0.35);
-    padding: 12px 28px 6px;
+    padding: clamp(8px, 2vw, 12px) clamp(16px, 4vw, 28px) 6px;
     font-weight: 500;
 }
 
@@ -111,11 +111,12 @@ section[data-testid="stSidebar"] > div {
     border-radius: 0;
     color: rgba(220,210,180,0.65);
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: clamp(11px, 2vw, 13px);
     font-weight: 400;
     letter-spacing: 0.5px;
-    padding: 11px 28px;
+    padding: clamp(8px, 2vw, 11px) clamp(16px, 3vw, 28px);
     height: auto;
+    min-height: 44px;
     transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
@@ -145,7 +146,7 @@ section[data-testid="stSidebar"] > div {
 
 /* ---- HERO SECTION ---- */
 .hero-wrapper {
-    padding: 64px 60px 40px;
+    padding: clamp(32px, 8vw, 64px) clamp(16px, 8vw, 60px) clamp(24px, 6vw, 40px);
     border-bottom: 1px solid rgba(212,175,55,0.08);
     position: relative;
     overflow: hidden;
@@ -161,17 +162,17 @@ section[data-testid="stSidebar"] > div {
 }
 
 .hero-eyebrow {
-    font-size: 10px;
+    font-size: clamp(8px, 2vw, 10px);
     letter-spacing: 4px;
     text-transform: uppercase;
     color: rgba(212,175,55,0.5);
-    margin-bottom: 18px;
+    margin-bottom: clamp(12px, 3vw, 18px);
     font-weight: 400;
 }
 
 .hero-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(52px, 7vw, 88px);
+    font-size: clamp(32px, 10vw, 88px);
     font-weight: 600;
     line-height: 0.95;
     letter-spacing: -1px;
@@ -179,11 +180,11 @@ section[data-testid="stSidebar"] > div {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 18px;
+    margin-bottom: clamp(12px, 3vw, 18px);
 }
 
 .hero-subtitle {
-    font-size: 15px;
+    font-size: clamp(12px, 3vw, 15px);
     color: rgba(220,210,185,0.55);
     font-weight: 300;
     letter-spacing: 0.3px;
@@ -199,10 +200,10 @@ section[data-testid="stSidebar"] > div {
     border: 1px solid rgba(212,175,55,0.2);
     border-radius: 100px;
     padding: 5px 14px 5px 10px;
-    font-size: 11px;
+    font-size: clamp(9px, 2vw, 11px);
     color: rgba(212,175,55,0.8);
     letter-spacing: 0.5px;
-    margin-bottom: 24px;
+    margin-bottom: clamp(16px, 4vw, 24px);
     width: fit-content;
 }
 
@@ -222,17 +223,19 @@ section[data-testid="stSidebar"] > div {
 /* ---- STAT PILLS ---- */
 .stats-row {
     display: flex;
-    gap: 16px;
-    padding: 24px 60px;
+    flex-wrap: wrap;
+    gap: clamp(8px, 3vw, 16px);
+    padding: clamp(16px, 4vw, 24px) clamp(16px, 8vw, 60px);
     border-bottom: 1px solid rgba(212,175,55,0.06);
 }
 
 .stat-pill {
     flex: 1;
+    min-width: clamp(100px, 20vw, 150px);
     background: rgba(255,255,255,0.02);
     border: 1px solid rgba(255,255,255,0.06);
     border-radius: 14px;
-    padding: 18px 22px;
+    padding: clamp(12px, 3vw, 18px) clamp(12px, 3vw, 22px);
     transition: all 0.25s ease;
 }
 
@@ -244,7 +247,7 @@ section[data-testid="stSidebar"] > div {
 
 .stat-value {
     font-family: 'DM Mono', monospace;
-    font-size: 26px;
+    font-size: clamp(18px, 4vw, 26px);
     font-weight: 500;
     color: #e8d89a;
     line-height: 1;
@@ -252,7 +255,7 @@ section[data-testid="stSidebar"] > div {
 }
 
 .stat-label {
-    font-size: 10px;
+    font-size: clamp(8px, 1.5vw, 10px);
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: rgba(200,185,140,0.4);
@@ -260,12 +263,12 @@ section[data-testid="stSidebar"] > div {
 
 /* ---- ANALYSIS SECTION ---- */
 .section-header {
-    padding: 40px 60px 0;
+    padding: clamp(24px, 6vw, 40px) clamp(16px, 8vw, 60px) 0;
 }
 
 .section-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
+    font-size: clamp(24px, 6vw, 32px);
     font-weight: 500;
     color: #f0e8cc;
     letter-spacing: 0.5px;
@@ -273,7 +276,7 @@ section[data-testid="stSidebar"] > div {
 }
 
 .section-desc {
-    font-size: 13px;
+    font-size: clamp(11px, 2vw, 13px);
     color: rgba(200,185,140,0.4);
     letter-spacing: 0.3px;
 }
@@ -283,7 +286,7 @@ section[data-testid="stSidebar"] > div {
     background: rgba(255,255,255,0.025);
     border: 1px solid rgba(255,255,255,0.07);
     border-radius: 20px;
-    padding: 28px 32px;
+    padding: clamp(16px, 4vw, 28px) clamp(16px, 4vw, 32px);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     transition: border-color 0.3s ease;
@@ -294,11 +297,11 @@ section[data-testid="stSidebar"] > div {
 }
 
 .input-label {
-    font-size: 10px;
+    font-size: clamp(8px, 1.5vw, 10px);
     letter-spacing: 2px;
     text-transform: uppercase;
     color: rgba(212,175,55,0.5);
-    margin-bottom: 12px;
+    margin-bottom: clamp(8px, 2vw, 12px);
     font-weight: 500;
 }
 
@@ -314,7 +317,7 @@ section[data-testid="stSidebar"] > div {
 
 .stSelectbox label, .stNumberInput label, .stSlider label, .stTextInput label {
     font-family: 'DM Sans', sans-serif !important;
-    font-size: 10px !important;
+    font-size: clamp(8px, 1.5vw, 10px) !important;
     letter-spacing: 1.8px !important;
     text-transform: uppercase !important;
     color: rgba(200,185,140,0.5) !important;
@@ -335,7 +338,7 @@ section[data-testid="stSidebar"] > div {
     background: rgba(255,255,255,0.02);
     border: 1px solid rgba(255,255,255,0.07);
     border-radius: 24px;
-    padding: 36px 28px;
+    padding: clamp(20px, 5vw, 36px) clamp(16px, 4vw, 28px);
     text-align: center;
     backdrop-filter: blur(20px);
     position: relative;
@@ -352,7 +355,7 @@ section[data-testid="stSidebar"] > div {
 
 .team-abbr {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
+    font-size: clamp(16px, 4vw, 22px);
     font-weight: 600;
     letter-spacing: 3px;
     margin-top: 14px;
@@ -360,7 +363,7 @@ section[data-testid="stSidebar"] > div {
 
 .vs-divider {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 48px;
+    font-size: clamp(32px, 8vw, 48px);
     font-weight: 300;
     color: rgba(212,175,55,0.25);
     line-height: 1;
@@ -370,8 +373,8 @@ section[data-testid="stSidebar"] > div {
 .team-logo-glow {
     border-radius: 50%;
     transition: box-shadow 0.3s ease;
-    width: 90px;
-    height: 90px;
+    width: clamp(60px, 15vw, 90px);
+    height: clamp(60px, 15vw, 90px);
     object-fit: contain;
 }
 
@@ -381,9 +384,9 @@ section[data-testid="stSidebar"] > div {
     color: #0a0800;
     border: none;
     border-radius: 14px;
-    height: 52px;
+    height: clamp(44px, 10vw, 52px);
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: clamp(11px, 2vw, 13px);
     font-weight: 600;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -405,7 +408,7 @@ section[data-testid="stSidebar"] > div {
     background: rgba(212,175,55,0.04);
     border: 1px solid rgba(212,175,55,0.18);
     border-radius: 24px;
-    padding: 36px 32px;
+    padding: clamp(20px, 5vw, 36px) clamp(16px, 4vw, 32px);
     position: relative;
     overflow: hidden;
 }
@@ -427,17 +430,17 @@ section[data-testid="stSidebar"] > div {
 }
 
 .prediction-label {
-    font-size: 9px;
+    font-size: clamp(8px, 1.5vw, 9px);
     letter-spacing: 3px;
     text-transform: uppercase;
     color: rgba(212,175,55,0.4);
-    margin-bottom: 24px;
+    margin-bottom: clamp(16px, 4vw, 24px);
     font-weight: 500;
 }
 
 .win-team-name {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 38px;
+    font-size: clamp(18px, 5vw, 38px);
     font-weight: 600;
     color: #f0e0a0;
     line-height: 1;
@@ -446,7 +449,7 @@ section[data-testid="stSidebar"] > div {
 
 .win-probability {
     font-family: 'DM Mono', monospace;
-    font-size: 72px;
+    font-size: clamp(48px, 12vw, 72px);
     font-weight: 500;
     background: linear-gradient(135deg, #f0d060, #d4af37);
     -webkit-background-clip: text;
@@ -457,17 +460,17 @@ section[data-testid="stSidebar"] > div {
 }
 
 .win-prob-label {
-    font-size: 10px;
+    font-size: clamp(8px, 1.5vw, 10px);
     letter-spacing: 2px;
     text-transform: uppercase;
     color: rgba(200,185,140,0.35);
-    margin-bottom: 28px;
+    margin-bottom: clamp(16px, 4vw, 28px);
 }
 
 /* ---- PROGRESS BAR CUSTOM ---- */
 .prob-bar-wrapper {
     position: relative;
-    margin: 20px 0 14px;
+    margin: clamp(12px, 3vw, 20px) 0 clamp(8px, 2vw, 14px);
 }
 
 .prob-bar-track {
@@ -489,7 +492,7 @@ section[data-testid="stSidebar"] > div {
     display: flex;
     justify-content: space-between;
     margin-top: 10px;
-    font-size: 11px;
+    font-size: clamp(9px, 2vw, 11px);
     color: rgba(200,185,140,0.4);
     font-family: 'DM Mono', monospace;
     letter-spacing: 0.5px;
@@ -498,8 +501,8 @@ section[data-testid="stSidebar"] > div {
 /* ---- METRICS ROW ---- */
 .metrics-row {
     display: flex;
-    gap: 10px;
-    margin-top: 18px;
+    gap: clamp(6px, 2vw, 10px);
+    margin-top: clamp(12px, 3vw, 18px);
 }
 
 .metric-chip {
@@ -507,20 +510,24 @@ section[data-testid="stSidebar"] > div {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.06);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: clamp(8px, 2vw, 12px) clamp(8px, 2vw, 14px);
     text-align: center;
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .metric-chip-value {
     font-family: 'DM Mono', monospace;
-    font-size: 16px;
+    font-size: clamp(14px, 3vw, 16px);
     color: #d4c080;
     font-weight: 500;
     margin-bottom: 4px;
 }
 
 .metric-chip-label {
-    font-size: 9px;
+    font-size: clamp(7px, 1.5vw, 9px);
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: rgba(180,165,115,0.35);
@@ -542,12 +549,12 @@ div[data-testid="metric-container"] {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px;
-    padding: 16px 20px;
+    padding: clamp(12px, 3vw, 16px) clamp(12px, 3vw, 20px);
 }
 
 div[data-testid="metric-container"] label {
     color: rgba(200,185,140,0.45) !important;
-    font-size: 10px !important;
+    font-size: clamp(8px, 1.5vw, 10px) !important;
     letter-spacing: 1.5px !important;
     text-transform: uppercase !important;
 }
@@ -555,7 +562,7 @@ div[data-testid="metric-container"] label {
 div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
     font-family: 'DM Mono', monospace !important;
     color: #e8d89a !important;
-    font-size: 28px !important;
+    font-size: clamp(20px, 5vw, 28px) !important;
 }
 
 /* ---- SEPARATOR ---- */
@@ -567,7 +574,7 @@ hr {
 
 /* ---- CONTENT PADDING ---- */
 .main-pad {
-    padding: 0 60px 60px;
+    padding: 0 clamp(16px, 8vw, 60px) clamp(32px, 8vw, 60px);
 }
 
 /* ---- SCROLLBAR ---- */
@@ -585,13 +592,192 @@ hr {
 }
 .profile-link:hover { background: rgba(212,175,55,0.07); }
 .profile-link span {
-    font-size: 11px; color: rgba(200,185,140,0.55);
+    font-size: clamp(10px, 2vw, 11px); color: rgba(200,185,140,0.55);
     font-weight: 400; letter-spacing: 0.2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     transition: color 0.2s;
 }
 .profile-link:hover span { color: rgba(212,175,55,0.8); }
 .profile-link svg { flex-shrink: 0; }
+
+/* ---- MOBILE RESPONSIVE BREAKPOINTS ---- */
+@media (max-width: 768px) {
+    /* HERO SECTION */
+    .hero-wrapper {
+        padding: clamp(24px, 6vw, 48px) clamp(12px, 6vw, 40px) clamp(20px, 5vw, 32px);
+    }
+
+    .hero-title {
+        font-size: clamp(24px, 8vw, 48px);
+        margin-bottom: clamp(10px, 2vw, 16px);
+    }
+
+    .hero-subtitle {
+        font-size: clamp(11px, 2.5vw, 14px);
+        max-width: 100%;
+    }
+
+    /* STATS ROW */
+    .stats-row {
+        padding: clamp(12px, 3vw, 20px) clamp(12px, 6vw, 40px);
+        gap: clamp(8px, 2vw, 12px);
+    }
+
+    .stat-pill {
+        min-width: 70px;
+        padding: clamp(10px, 2vw, 14px) clamp(10px, 2vw, 16px);
+    }
+
+    .stat-value {
+        font-size: clamp(16px, 3vw, 22px);
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: clamp(7px, 1.2vw, 8px);
+    }
+
+    /* SIDEBAR NAV */
+    section[data-testid="stSidebar"] {
+        width: 220px !important;
+    }
+
+    .sidebar-brand {
+        padding: clamp(16px, 4vw, 24px) clamp(12px, 3vw, 20px) clamp(12px, 3vw, 16px);
+    }
+
+    .sidebar-logo-text {
+        font-size: clamp(16px, 3.5vw, 24px);
+    }
+
+    /* INPUT CARDS */
+    .input-card {
+        padding: clamp(12px, 3vw, 20px) clamp(12px, 3vw, 24px);
+    }
+
+    /* PREDICTION CARDS */
+    .prediction-card {
+        padding: clamp(16px, 4vw, 28px) clamp(12px, 3vw, 24px);
+    }
+
+    .win-probability {
+        font-size: clamp(36px, 8vw, 56px);
+    }
+
+    .metrics-row {
+        gap: clamp(4px, 1.5vw, 8px);
+    }
+
+    .metric-chip {
+        padding: clamp(6px, 1.5vw, 10px) clamp(6px, 1.5vw, 10px);
+        min-height: 45px;
+    }
+
+    .metric-chip-value {
+        font-size: clamp(12px, 2.5vw, 14px);
+    }
+
+    .metric-chip-label {
+        font-size: clamp(6px, 1vw, 7px);
+    }
+
+    /* MAIN PAD */
+    .main-pad {
+        padding: 0 clamp(12px, 4vw, 32px) clamp(24px, 6vw, 48px);
+    }
+
+    /* TEAM CARDS */
+    .team-logo-glow {
+        width: clamp(50px, 12vw, 72px);
+        height: clamp(50px, 12vw, 72px);
+    }
+
+    /* VS DIVIDER */
+    .vs-divider {
+        font-size: clamp(24px, 6vw, 40px);
+    }
+
+    .team-abbr {
+        font-size: clamp(14px, 3.5vw, 20px);
+    }
+
+    .team-vs-wrapper {
+        padding: clamp(16px, 4vw, 28px) clamp(12px, 3vw, 20px);
+    }
+}
+
+@media (max-width: 480px) {
+    /* EXTREME MOBILE ADJUSTMENTS */
+    section[data-testid="stSidebar"] {
+        width: 200px !important;
+    }
+
+    .hero-wrapper {
+        padding: clamp(16px, 5vw, 32px) clamp(10px, 4vw, 24px) clamp(16px, 4vw, 24px);
+    }
+
+    .hero-title {
+        font-size: clamp(20px, 7vw, 40px);
+        letter-spacing: -0.5px;
+    }
+
+    .hero-eyebrow {
+        font-size: clamp(7px, 1.5vw, 8px);
+        margin-bottom: clamp(8px, 2vw, 12px);
+    }
+
+    .stats-row {
+        padding: clamp(10px, 2vw, 16px) clamp(10px, 4vw, 24px);
+        flex-direction: column;
+    }
+
+    .stat-pill {
+        min-width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .input-card {
+        padding: clamp(10px, 2vw, 16px) clamp(10px, 2vw, 16px);
+    }
+
+    .prediction-card {
+        padding: clamp(12px, 3vw, 20px) clamp(10px, 2vw, 16px);
+    }
+
+    .win-probability {
+        font-size: clamp(32px, 7vw, 48px);
+    }
+
+    .win-team-name {
+        font-size: clamp(14px, 4vw, 28px);
+    }
+
+    .main-pad {
+        padding: 0 clamp(10px, 3vw, 20px) clamp(20px, 5vw, 32px);
+    }
+
+    .metrics-row {
+        flex-direction: column;
+        gap: clamp(6px, 2vw, 8px);
+    }
+
+    .metric-chip {
+        min-width: 100%;
+        flex: 1 1 100%;
+    }
+}
+
+@media (min-width: 1440px) {
+    /* DESKTOP LARGE OPTIMIZATIONS */
+    .stats-row {
+        gap: 20px;
+    }
+
+    .stat-pill {
+        min-width: unset;
+        flex: 1;
+    }
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -813,12 +999,12 @@ if st.session_state.page == "Dashboard":
     """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div style="padding: 48px 60px;">
-            <div style="font-family:'Cormorant Garamond',serif; font-size:13px; letter-spacing:3px;
-                        text-transform:uppercase; color:rgba(212,175,55,0.4); margin-bottom:28px;">
+        <div style="padding: clamp(24px, 6vw, 48px) clamp(16px, 8vw, 60px);">
+            <div style="font-family:'Cormorant Garamond',serif; font-size: clamp(11px, 2vw, 13px); letter-spacing:3px;
+                        text-transform:uppercase; color:rgba(212,175,55,0.4); margin-bottom: clamp(16px, 4vw, 28px);">
                 IPL Teams
             </div>
-            <div style="display:flex; flex-wrap:wrap; gap:12px;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: clamp(8px, 2vw, 12px);">
     """, unsafe_allow_html=True)
 
     team_cols = st.columns(4)
@@ -829,12 +1015,12 @@ if st.session_state.page == "Dashboard":
                     background:rgba(255,255,255,0.025);
                     border:1px solid rgba(255,255,255,0.07);
                     border-radius:16px;
-                    padding:20px;
+                    padding: clamp(12px, 3vw, 20px);
                     text-align:center;
                     transition:all 0.25s ease;
                     margin-bottom:12px;
                 ">
-                    <div style="width:72px;height:72px;border-radius:50%;margin:0 auto;
+                    <div style="width: clamp(50px, 12vw, 72px); height: clamp(50px, 12vw, 72px); border-radius:50%; margin:0 auto;
                                 overflow:hidden;background:#111;
                                 box-shadow:0 0 20px {tdata['color']}50;
                                 display:flex;align-items:center;justify-content:center;">
@@ -842,11 +1028,11 @@ if st.session_state.page == "Dashboard":
                              style="width:100%;height:100%;object-fit:cover;
                                     mix-blend-mode:screen;border-radius:50%;" />
                     </div>
-                    <div style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600;
-                                color:{tdata['color']}; letter-spacing:2px; margin-top:12px;">
+                    <div style="font-family:'Cormorant Garamond',serif; font-size: clamp(14px, 3vw, 18px); font-weight:600;
+                                color:{tdata['color']}; letter-spacing:2px; margin-top: clamp(8px, 2vw, 12px);">
                         {tdata['abbr']}
                     </div>
-                    <div style="font-size:10px; color:rgba(200,185,140,0.35); margin-top:4px;
+                    <div style="font-size: clamp(8px, 1.5vw, 10px); color:rgba(200,185,140,0.35); margin-top:4px;
                                 letter-spacing:0.5px;">
                         {team_name}
                     </div>
@@ -854,12 +1040,12 @@ if st.session_state.page == "Dashboard":
             """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div style="padding:0 60px 32px; text-align:center;">
+        <div style="padding: clamp(16px, 4vw, 32px) clamp(16px, 8vw, 60px); text-align:center;">
             <div style="display:inline-block; background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.15);
-                        border-radius:14px; padding:20px 36px;">
-                <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                            color:rgba(212,175,55,0.5);margin-bottom:8px;">Get Started</div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#f0e8cc;font-weight:500;">
+                        border-radius:14px; padding: clamp(12px, 3vw, 20px) clamp(20px, 5vw, 36px);">
+                <div style="font-size: clamp(8px, 1.5vw, 10px); letter-spacing:2px; text-transform:uppercase;
+                            color:rgba(212,175,55,0.5); margin-bottom:8px;">Get Started</div>
+                <div style="font-family:'Cormorant Garamond',serif; font-size: clamp(14px, 3vw, 20px); color:#f0e8cc; font-weight:500;">
                     Open Match Analysis from the sidebar →
                 </div>
             </div>
@@ -872,22 +1058,22 @@ if st.session_state.page == "Dashboard":
 if st.session_state.page == "Analysis":
 
     st.markdown("""
-        <div class="hero-wrapper" style="padding-bottom:32px;">
+        <div class="hero-wrapper" style="padding-bottom: clamp(20px, 5vw, 32px);">
             <div class="hero-eyebrow">Win Probability Engine</div>
-            <div class="hero-title" style="font-size:clamp(36px,4vw,56px); margin-bottom:10px;">Match Analysis</div>
+            <div class="hero-title" style="font-size: clamp(28px, 6vw, 56px); margin-bottom: clamp(8px, 2vw, 10px);">Match Analysis</div>
             <div class="hero-subtitle">Configure the match state below to compute real-time win probabilities.</div>
         </div>
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="main-pad">', unsafe_allow_html=True)
-    st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height: clamp(16px, 4vw, 32px);"></div>', unsafe_allow_html=True)
 
     teams = list(team_data.keys())
 
     # ---- INPUT SECTION ----
     st.markdown("""
-        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                    color:rgba(212,175,55,0.4);margin-bottom:20px;font-weight:500;">
+        <div style="font-size: clamp(8px, 1.5vw, 10px); letter-spacing:3px; text-transform:uppercase;
+                    color:rgba(212,175,55,0.4); margin-bottom: clamp(12px, 3vw, 20px); font-weight:500;">
             Match Configuration
         </div>
     """, unsafe_allow_html=True)
@@ -913,7 +1099,7 @@ if st.session_state.page == "Analysis":
             wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height: clamp(16px, 4vw, 28px);"></div>', unsafe_allow_html=True)
 
     # ---- TEAM VS DISPLAY ----
     t1 = team_data[batting_team]
@@ -923,8 +1109,8 @@ if st.session_state.page == "Analysis":
         t2 = team_data[teams[1]]
 
     st.markdown("""
-        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                    color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+        <div style="font-size: clamp(8px, 1.5vw, 10px); letter-spacing:3px; text-transform:uppercase;
+                    color:rgba(212,175,55,0.4); margin-bottom: clamp(12px, 3vw, 16px); font-weight:500;">
             Fixture
         </div>
     """, unsafe_allow_html=True)
@@ -934,9 +1120,9 @@ if st.session_state.page == "Analysis":
     with vs_col1:
         st.markdown(f"""
             <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);
-                        border-radius:20px;padding:28px;text-align:center;
+                        border-radius:20px; padding: clamp(16px, 4vw, 28px); text-align:center;
                         box-shadow:0 0 40px {t1['color']}12;">
-                <div style="width:100px;height:100px;border-radius:50%;margin:0 auto;
+                <div style="width: clamp(60px, 15vw, 100px); height: clamp(60px, 15vw, 100px); border-radius:50%; margin:0 auto;
                             overflow:hidden;background:#111;
                             box-shadow:0 0 28px {t1['color']}60;
                             display:flex;align-items:center;justify-content:center;">
@@ -944,11 +1130,11 @@ if st.session_state.page == "Analysis":
                          style="width:100%;height:100%;object-fit:cover;
                                 mix-blend-mode:screen;" />
                 </div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
-                            color:{t1['color']};letter-spacing:3px;margin-top:14px;">
+                <div style="font-family:'Cormorant Garamond',serif; font-size: clamp(18px, 4vw, 26px); font-weight:600;
+                            color:{t1['color']}; letter-spacing:3px; margin-top: clamp(10px, 2vw, 14px);">
                     {t1['abbr']}
                 </div>
-                <div style="font-size:10px;color:rgba(200,185,140,0.3);margin-top:4px;letter-spacing:0.5px;">
+                <div style="font-size: clamp(8px, 1.5vw, 10px); color:rgba(200,185,140,0.3); margin-top:4px; letter-spacing:0.5px;">
                     BATTING
                 </div>
             </div>
@@ -957,8 +1143,8 @@ if st.session_state.page == "Analysis":
     with vs_col2:
         st.markdown("""
             <div style="display:flex;align-items:center;justify-content:center;height:100%;
-                        font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;
-                        color:rgba(212,175,55,0.2);letter-spacing:-2px;padding:28px 0;">
+                        font-family:'Cormorant Garamond',serif; font-size: clamp(24px, 8vw, 52px); font-weight:300;
+                        color:rgba(212,175,55,0.2); letter-spacing:-2px; padding: clamp(16px, 4vw, 28px) 0;">
                 vs
             </div>
         """, unsafe_allow_html=True)
@@ -966,9 +1152,9 @@ if st.session_state.page == "Analysis":
     with vs_col3:
         st.markdown(f"""
             <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);
-                        border-radius:20px;padding:28px;text-align:center;
+                        border-radius:20px; padding: clamp(16px, 4vw, 28px); text-align:center;
                         box-shadow:0 0 40px {t2['color']}12;">
-                <div style="width:100px;height:100px;border-radius:50%;margin:0 auto;
+                <div style="width: clamp(60px, 15vw, 100px); height: clamp(60px, 15vw, 100px); border-radius:50%; margin:0 auto;
                             overflow:hidden;background:#111;
                             box-shadow:0 0 28px {t2['color']}60;
                             display:flex;align-items:center;justify-content:center;">
@@ -976,17 +1162,17 @@ if st.session_state.page == "Analysis":
                          style="width:100%;height:100%;object-fit:cover;
                                 mix-blend-mode:screen;" />
                 </div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
-                            color:{t2['color']};letter-spacing:3px;margin-top:14px;">
+                <div style="font-family:'Cormorant Garamond',serif; font-size: clamp(18px, 4vw, 26px); font-weight:600;
+                            color:{t2['color']}; letter-spacing:3px; margin-top: clamp(10px, 2vw, 14px);">
                     {t2['abbr']}
                 </div>
-                <div style="font-size:10px;color:rgba(200,185,140,0.3);margin-top:4px;letter-spacing:0.5px;">
+                <div style="font-size: clamp(8px, 1.5vw, 10px); color:rgba(200,185,140,0.3); margin-top:4px; letter-spacing:0.5px;">
                     BOWLING
                 </div>
             </div>
         """, unsafe_allow_html=True)
 
-    st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height: clamp(16px, 4vw, 28px);"></div>', unsafe_allow_html=True)
 
     # ---- ANALYZE BUTTON ----
     st.markdown('<div class="analyze-btn">', unsafe_allow_html=True)
@@ -1019,10 +1205,10 @@ if st.session_state.page == "Analysis":
         win = proba[1]
         lose = proba[0]
 
-        st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+        st.markdown('<div style="height: clamp(16px, 4vw, 28px);"></div>', unsafe_allow_html=True)
         st.markdown("""
-            <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                        color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+            <div style="font-size: clamp(8px, 1.5vw, 10px); letter-spacing:3px; text-transform:uppercase;
+                        color:rgba(212,175,55,0.4); margin-bottom: clamp(12px, 3vw, 16px); font-weight:500;">
                 Prediction Output
             </div>
         """, unsafe_allow_html=True)
@@ -1034,8 +1220,8 @@ if st.session_state.page == "Analysis":
             st.markdown(f"""
                 <div class="prediction-card">
                     <div class="prediction-label">Batting Team · {t1['abbr']}</div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                                font-weight:500;color:#c8b870;margin-bottom:16px;">
+                    <div style="font-family:'Cormorant Garamond',serif; font-size: clamp(16px, 4vw, 22px);
+                                font-weight:500;color:#c8b870;margin-bottom: clamp(12px, 3vw, 16px);">
                         {batting_team}
                     </div>
                     <div class="win-probability">{bat_pct}%</div>
@@ -1067,13 +1253,13 @@ if st.session_state.page == "Analysis":
             bowl_pct = round(lose * 100)
             st.markdown(f"""
                 <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
-                            border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;">
+                            border-radius:24px; padding: clamp(20px, 5vw, 36px) clamp(16px, 4vw, 32px); position:relative;overflow:hidden;">
                     <div class="prediction-label">Bowling Team · {t2['abbr']}</div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                                font-weight:500;color:#c8b870;margin-bottom:16px;">
+                    <div style="font-family:'Cormorant Garamond',serif; font-size: clamp(16px, 4vw, 22px);
+                                font-weight:500;color:#c8b870;margin-bottom: clamp(12px, 3vw, 16px);">
                         {bowling_team}
                     </div>
-                    <div style="font-family:'DM Mono',monospace;font-size:72px;font-weight:500;
+                    <div style="font-family:'DM Mono',monospace; font-size: clamp(36px, 8vw, 72px); font-weight:500;
                                 color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
                         {bowl_pct}%
                     </div>
@@ -1104,27 +1290,29 @@ if st.session_state.page == "Analysis":
             """, unsafe_allow_html=True)
 
         # ---- SUMMARY ROW ----
-        st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
+        st.markdown('<div style="height: clamp(8px, 2vw, 16px);"></div>', unsafe_allow_html=True)
         verdict = batting_team if win > 0.5 else bowling_team
         conf = max(win, lose)
         conf_label = "High" if conf > 0.75 else "Moderate" if conf > 0.55 else "Close"
 
         st.markdown(f"""
             <div style="background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.1);
-                        border-radius:16px;padding:20px 28px;display:flex;
-                        align-items:center;justify-content:space-between;">
+                        border-radius:16px; padding: clamp(12px, 3vw, 20px) clamp(16px, 4vw, 28px); display:flex;
+                        flex-direction: column;
+                        align-items:flex-start;justify-content:space-between;
+                        gap: clamp(12px, 3vw, 20px);">
                 <div>
-                    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+                    <div style="font-size: clamp(7px, 1.5vw, 9px); letter-spacing:2px; text-transform:uppercase;
                                 color:rgba(212,175,55,0.35);margin-bottom:6px;">Model Verdict</div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                    <div style="font-family:'Cormorant Garamond',serif; font-size: clamp(16px, 4vw, 22px);
                                 font-weight:500;color:#f0e8cc;">
                         {verdict} favoured to win
                     </div>
                 </div>
-                <div style="text-align:right;">
-                    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+                <div style="text-align:left;width:100%;">
+                    <div style="font-size: clamp(7px, 1.5vw, 9px); letter-spacing:2px; text-transform:uppercase;
                                 color:rgba(212,175,55,0.35);margin-bottom:6px;">Confidence</div>
-                    <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
+                    <div style="font-family:'DM Mono',monospace; font-size: clamp(14px, 3vw, 20px); color:#d4af37;">
                         {conf_label} · {round(conf*100)}%
                     </div>
                 </div>
