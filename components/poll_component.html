@@ -1,0 +1,30 @@
+<div id="poll-area">
+  <select id="poll-type">
+    <option>Best Powerplay Opener</option>
+    <option>Most Clutch Finisher</option>
+  </select>
+  <div id="poll-buttons"></div>
+  <div id="d3-chart"></div>
+</div>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+  // Firebase ref: /polls/{pollType}/votes/{player}
+  function loadPoll(type) {
+    const ref = db.ref(`polls/${type}/votes`);
+    ref.on('value', snap => {
+      const data = snap.val() || {};
+      drawD3BarChart(data);
+    });
+  }
+  
+  function vote(player) {
+    const pollType = document.getElementById('poll-type').value;
+    db.ref(`polls/${pollType}/votes/${player}`).transaction(v => (v||0)+1);
+  }
+  
+  function drawD3BarChart(data) {
+    // Animated D3 horizontal bar chart
+    const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+    // ... D3 code for animated bars
+  }
+</script>

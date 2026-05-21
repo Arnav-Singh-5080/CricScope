@@ -1145,6 +1145,9 @@ with st.sidebar:
     if st.button("◉  Match Analysis", key="nav_analysis"):
         st.session_state.page = "Analysis"
 
+    if st.button("🔥  Fan Pulse Arena", key="nav_fanpulse"):
+        st.session_state.page = "FanPulse"
+
     st.markdown('<div style="height:1px; background:rgba(251,191,36,0.1); margin:20px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
 
@@ -1700,5 +1703,273 @@ if st.session_state.page == "Analysis":
             )
 
             st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+    # -----------------------------------
+# FAN PULSE ARENA PAGE
+# -----------------------------------
+if st.session_state.page == "FanPulse":
+    
+    st.markdown("""
+        <div class="hero-wrapper" style="padding-bottom:clamp(24px,5vw,40px);">
+            <div class="hero-eyebrow">Fan Engagement Hub</div>
+            <div class="hero-title" style="font-size:clamp(36px,8vw,72px);margin-bottom:clamp(12px,2vw,16px);">
+                Fan Pulse Arena 🔥
+            </div>
+            <div class="hero-subtitle">
+                Real-time community mood and polls. Share how you're feeling and vote for the best players.
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="main-pad">', unsafe_allow_html=True)
+    
+    # Initialize session state for Fan Pulse
+    if 'mood_votes' not in st.session_state:
+        st.session_state.mood_votes = {'😡': 0, '😐': 0, '🔥': 0}
+    if 'poll_votes' not in st.session_state:
+        st.session_state.poll_votes = {
+            'Virat Kohli': 0,
+            'Rohit Sharma': 0,
+            'KL Rahul': 0,
+            'Shubman Gill': 0
+        }
+    if 'current_poll' not in st.session_state:
+        st.session_state.current_poll = "Best Powerplay Opener"
+    
+    # Create two columns for the features
+    col1, col2 = st.columns(2, gap="large")
+    
+    # ========== COLUMN 1: MOOD METER ==========
+    with col1:
+        st.markdown("""
+            <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.15);
+                        border-radius:28px;padding:clamp(24px,5vw,32px);
+                        backdrop-filter:blur(20px);">
+                <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
+                            color:rgba(251,191,36,0.8);margin-bottom:20px;font-weight:600;">
+                    📊 Live Mood Meter
+                </div>
+                <div style="font-size:18px;font-weight:500;color:#f8fafc;margin-bottom:24px;">
+                    How are you feeling right now?
+                </div>
+        """, unsafe_allow_html=True)
+        
+        # Mood buttons
+        mood_col1, mood_col2, mood_col3 = st.columns(3)
+        
+        with mood_col1:
+            if st.button("😡 ANGRY", key="mood_angry", use_container_width=True):
+                st.session_state.mood_votes['😡'] += 1
+                st.rerun()
+        
+        with mood_col2:
+            if st.button("😐 NEUTRAL", key="mood_neutral", use_container_width=True):
+                st.session_state.mood_votes['😐'] += 1
+                st.rerun()
+        
+        with mood_col3:
+            if st.button("🔥 EXCITED", key="mood_excited", use_container_width=True):
+                st.session_state.mood_votes['🔥'] += 1
+                st.rerun()
+        
+        # Calculate percentages
+        total_votes = sum(st.session_state.mood_votes.values())
+        
+        if total_votes > 0:
+            angry_pct = (st.session_state.mood_votes['😡'] / total_votes) * 100
+            neutral_pct = (st.session_state.mood_votes['😐'] / total_votes) * 100
+            excited_pct = (st.session_state.mood_votes['🔥'] / total_votes) * 100
+            
+            st.markdown('<div style="margin-top:24px;"><div style="font-size:12px;color:rgba(251,191,36,0.7);margin-bottom:12px;">Current Mood Distribution</div></div>', unsafe_allow_html=True)
+            
+            # Angry bar
+            st.markdown(f"""
+                <div style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:12px;">😡 ANGRY</span>
+                        <span style="font-size:12px;color:#fbbf24;">{angry_pct:.1f}%</span>
+                    </div>
+                    <div class="prob-bar-track">
+                        <div class="prob-bar-fill" style="width:{angry_pct}%;background:linear-gradient(90deg,#dc2626,#ef4444);"></div>
+                    </div>
+                    <div style="font-size:10px;color:rgba(148,163,184,0.5);margin-top:4px;">{st.session_state.mood_votes['😡']} votes</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Neutral bar
+            st.markdown(f"""
+                <div style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:12px;">😐 NEUTRAL</span>
+                        <span style="font-size:12px;color:#fbbf24;">{neutral_pct:.1f}%</span>
+                    </div>
+                    <div class="prob-bar-track">
+                        <div class="prob-bar-fill" style="width:{neutral_pct}%;background:linear-gradient(90deg,#94a3b8,#cbd5e1);"></div>
+                    </div>
+                    <div style="font-size:10px;color:rgba(148,163,184,0.5);margin-top:4px;">{st.session_state.mood_votes['😐']} votes</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Excited bar
+            st.markdown(f"""
+                <div style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:12px;">🔥 EXCITED</span>
+                        <span style="font-size:12px;color:#fbbf24;">{excited_pct:.1f}%</span>
+                    </div>
+                    <div class="prob-bar-track">
+                        <div class="prob-bar-fill" style="width:{excited_pct}%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div>
+                    </div>
+                    <div style="font-size:10px;color:rgba(148,163,184,0.5);margin-top:4px;">{st.session_state.mood_votes['🔥']} votes</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Determine dominant mood
+            moods = {'😡': angry_pct, '😐': neutral_pct, '🔥': excited_pct}
+            dominant = max(moods, key=moods.get)
+            dominant_text = {"😡": "ANGRY", "😐": "NEUTRAL", "🔥": "EXCITED"}[dominant]
+            
+            st.info(f"💡 **Fan Sentiment:** The crowd is feeling {dominant} {dominant_text} right now!")
+        else:
+            st.info("👆 Click on a mood button above to start the voting!")
+        
+        st.metric("Total Mood Votes", total_votes)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # ========== COLUMN 2: BEST ROLE POLLS ==========
+    with col2:
+        st.markdown("""
+            <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.15);
+                        border-radius:28px;padding:clamp(24px,5vw,32px);
+                        backdrop-filter:blur(20px);">
+                <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
+                            color:rgba(251,191,36,0.8);margin-bottom:20px;font-weight:600;">
+                    🏆 Best Role Polls
+                </div>
+        """, unsafe_allow_html=True)
+        
+        # Poll type selector
+        poll_type = st.selectbox(
+            "Select Poll Category",
+            ["Best Powerplay Opener", "Most Clutch Finisher", "Best Death Bowler", "MVP of the Tournament"],
+            key="poll_selector"
+        )
+        
+        # Dynamic player options
+        player_options = {
+            "Best Powerplay Opener": ["Rohit Sharma", "Jos Buttler", "Quinton de Kock", "David Warner"],
+            "Most Clutch Finisher": ["MS Dhoni", "Hardik Pandya", "Andre Russell", "Kieron Pollard"],
+            "Best Death Bowler": ["Jasprit Bumrah", "Kagiso Rabada", "Trent Boult", "Pat Cummins"],
+            "MVP of the Tournament": ["Virat Kohli", "Rashid Khan", "Jos Buttler", "Jasprit Bumrah"]
+        }
+        
+        players = player_options.get(poll_type, ["Player 1", "Player 2", "Player 3", "Player 4"])
+        
+        # Reset poll votes when poll type changes
+        if st.session_state.current_poll != poll_type:
+            st.session_state.current_poll = poll_type
+            st.session_state.poll_votes = {player: 0 for player in players}
+        
+        st.markdown('<div style="margin:20px 0 16px 0;"><div style="font-size:12px;color:rgba(251,191,36,0.7);">Cast your vote</div></div>', unsafe_allow_html=True)
+        
+        # Create vote buttons
+        vote_cols = st.columns(2)
+        for idx, player in enumerate(players):
+            with vote_cols[idx % 2]:
+                if st.button(f"🗳️ Vote for {player}", key=f"poll_{player}_{poll_type}", use_container_width=True):
+                    st.session_state.poll_votes[player] = st.session_state.poll_votes.get(player, 0) + 1
+                    st.success(f"✓ You voted for {player}!")
+                    st.rerun()
+        
+        st.markdown('<div style="margin:24px 0 16px 0;"><div style="font-size:12px;color:rgba(251,191,36,0.7);">📊 Poll Results</div></div>', unsafe_allow_html=True)
+        
+        # Display results
+        if st.session_state.poll_votes:
+            votes_df = pd.DataFrame({
+                'Player': list(st.session_state.poll_votes.keys()),
+                'Votes': list(st.session_state.poll_votes.values())
+            }).sort_values('Votes', ascending=True)
+            
+            st.bar_chart(votes_df.set_index('Player'))
+            
+            if votes_df['Votes'].sum() > 0:
+                winner = votes_df.loc[votes_df['Votes'].idxmax(), 'Player']
+                st.success(f"🏆 Current Leader: **{winner}** with {max(st.session_state.poll_votes.values())} votes!")
+        else:
+            st.info("No votes yet. Be the first to vote!")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # ========== LIVE ACTIVITY FEED ==========
+    st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.15);
+                    border-radius:28px;padding:clamp(20px,4vw,28px);
+                    backdrop-filter:blur(20px);">
+            <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
+                        color:rgba(251,191,36,0.8);margin-bottom:20px;font-weight:600;">
+                🔄 Live Activity Feed
+            </div>
+    """, unsafe_allow_html=True)
+    
+    # Generate random activity messages
+    import random
+    activities = [
+        f"⚡ A fan just voted {random.choice(['🔥', '😡', '😐'])} in Mood Meter!",
+        f"🗳️ New vote recorded in '{poll_type}' poll",
+        f"📊 Total {total_votes} fans have shared their mood!",
+        f"🏆 {winner if 'winner' in locals() else 'Someone'} is leading the poll!"
+    ]
+    
+    for activity in activities[:3]:
+        st.markdown(f"""
+            <div style="padding:12px 0;border-bottom:1px solid rgba(251,191,36,0.1);
+                        font-size:13px;color:rgba(226,232,240,0.7);">
+                {activity}
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+            <div style="margin-top:16px;font-size:11px;color:rgba(148,163,184,0.4);text-align:center;">
+                Real-time updates · Powered by Streamlit
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # ========== INSIGHTS SECTION ==========
+    st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.15);
+                    border-radius:28px;padding:clamp(20px,4vw,28px);
+                    backdrop-filter:blur(20px);">
+            <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
+                        color:rgba(251,191,36,0.8);margin-bottom:20px;font-weight:600;">
+                📈 Sentiment Insights
+            </div>
+    """, unsafe_allow_html=True)
+    
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.metric("Total Engagement", f"{total_votes} votes")
+    with col_b:
+        if total_votes > 0 and 'excited_pct' in locals():
+            st.metric("Excitement Level", f"{excited_pct:.0f}%")
+        else:
+            st.metric("Excitement Level", "0%")
+    with col_c:
+        st.metric("Active Polls", "4")
+    
+    st.markdown("""
+            <div style="margin-top:16px;font-size:11px;color:rgba(148,163,184,0.5);text-align:center;">
+                🤖 XGBoost sentiment forecasting coming soon!
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)

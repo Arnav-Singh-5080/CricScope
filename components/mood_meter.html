@@ -1,0 +1,22 @@
+<div id="mood-buttons">
+  <button onclick="vote('angry')">😡</button>
+  <button onclick="vote('neutral')">😐</button>
+  <button onclick="vote('fire')">🔥</button>
+</div>
+<div id="mood-chart"></div>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script>
+  // Firebase config (your project)
+  firebase.initializeApp({...});
+  const db = firebase.database();
+  
+  function vote(mood) {
+    db.ref('mood-meter/votes').push({ mood, timestamp: Date.now() });
+  }
+  
+  db.ref('mood-meter/votes').on('value', snap => {
+    const counts = { angry:0, neutral:0, fire:0 };
+    snap.forEach(v => counts[v.val().mood]++);
+    updateChart(counts);
+  });
+</script>
