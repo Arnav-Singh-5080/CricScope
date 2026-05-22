@@ -1418,7 +1418,9 @@ if st.session_state.page == "Analysis":
         score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
         col_ov, col_wk = st.columns(2)
         with col_ov:
-            overs = st.slider("Overs Completed", min_value=1, max_value=19, value=10)
+            overs_completed = st.number_input(
+                "Overs Completed",min_value=0,max_value=19,value=10, step=1)
+            balls = st.number_input("Balls", min_value=0,max_value=5,value=0, step=1)
         with col_wk:
             wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1507,18 +1509,21 @@ if st.session_state.page == "Analysis":
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ---- PREDICTION OUTPUT ----
+    # ---- PREDICTION OUTPUT ----
     if analyze:
         runs_left = target - score
-        balls_left = 120 - (overs * 6)
-        wickets_left = 10 - wickets  # Our model specifically trained on 'wickets_left'
-    
-        # Calculate balls bowled to ensure exact CRR match with training data
-        balls_bowled = 120 - balls_left
-    
-        # Safe CRR and RRR calculation (prevents division by zero errors on first/last balls)
-        crr = (score * 6) / balls_bowled if balls_bowled > 0 else 0
+        total_balls_bowled = (overs_completed * 6) + balls
+        balls_left = 120 - total_balls_bowled
+        
+        # Model trained on wickets_left
+        wickets_left = 10 - wickets
+        
+        # Convert balls into proper over representation
+        overs_bowled = total_balls_bowled / 6
+        
+        # Safe CRR and RRR calculation
+        crr = score / overs_bowled if overs_bowled > 0 else 0
         rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
-
         loaded_xgb = xgb.XGBClassifier()
         loaded_xgb.load_model('xgb_win_prob_model.json')
 
@@ -1604,12 +1609,19 @@ if st.session_state.page == "Analysis":
             'city': [city],  # Here is the mAin fix, from hardcoded mumbai -> dynamic city input
             'runs_left': [runs_left],
             'balls_left': [balls_left],
-            'wickets': [10 - wickets],
-            'target': [target],
+            'wickets_left': [10 - wickets],
+            'target_score': [target],
             'crr': [crr],
             'rrr': [rrr]
         })
+        input_df = pd.get_dummies(input_df)
+        model_columns = loaded_xgb.get_booster().feature_names
+        for col in model_columns:
+            if col not in input_df.columns:
+                input_df[col] = 0
 
+        input_df = input_df[model_columns]
+      
         with st.spinner(""):
             time.sleep(0.4)
             result = loaded_xgb.predict_proba(input_df)
@@ -1709,7 +1721,7 @@ if st.session_state.page == "Analysis":
         verdict = batting_team if win > 0.5 else bowling_team
         conf = max(win, loss)
         conf_label = "High" if conf > 0.75 else "Moderate" if conf > 0.55 else "Close"
-        conf = max(win, lose)
+        conf = max(win, loss)
         conf_color = "#10b981" if conf > 0.75 else "#fbbf24" if conf > 0.55 else "#f87171"
         conf_label = "High Confidence" if conf > 0.75 else "Moderate" if conf > 0.55 else "Close Match"
 
