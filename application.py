@@ -1521,51 +1521,30 @@ if st.session_state.page == "Analysis":
 
         loaded_xgb = xgb.XGBClassifier()
         loaded_xgb.load_model('xgb_win_prob_model.json')
+        feature_names = list(loaded_xgb.feature_names_in_)
 
-        # Map current UI team names to the historical names used during model training.
-        # The model was trained before aliases were applied, so it knows teams by their
-        # original names (e.g. "Kings XI Punjab" not "Punjab Kings").
-        UI_TO_MODEL_NAME = {
-            "Chennai Super Kings":        "Chennai Super Kings",
-            "Delhi Capitals":             "Delhi Capitals",
-            "Punjab Kings":               "Kings XI Punjab",
-            "Kolkata Knight Riders":      "Kolkata Knight Riders",
-            "Mumbai Indians":             "Mumbai Indians",
-            "Rajasthan Royals":           "Rajasthan Royals",
-            "Royal Challengers Bangalore":"Royal Challengers Bangalore",
-            "Sunrisers Hyderabad":        "Sunrisers Hyderabad",
-        }
+        bat_col = f"bat_{batting_team}"
+        bowl_col = f"bowl_{bowling_team}"
 
-        # All one-hot columns the model was trained on (from the saved model's feature list).
-        # Historical/defunct teams must be present as zeros so the feature matrix matches exactly.
-        ALL_MODEL_TEAMS = [
-            "Chennai Super Kings", "Deccan Chargers", "Delhi Capitals", "Delhi Daredevils",
-            "Gujarat Lions", "Kings XI Punjab", "Kochi Tuskers Kerala", "Kolkata Knight Riders",
-            "Mumbai Indians", "Pune Warriors", "Rajasthan Royals", "Rising Pune Supergiant",
-            "Rising Pune Supergiants", "Royal Challengers Bangalore", "Sunrisers Hyderabad",
-        ]
+        if bat_col not in feature_names or bowl_col not in feature_names:
+            st.error(
+                f"Team not recognized by the model: **{batting_team}** vs **{bowling_team}**. "
+                "Retrain after adding this franchise to the dataset."
+            )
+            st.stop()
 
-        # Build numerical features first, then one-hot columns — all 0 by default.
-        input_dict = {
-            'target_score':  target,
-            'runs_left':     runs_left,
-            'balls_left':    balls_left,
-            'crr':           crr,
-            'rrr':           rrr,
-            'wickets_left':  wickets_left,
-        }
-        for team in ALL_MODEL_TEAMS:
-            input_dict[f"bat_{team}"] = 0
-        for team in ALL_MODEL_TEAMS:
-            input_dict[f"bowl_{team}"] = 0
-
-        # Set the correct bat/bowl flags using the historical name mapping.
-        bat_col  = f"bat_{UI_TO_MODEL_NAME[batting_team]}"
-        bowl_col = f"bowl_{UI_TO_MODEL_NAME[bowling_team]}"
-        input_dict[bat_col]  = 1
+        input_dict = {name: 0.0 for name in feature_names}
+        input_dict.update({
+            'target_score': target,
+            'runs_left': runs_left,
+            'balls_left': balls_left,
+            'crr': crr,
+            'rrr': rrr,
+            'wickets_left': wickets_left,
+        })
+        input_dict[bat_col] = 1
         input_dict[bowl_col] = 1
-
-        input_df = pd.DataFrame([input_dict])
+        input_df = pd.DataFrame([input_dict], columns=feature_names)
         # ---- MATCH-STATE VALIDATION (Issue #31) ----
         # Guard 1: batting team has already reached or crossed the target
         if runs_left <= 0:
@@ -1597,18 +1576,6 @@ if st.session_state.page == "Analysis":
                 f"⚠️ **Extreme match state** — Required Run Rate is **{round(rrr, 2)} runs/over**. "
                 f"This is a very unlikely scenario; the prediction below may be less reliable."
             )
-
-        input_df = pd.DataFrame({
-            'batting_team': [batting_team],
-            'bowling_team': [bowling_team],
-            'city': [city],  # Here is the mAin fix, from hardcoded mumbai -> dynamic city input
-            'runs_left': [runs_left],
-            'balls_left': [balls_left],
-            'wickets': [10 - wickets],
-            'target': [target],
-            'crr': [crr],
-            'rrr': [rrr]
-        })
 
         with st.spinner(""):
             time.sleep(0.4)
