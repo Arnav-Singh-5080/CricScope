@@ -363,13 +363,15 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+This project is Python-based, so `npm install` is not used here.
+
 ---
 
 ## 4 — Add Dataset
 
 ```text
 cricscope/
-├── app.py
+├── application.py
 ├── matches.csv
 └── deliveries.csv
 ```
@@ -379,7 +381,7 @@ cricscope/
 ## 5 — Run Application
 
 ```bash
-streamlit run app.py
+streamlit run application.py
 ```
 
 Visit:

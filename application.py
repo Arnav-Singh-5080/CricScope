@@ -3,12 +3,28 @@ import pandas as pd
 import numpy as np
 import time
 import plotly.express as px
+import plotly.graph_objects as go
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
 import xgboost as xgb
 from xgboost import XGBClassifier
+
+from scenario_utils import (
+    build_feature_vector,
+    calculate_player_impact,
+    get_win_probability,
+    get_player_stats,
+    get_player_explanation,
+    get_player_profile,
+    get_player_wicket_penalty,
+    get_team_players,
+    load_matches,
+    load_deliveries,
+    load_pipeline,
+    predict_score_range,
+)
 
 # -----------------------------------
 # CONFIG
@@ -867,7 +883,7 @@ hr {
     filter: blur(60px);
 }
 
-/* FIX 2: Team card abbreviation — prevent overflow truncation */
+/* FIX 2: Team card abbreviation €” prevent overflow truncation */
 .team-card-abbr {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(14px, 2.5vw, 20px);
@@ -1130,7 +1146,7 @@ pipe = train_model()
 # SIDEBAR
 # -----------------------------------
 with st.sidebar:
-    # FIX 1: Logo text on one line — reduced letter-spacing, nowrap enforced via CSS
+    # FIX 1: Logo text on one line €” reduced letter-spacing, nowrap enforced via CSS
     st.markdown("""
         <div class="sidebar-brand">
             <span class="sidebar-logo-text">CRICSCOPE</span>
@@ -1140,11 +1156,14 @@ with st.sidebar:
 
     st.markdown('<div class="sidebar-section-label">Navigation</div>', unsafe_allow_html=True)
 
-    if st.button("◈  Dashboard", key="nav_dash"):
+    if st.button("Dashboard", key="nav_dash"):
         st.session_state.page = "Dashboard"
 
-    if st.button("◉  Match Analysis", key="nav_analysis"):
+    if st.button("Match Analysis", key="nav_analysis"):
         st.session_state.page = "Analysis"
+
+    if st.button("What-If Simulator", key="nav_simulator"):
+        st.session_state.page = "Simulator"
 
     st.markdown('<div style="height:1px; background:rgba(251,191,36,0.1); margin:20px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
@@ -1165,7 +1184,7 @@ with st.sidebar:
                 <div style="font-size:18px;font-weight:600;color:#f8fafc;
                             letter-spacing:0.5px;margin-bottom:4px;">Arnav Singh</div>
                 <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                            color:rgba(251,191,36,0.6);margin-bottom:20px;font-weight:600;">ML · Data · Analytics</div>
+                            color:rgba(251,191,36,0.6);margin-bottom:20px;font-weight:600;">ML Â· Data Â· Analytics</div>
                 <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(251,191,36,0.2),transparent);margin-bottom:14px;"></div>
                 <div style="font-size:11px;color:rgba(226,232,240,0.5);line-height:1.6;">
                     Predictive analytics for modern cricket.
@@ -1179,7 +1198,7 @@ with st.sidebar:
             <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(251,191,36,0.15);
                         border-top:none;border-radius:0 0 20px 20px;padding:4px 12px 16px;">
                 <p style="margin:0 0 4px 0;padding:10px 8px;">
-                    <span style="color:rgba(251,191,36,0.8);margin-right:10px;font-size:13px;">✉</span>
+                    <span style="color:rgba(251,191,36,0.8);margin-right:10px;font-size:13px;">œ‰</span>
                     <a href="mailto:itsarnav.singh80@gmail.com"
                        style="color:rgba(226,232,240,0.7);font-size:12px;text-decoration:none;letter-spacing:0.3px;">
                         itsarnav.singh80@gmail.com
@@ -1193,7 +1212,7 @@ with st.sidebar:
                     </a>
                 </p>
                 <p style="margin:0;padding:10px 8px;">
-                    <span style="color:rgba(251,191,36,0.8);margin-right:10px;font-size:13px;">◆</span>
+                    <span style="color:rgba(251,191,36,0.8);margin-right:10px;font-size:13px;">—</span>
                     <a href="https://github.com/Arnav-Singh-5080" target="_blank"
                        style="color:rgba(226,232,240,0.7);font-size:12px;text-decoration:none;letter-spacing:0.3px;">
                         Arnav-Singh-5080
@@ -1206,7 +1225,7 @@ with st.sidebar:
     st.markdown("""
         <div style="text-align:center;margin-top:20px;padding-bottom:28px;font-size:10px;
                     letter-spacing:2px;text-transform:uppercase;color:rgba(148,163,184,0.3);font-weight:500;">
-            CricScope v2.0 · IPL Edition
+            CricScope v2.0 Â· IPL Edition
         </div>
     """, unsafe_allow_html=True)
 
@@ -1218,7 +1237,7 @@ if st.session_state.page == "Dashboard":
     st.markdown("""
         <div class="hero-wrapper">
             <div class="hero-eyebrow">
-                <span style="color:#10b981;">●</span> IPL Match Intelligence · Season 2025
+                <span style="color:#10b981;">—</span> IPL Match Intelligence Â· Season 2025
             </div>
             <div class="hero-badge">
                 <div class="hero-dot"></div>
@@ -1263,7 +1282,7 @@ if st.session_state.page == "Dashboard":
 
     st.markdown('<div class="main-pad">', unsafe_allow_html=True)
     
-    # FIX 2: Team cards — full abbreviation visible, no truncation
+    # FIX 2: Team cards €” full abbreviation visible, no truncation
     team_cols = st.columns(5)
     for i, (team_name, tdata) in enumerate(team_data.items()):
         color = tdata['color']
@@ -1313,7 +1332,7 @@ if st.session_state.page == "Dashboard":
         </div>
     """, unsafe_allow_html=True)
 
-    # FIX 3: Win rate cards — clean layout with correct stats display
+    # FIX 3: Win rate cards €” clean layout with correct stats display
     wr_cols = st.columns(5)
     for i, (team_name, tdata) in enumerate(team_data.items()):
         s = win_stats.get(team_name, {"wins": 0, "total": 0, "rate": 0})
@@ -1348,13 +1367,643 @@ if st.session_state.page == "Dashboard":
                 <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;
                             color:#10b981;margin-bottom:10px;font-weight:600;">Get Started</div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:24px;color:#f8fafc;font-weight:500;">
-                    Navigate to Match Analysis →
+                    Navigate to Match Analysis 
                 </div>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
+
+if st.session_state.page == "Simulator":
+    import joblib
+
+    # ═══════════════════════════════════════════════════════════
+    # PIPELINE TRAINING DATA CONSTANTS
+    # ═══════════════════════════════════════════════════════════
+    # These MUST match exactly what pipe.pkl was trained on
+    PIPELINE_TEAMS = ['Chennai Super Kings', 'Deccan Chargers', 'Delhi Capitals', 'Delhi Daredevils', 'Kings XI Punjab', 'Kolkata Knight Riders', 'Mumbai Indians', 'Rajasthan Royals', 'Royal Challengers Bangalore', 'Sunrisers Hyderabad']
+    PIPELINE_CITIES = ['Abu Dhabi', 'Ahmedabad', 'Bangalore', 'Bengaluru', 'Bloemfontein', 'Cape Town', 'Centurion', 'Chandigarh', 'Chennai', 'Cuttack', 'Delhi', 'Dharamsala', 'Durban', 'East London', 'Hyderabad', 'Indore', 'Jaipur', 'Johannesburg', 'Kimberley', 'Kolkata', 'Mohali', 'Mumbai', 'Nagpur', 'Port Elizabeth', 'Pune', 'Raipur', 'Ranchi', 'Sharjah', 'Visakhapatnam']
+
+    # ═══════════════════════════════════════════════════════════
+    # CACHED DATA LOADER
+    # ═══════════════════════════════════════════════════════════
+    
+    @st.cache_resource
+    def load_pipe():
+        """Load pipeline only once"""
+        return joblib.load("pipe.pkl")
+    
+    def safe_predict(pipe, df):
+        """Safely predict with error handling for feature mismatch"""
+        # Validate team and city before prediction
+        batting_team = df.loc[0, 'batting_team'] if 'batting_team' in df.columns else None
+        bowling_team = df.loc[0, 'bowling_team'] if 'bowling_team' in df.columns else None
+        city = df.loc[0, 'city'] if 'city' in df.columns else None
+        
+        if batting_team and batting_team not in PIPELINE_TEAMS:
+            st.error(f"❌ Batting team '{batting_team}' not in pipeline training data. Valid teams: {', '.join(PIPELINE_TEAMS)}")
+            return 0.5
+        if bowling_team and bowling_team not in PIPELINE_TEAMS:
+            st.error(f"❌ Bowling team '{bowling_team}' not in pipeline training data. Valid teams: {', '.join(PIPELINE_TEAMS)}")
+            return 0.5
+        if city and city not in PIPELINE_CITIES:
+            st.error(f"❌ City '{city}' not in pipeline training data. Valid cities: {', '.join(PIPELINE_CITIES)}")
+            return 0.5
+        
+        try:
+            return pipe.predict_proba(df)[0][1]
+        except ValueError as e:
+            st.error(f"Prediction error: {e}. Check that team and city names match the training data.")
+            return 0.5
+
+    # ═══════════════════════════════════════════════════════════
+    # DATA FUNCTIONS
+    # ═══════════════════════════════════════════════════════════
+
+    @st.cache_data
+    def get_deliveries_data():
+        """Load and cache deliveries data once per session"""
+        return load_deliveries()
+
+    @st.cache_data
+    def get_all_teams():
+        """Get teams that the pipeline was trained on (FIXED)"""
+        return PIPELINE_TEAMS
+
+    @st.cache_data
+    def get_all_cities():
+        """Get cities that the pipeline was trained on (FIXED)"""
+        return PIPELINE_CITIES
+
+    @st.cache_data
+    def get_batsmen_for_team(team_name):
+        """Get batsmen for a team, sorted by most appearances first"""
+        deliveries = get_deliveries_data()
+        filtered = deliveries[deliveries["batting_team"] == team_name]
+        if filtered.empty:
+            return []
+        batsmen = filtered["batsman"].value_counts().index.tolist()
+        return batsmen
+
+    @st.cache_data
+    def get_bowlers_for_team(team_name):
+        """Get bowlers for a team, sorted by most appearances first"""
+        deliveries = get_deliveries_data()
+        filtered = deliveries[deliveries["bowling_team"] == team_name]
+        if filtered.empty:
+            return []
+        bowlers = filtered["bowler"].value_counts().index.tolist()
+        return bowlers
+
+    @st.cache_data
+    def get_batsman_stats(player, team):
+        """Calculate batsman stats for a player in a team"""
+        deliveries = get_deliveries_data()
+        filtered = deliveries[(deliveries["batsman"] == player) & (deliveries["batting_team"] == team)]
+        if filtered.empty:
+            return None
+        
+        total_runs = filtered["batsman_runs"].sum()
+        total_balls = len(filtered)
+        innings = filtered["match_id"].nunique()
+        average = round(total_runs / innings if innings > 0 else 0, 1)
+        strike_rate = round((total_runs / total_balls * 100) if total_balls > 0 else 0, 1)
+        impact_score = round((average * 0.6) + (strike_rate * 0.4), 1)
+        
+        return {
+            "total_runs": round(total_runs, 1),
+            "total_balls": total_balls,
+            "innings": innings,
+            "average": average,
+            "strike_rate": strike_rate,
+            "impact_score": impact_score
+        }
+
+    @st.cache_data
+    def get_bowler_stats(bowler, team):
+        """Calculate bowler stats for a bowler in a team"""
+        deliveries = get_deliveries_data()
+        filtered = deliveries[(deliveries["bowler"] == bowler) & (deliveries["bowling_team"] == team)]
+        if filtered.empty:
+            return None
+        
+        total_balls = len(filtered)
+        total_runs = filtered["total_runs"].sum()
+        total_wickets = filtered["player_dismissed"].notna().sum()
+        overs_bowled = round(total_balls / 6, 1)
+        economy = round(total_runs / overs_bowled if overs_bowled > 0 else 0, 1)
+        
+        return {
+            "total_balls": total_balls,
+            "total_runs": round(total_runs, 1),
+            "total_wickets": total_wickets,
+            "overs_bowled": overs_bowled,
+            "economy": economy
+        }
+
+    # ═══════════════════════════════════════════════════════════
+    # PLAYER IMPORTANCE FUNCTIONS
+    # ═══════════════════════════════════════════════════════════
+
+    @st.cache_data
+    def get_team_batting_average(batting_team):
+        """Calculate team average batting stats"""
+        deliveries = get_deliveries_data()
+        
+        team_df = deliveries[deliveries['batting_team'] == batting_team]
+        
+        if team_df.empty:
+            return {'team_avg': 0, 'team_sr': 0}
+        
+        # Average runs per batsman per match across the whole team
+        team_total = team_df['batsman_runs'].sum()
+        team_balls = len(team_df)
+        team_innings = team_df['match_id'].nunique()
+        
+        team_avg = team_total / max(team_innings, 1)
+        team_sr = (team_total / max(team_balls, 1)) * 100
+        
+        return {
+            'team_avg': round(team_avg, 1),
+            'team_sr': round(team_sr, 1)
+        }
+
+    @st.cache_data
+    def get_player_importance(player_name, batting_team):
+        """Calculate player importance ratio vs team average"""
+        deliveries = get_deliveries_data()
+        
+        # Player stats
+        player_df = deliveries[
+            (deliveries['batsman'] == player_name) &
+            (deliveries['batting_team'] == batting_team)
+        ]
+        
+        if player_df.empty:
+            # Unknown player — return neutral weight
+            return {
+                'importance_ratio': 1.0,
+                'player_avg': 0,
+                'player_sr': 0,
+                'innings': 0,
+                'label': 'Unknown player'
+            }
+        
+        player_runs = player_df['batsman_runs'].sum()
+        player_balls = len(player_df)
+        player_innings = player_df['match_id'].nunique()
+        
+        player_avg = player_runs / max(player_innings, 1)
+        player_sr = (player_runs / max(player_balls, 1)) * 100
+        
+        # Team average for comparison
+        team_stats = get_team_batting_average(batting_team)
+        team_avg = team_stats['team_avg']
+        team_sr = team_stats['team_sr']
+        
+        # How much better or worse than team average
+        avg_ratio = player_avg / max(team_avg, 1)
+        sr_ratio = player_sr / max(team_sr, 1)
+        
+        # Combined importance (1.0 = average player)
+        importance = (avg_ratio * 0.6) + (sr_ratio * 0.4)
+        importance = round(importance, 3)
+        
+        # Label for UI
+        if importance >= 1.5:
+            label = "Key match winner"
+        elif importance >= 1.2:
+            label = "Important batsman"
+        elif importance >= 0.8:
+            label = "Regular contributor"
+        else:
+            label = "Lower order batsman"
+        
+        return {
+            'importance_ratio': importance,
+            'player_avg': round(player_avg, 1),
+            'player_sr': round(player_sr, 1),
+            'innings': player_innings,
+            'label': label
+        }
+
+    # ═══════════════════════════════════════════════════════════
+    # FEATURE VECTOR FUNCTION
+    # ═══════════════════════════════════════════════════════════
+
+    def build_sim_feature_vector(batting_team, bowling_team, city, current_score, target, overs_done, wickets_fallen):
+        """Build feature vector for predictions"""
+        runs_left = target - current_score
+        balls_left = max(int((20 - overs_done) * 6), 1)
+        crr = round(current_score / max(overs_done, 0.1), 2)
+        rrr = round((runs_left * 6) / balls_left, 2)
+        total_runs_x = current_score  # Total runs scored so far
+        
+        return pd.DataFrame({
+            "batting_team": [batting_team],
+            "bowling_team": [bowling_team],
+            "city": [city],
+            "runs_left": [runs_left],
+            "balls_left": [balls_left],
+            "wickets": [wickets_fallen],
+            "target": [target],
+            "total_runs_x": [total_runs_x],
+            "crr": [crr],
+            "rrr": [rrr]
+        })
+
+    # ═══════════════════════════════════════════════════════════
+    # IMPACT CALCULATION FUNCTIONS
+    # ═══════════════════════════════════════════════════════════
+
+    def calculate_wicket_impact(base_prob, player_importance, balls_left):
+        """Calculate impact of batsman getting out using player importance"""
+        if player_importance is None:
+            importance = 1.0  # Average player
+        else:
+            importance = player_importance['importance_ratio']
+        
+        # Base drop for any wicket falling
+        # Model already accounts for wickets+1
+        # This is the ADDITIONAL player-specific drop
+        
+        # Average player (importance=1.0) adds 0% extra drop
+        # Key player (importance=2.0) adds -8% extra
+        # Tail-ender (importance=0.3) adds +3% (slight recovery)
+        
+        extra_drop = (importance - 1.0) * 0.08
+        
+        # More balls left = bigger impact
+        ball_factor = min(balls_left / 60, 1.5)
+        extra_drop = extra_drop * ball_factor
+        
+        # Cap between -5% and -25% extra
+        extra_drop = max(min(extra_drop, 0.25), -0.05)
+        
+        # Apply player-specific adjustment to base probability
+        scenario_prob = max(base_prob - extra_drop, 0.02)
+        
+        return round(scenario_prob, 3), round(extra_drop * 100, 1)
+
+    def calculate_bowler_impact(base_prob, bowler_stats):
+        """Calculate impact of bowler change"""
+        if bowler_stats is None:
+            return base_prob, 0
+        
+        economy = bowler_stats["economy"]
+        
+        if economy < 7.0:
+            change = -0.04
+        elif economy < 8.5:
+            change = -0.02
+        elif economy < 10.0:
+            change = +0.02
+        else:
+            change = +0.04
+        
+        scenario_prob = base_prob + change
+        scenario_prob = max(min(scenario_prob, 0.98), 0.02)
+        return round(scenario_prob, 1), round(change * 100, 1)
+
+    # ═══════════════════════════════════════════════════════════
+    # PAGE HEADER
+    # ═══════════════════════════════════════════════════════════
+
+    st.title("What-If Match Simulator")
+    st.caption("Set the match situation below. Pick a scenario and instantly see how the win chance shifts.")
+
+    # ═══════════════════════════════════════════════════════════
+    # MATCH SETUP EXPANDER
+    # ═══════════════════════════════════════════════════════════
+
+    with st.expander("Match Setup", expanded=True):
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            batting_team = st.selectbox("Batting Team", get_all_teams(), key="wb_bat")
+            bowling_team = st.selectbox("Bowling Team", [t for t in get_all_teams() if t != batting_team], key="wb_bowl")
+        
+        with col2:
+            city = st.selectbox("Venue City", get_all_cities(), key="wb_city")
+            target = st.number_input("Target Score", min_value=50, max_value=400, value=190, key="wb_target")
+        
+        with col3:
+            current_score = st.slider("Runs Scored So Far", 0, target - 1, 140, key="wb_score")
+            overs_done = st.slider("Overs Completed", 0.1, 19.5, 15.0, step=0.1, key="wb_overs")
+            wickets_fallen = st.slider("Wickets Lost", 0, 9, 4, key="wb_wkts")
+        
+        st.divider()
+        col_toss1, col_toss2 = st.columns(2)
+        
+        with col_toss1:
+            toss_winner = st.selectbox("Toss Won By", [batting_team, bowling_team], key="wb_toss_w")
+        
+        with col_toss2:
+            toss_decision = st.radio("Toss Decision", ["Bat", "Field"], horizontal=True, key="wb_toss_d")
+
+    # ═══════════════════════════════════════════════════════════
+    # CALCULATIONS AFTER SETUP
+    # ═══════════════════════════════════════════════════════════
+
+    runs_left = target - current_score
+    balls_left = max(int((20 - overs_done) * 6), 1)
+    crr = round(current_score / max(overs_done, 0.1), 2)
+    rrr = round((runs_left * 6) / balls_left, 2)
+    wickets_left = 10 - wickets_fallen
+
+    if runs_left <= 0:
+        st.error("Target already achieved!")
+        st.stop()
+
+    pipe = load_pipe()
+    baseline_df = build_sim_feature_vector(batting_team, bowling_team, city, current_score, target, overs_done, wickets_fallen)
+    base_prob = safe_predict(pipe, baseline_df)
+
+    # ═══════════════════════════════════════════════════════════
+    # SCORECARD DISPLAY
+    # ═══════════════════════════════════════════════════════════
+
+    st.markdown(f"**{batting_team} — {current_score}/{wickets_fallen} ({overs_done} overs)**")
+    st.markdown(f"Need {runs_left} runs in {balls_left} balls")
+
+    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+    col_m1.metric("Runs Needed", runs_left)
+    col_m2.metric("Balls Left", balls_left)
+    col_m3.metric("Need Per Over", rrr)
+    col_m4.metric("Current Rate", crr)
+
+    # ═══════════════════════════════════════════════════════════
+    # THREE SCENARIO TABS
+    # ═══════════════════════════════════════════════════════════
+
+    tab1, tab2, tab3 = st.tabs(["Batsman Gets Out", "Bowler Change", "Toss and Teams"])
+
+    # ─────────────────────────────────────────────────────────────
+    # TAB 1: BATSMAN GETS OUT
+    # ─────────────────────────────────────────────────────────────
+    with tab1:
+        batsmen_available = get_batsmen_for_team(batting_team)
+        
+        if len(batsmen_available) < 2:
+            st.error(f"Need at least 2 batsmen for {batting_team}")
+        else:
+            col_bat1, col_bat2 = st.columns(2)
+            
+            with col_bat1:
+                batsman1 = st.selectbox("Striker", batsmen_available, key="wb_batter1")
+            
+            with col_bat2:
+                batsman2_options = [b for b in batsmen_available if b != batsman1]
+                batsman2 = st.selectbox("Non-Striker", batsman2_options, key="wb_batter2")
+            
+            dismissed = st.radio(f"Who gets out?", [batsman1, batsman2], horizontal=True, key="wb_dismissed")
+            
+            # Get player importance based on historical performance
+            player_imp = get_player_importance(dismissed, batting_team)
+            
+            # Show player stats and importance metrics
+            col_b1, col_b2, col_b3, col_b4, col_b5 = st.columns(5)
+            col_b1.metric("Innings Played", player_imp['innings'])
+            col_b2.metric("Batting Average", player_imp['player_avg'])
+            col_b3.metric("Strike Rate", player_imp['player_sr'])
+            col_b4.metric("Importance Score", player_imp['importance_ratio'])
+            col_b5.metric("Player Role", player_imp['label'])
+            
+            # Build scenario with wickets+1 and predict
+            scenario_df = build_sim_feature_vector(batting_team, bowling_team, city, current_score, target, overs_done, wickets_fallen + 1)
+            scenario_model_prob = safe_predict(pipe, scenario_df)
+            
+            # Adjust using player importance
+            scenario_prob, drop_pct = calculate_wicket_impact(scenario_model_prob, player_imp, balls_left)
+            delta = scenario_prob - base_prob
+            
+            st.divider()
+            
+            col_before, col_after = st.columns(2)
+            with col_before:
+                st.markdown(f"""
+                <div style='background: rgba(255,255,255,0.05); border: 2px solid rgba(212,175,55,0.4); border-radius: 12px; padding: 20px; text-align: center;'>
+                <p style='color:#a0a0a0; font-size:14px; margin:0;'>Before {dismissed} gets out</p>
+                <p style='color:#d4af37; font-size:48px; font-weight:bold; margin:10px 0;'>{int(base_prob*100)}%</p>
+                <p style='color:#a0a0a0; font-size:13px; margin:0;'>{batting_team} win probability</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col_after:
+                if delta < 0:
+                    border_color = "#ef4444"
+                    text_color = "#ef4444"
+                    delta_text = f"down {abs(delta)*100:.0f}% drop"
+                else:
+                    border_color = "#22c55e"
+                    text_color = "#22c55e"
+                    delta_text = f"up {delta*100:.0f}% gain"
+                
+                st.markdown(f"""
+                <div style='background: rgba(255,255,255,0.05); border: 2px solid {border_color}55; border-radius: 12px; padding: 20px; text-align: center;'>
+                <p style='color:#a0a0a0; font-size:14px; margin:0;'>After {dismissed} gets out</p>
+                <p style='color:{text_color}; font-size:48px; font-weight:bold; margin:10px 0;'>{int(scenario_prob*100)}%</p>
+                <p style='color:{text_color}; font-size:13px; margin:0;'>{delta_text}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("")
+            
+            # Show player importance-based message
+            importance = player_imp['importance_ratio']
+            label = player_imp['label']
+            
+            if importance >= 1.5:
+                st.error(
+                    f"🔴 **{dismissed}** is a **KEY MATCH WINNER** for {batting_team} "
+                    f"(importance: **{importance}x** above team average). "
+                    f"Their dismissal has a **MAJOR IMPACT** on win probability. "
+                    f"Win chance drops by **{abs(delta)*100:.0f}%**."
+                )
+            elif importance >= 1.2:
+                st.warning(
+                    f"🟠 **{dismissed}** is an **IMPORTANT BATSMAN** for {batting_team} "
+                    f"(importance: **{importance}x** above team average). "
+                    f"Losing them hurts the innings. "
+                    f"Win chance drops by **{abs(delta)*100:.0f}%**."
+                )
+            elif importance >= 0.8:
+                st.info(
+                    f"🔵 **{dismissed}** is a **REGULAR CONTRIBUTOR** (importance: **{importance}x**). "
+                    f"Their loss has moderate impact. "
+                    f"Win chance drops by **{abs(delta)*100:.0f}%**."
+                )
+            else:
+                st.success(
+                    f"🟢 **{dismissed}** is a **LOWER ORDER BATSMAN** (importance: **{importance}x**). "
+                    f"Their dismissal has **LIMITED IMPACT** on {batting_team} win chances. "
+                    f"Win chance drops by **{abs(delta)*100:.0f}%**."
+                )
+            
+            fig_gauge = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=scenario_prob * 100,
+                number={"suffix": "%", "font": {"size": 40, "color": "#d4af37"}},
+                gauge={
+                    "axis": {"range": [0, 100]},
+                    "bar": {"color": "#d4af37"},
+                    "steps": [
+                        {"range": [0, 40], "color": "#ef4444"},
+                        {"range": [40, 60], "color": "#f59e0b"},
+                        {"range": [60, 100], "color": "#22c55e"},
+                    ],
+                    "threshold": {
+                        "line": {"color": "#888888", "width": 4},
+                        "thickness": 0.75,
+                        "value": base_prob * 100,
+                    },
+                },
+            ))
+            fig_gauge.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={"color": "#ffffff"}, height=320, margin={"t": 20, "b": 20})
+            st.plotly_chart(fig_gauge, use_container_width=True)
+            st.caption(f"Gold needle = after {dismissed} gets out ({scenario_prob*100:.0f}%) | Gray line = before ({base_prob*100:.0f}%)")
+
+    # ─────────────────────────────────────────────────────────────
+    # TAB 2: BOWLER CHANGE
+    # ─────────────────────────────────────────────────────────────
+    with tab2:
+        next_bowler = st.selectbox("Who bowls the next over?", get_bowlers_for_team(bowling_team), key="wb_bowler")
+        
+        bwl_stats = get_bowler_stats(next_bowler, bowling_team)
+        
+        if bwl_stats is not None:
+            col_bw1, col_bw2, col_bw3, col_bw4 = st.columns(4)
+            col_bw1.metric("Overs Bowled", bwl_stats["overs_bowled"])
+            col_bw2.metric("Wickets", bwl_stats["total_wickets"])
+            col_bw3.metric("Economy", bwl_stats["economy"])
+            col_bw4.metric("Runs Given", bwl_stats["total_runs"])
+        
+        bowl_prob, bowl_change = calculate_bowler_impact(base_prob, bwl_stats)
+        bowl_delta = bowl_prob - base_prob
+        
+        col_bwl1, col_bwl2 = st.columns(2)
+        with col_bwl1:
+            st.markdown(f"""
+            <div style='background: rgba(255,255,255,0.05); border: 2px solid rgba(212,175,55,0.4); border-radius: 12px; padding: 20px; text-align: center;'>
+            <p style='color:#a0a0a0; font-size:14px; margin:0;'>Without {next_bowler}</p>
+            <p style='color:#d4af37; font-size:48px; font-weight:bold; margin:10px 0;'>{int(base_prob*100)}%</p>
+            <p style='color:#a0a0a0; font-size:13px; margin:0;'>{batting_team} win probability</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_bwl2:
+            if bowl_delta < 0:
+                border_color = "#ef4444"
+                text_color = "#ef4444"
+            else:
+                border_color = "#22c55e"
+                text_color = "#22c55e"
+            
+            st.markdown(f"""
+            <div style='background: rgba(255,255,255,0.05); border: 2px solid {border_color}55; border-radius: 12px; padding: 20px; text-align: center;'>
+            <p style='color:#a0a0a0; font-size:14px; margin:0;'>With {next_bowler} bowling</p>
+            <p style='color:{text_color}; font-size:48px; font-weight:bold; margin:10px 0;'>{int(bowl_prob*100)}%</p>
+            <p style='color:{text_color}; font-size:13px; margin:0;'>drops/improves by {abs(bowl_change):.0f}%</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("")
+        
+        if bwl_stats is not None:
+            economy = bwl_stats["economy"]
+            if economy < 7:
+                st.warning(f"{next_bowler} is an economical bowler (economy {economy}). Tough over ahead for {batting_team}.")
+            elif economy <= 9:
+                st.info(f"{next_bowler} has average economy of {economy}. Competitive over expected.")
+            else:
+                st.success(f"{next_bowler} tends to be expensive (economy {economy}). Good over for {batting_team} to attack.")
+
+    # ─────────────────────────────────────────────────────────────
+    # TAB 3: TOSS AND TEAMS
+    # ─────────────────────────────────────────────────────────────
+    with tab3:
+        st.markdown("See how swapping teams changes the win probability.")
+        swap = st.toggle("Swap batting and bowling teams", key="wb_swap")
+        
+        if swap:
+            alt_bat = bowling_team
+            alt_bowl = batting_team
+        else:
+            alt_bat = batting_team
+            alt_bowl = bowling_team
+        
+        alt_df = build_sim_feature_vector(alt_bat, alt_bowl, city, current_score, target, overs_done, wickets_fallen)
+        alt_prob = safe_predict(pipe, alt_df)
+        alt_delta = alt_prob - base_prob
+        
+        col_toss1, col_toss2 = st.columns(2)
+        with col_toss1:
+            st.markdown(f"""
+            <div style='background: rgba(255,255,255,0.05); border: 2px solid rgba(212,175,55,0.4); border-radius: 12px; padding: 20px; text-align: center;'>
+            <p style='color:#a0a0a0; font-size:14px; margin:0;'>Current setup</p>
+            <p style='color:#d4af37; font-size:48px; font-weight:bold; margin:10px 0;'>{int(base_prob*100)}%</p>
+            <p style='color:#a0a0a0; font-size:13px; margin:0;'>{batting_team} batting</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_toss2:
+            if alt_delta < 0:
+                border_color = "#ef4444"
+                text_color = "#ef4444"
+            else:
+                border_color = "#22c55e"
+                text_color = "#22c55e"
+            
+            st.markdown(f"""
+            <div style='background: rgba(255,255,255,0.05); border: 2px solid {border_color}55; border-radius: 12px; padding: 20px; text-align: center;'>
+            <p style='color:#a0a0a0; font-size:14px; margin:0;'>Teams swapped</p>
+            <p style='color:{text_color}; font-size:48px; font-weight:bold; margin:10px 0;'>{int(alt_prob*100)}%</p>
+            <p style='color:#a0a0a0; font-size:13px; margin:0;'>{alt_bat} batting</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if swap:
+            st.info(f"If {bowling_team} were batting instead, win probability would be {alt_prob*100:.0f}% compared to {base_prob*100:.0f}% for {batting_team}.")
+
+    # ═══════════════════════════════════════════════════════════
+    # SCORE PREDICTION SECTION
+    # ═══════════════════════════════════════════════════════════
+
+    st.subheader("Score Prediction")
+    
+    crr_val = round(current_score / max(overs_done, 0.1), 2)
+    proj = crr_val * (balls_left / 6)
+    low = round(current_score + proj * 0.75)
+    mid = round(current_score + proj)
+    high = round(current_score + proj * 1.25)
+    
+    st.markdown(f"{batting_team} projected final score at current rate of {crr_val} runs/over")
+    
+    col_sp1, col_sp2, col_sp3 = st.columns(3)
+    
+    worst_diff = low - target
+    worst_delta = f"{worst_diff} short" if worst_diff < 0 else f"{worst_diff} above target"
+    col_sp1.metric("Worst Case", low, worst_delta)
+    
+    mid_diff = mid - target
+    mid_delta = f"{mid_diff} short" if mid_diff < 0 else f"{mid_diff} above target"
+    col_sp2.metric("Most Likely", mid, mid_delta)
+    
+    high_diff = high - target
+    high_delta = f"{high_diff} short" if high_diff < 0 else f"{high_diff} above target"
+    col_sp3.metric("Best Case", high, high_delta)
+
+    # ═══════════════════════════════════════════════════════════
+    # VERDICT CARD
+    # ═══════════════════════════════════════════════════════════
+
+    if base_prob >= 0.65:
+        st.success(f"Looking Good — {batting_team} are in control. Need {runs_left} off {balls_left} balls with {wickets_left} wickets in hand.")
+    elif base_prob >= 0.45:
+        st.warning(f"Evenly Poised — Very close match. {batting_team} need to bat smart and not lose more wickets.")
+    else:
+        st.error(f"Under Pressure — {batting_team} are struggling. Need {runs_left} runs off {balls_left} balls with only {wickets_left} wickets left.")
 
 # -----------------------------------
 # ANALYSIS PAGE
@@ -1545,7 +2194,7 @@ if st.session_state.page == "Analysis":
             "Rising Pune Supergiants", "Royal Challengers Bangalore", "Sunrisers Hyderabad",
         ]
 
-        # Build numerical features first, then one-hot columns — all 0 by default.
+        # Build numerical features first, then one-hot columns €” all 0 by default.
         input_dict = {
             'target_score':  target,
             'runs_left':     runs_left,
@@ -1570,15 +2219,15 @@ if st.session_state.page == "Analysis":
         # Guard 1: batting team has already reached or crossed the target
         if runs_left <= 0:
             st.success(
-                f"🏆 **Match Over** — **{batting_team}** have already reached the target! "
+                f"ðŸ **Match Over** €” **{batting_team}** have already reached the target! "
                 f"No prediction needed."
             )
             st.stop()
 
-        # Guard 2: no balls remaining — innings is over, batting team fell short
+        # Guard 2: no balls remaining €” innings is over, batting team fell short
         if balls_left <= 0:
             st.error(
-                f"⏱️ **Match Over** — No balls remaining. **{bowling_team}** win! "
+                f"±ï¸ **Match Over** €” No balls remaining. **{bowling_team}** win! "
                 f"No prediction needed."
             )
             st.stop()
@@ -1586,15 +2235,15 @@ if st.session_state.page == "Analysis":
         # Guard 3: RRR physically impossible (> 36 runs/over = 6 runs every ball)
         if rrr > 36.0:
             st.error(
-                f"⚠️ **Invalid match state** — Required Run Rate is **{round(rrr, 2)} runs/over**, "
+                f"š ï¸ **Invalid match state** €” Required Run Rate is **{round(rrr, 2)} runs/over**, "
                 f"which is physically impossible in cricket. Please check your inputs."
             )
             st.stop()
 
-        # Guard 4: RRR extremely high (> 24 runs/over) — warn but allow prediction
+        # Guard 4: RRR extremely high (> 24 runs/over) €” warn but allow prediction
         if rrr > 24.0:
             st.warning(
-                f"⚠️ **Extreme match state** — Required Run Rate is **{round(rrr, 2)} runs/over**. "
+                f"š ï¸ **Extreme match state** €” Required Run Rate is **{round(rrr, 2)} runs/over**. "
                 f"This is a very unlikely scenario; the prediction below may be less reliable."
             )
 
@@ -1632,7 +2281,7 @@ if st.session_state.page == "Analysis":
             bat_pct = round(win * 100)
             st.markdown(f"""
                 <div class="prediction-card">
-                    <div class="prediction-label">Batting Team · {t1['abbr']}</div>
+                    <div class="prediction-label">Batting Team Â· {t1['abbr']}</div>
                     <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(20px,4vw,28px);
                                 font-weight:600;color:#f8fafc;margin-bottom:clamp(16px,3vw,20px);">
                         {batting_team}
@@ -1669,7 +2318,7 @@ if st.session_state.page == "Analysis":
                             border-radius:28px;padding:clamp(28px,5vw,40px);position:relative;overflow:hidden;
                             backdrop-filter:blur(20px);">
                     <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(148,163,184,0.3),transparent);"></div>
-                    <div class="prediction-label">Bowling Team · {t2['abbr']}</div>
+                    <div class="prediction-label">Bowling Team Â· {t2['abbr']}</div>
                     <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(20px,4vw,28px);
                                 font-weight:600;color:#f8fafc;margin-bottom:clamp(16px,3vw,20px);">
                         {bowling_team}
@@ -1731,7 +2380,7 @@ if st.session_state.page == "Analysis":
                         <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;
                                     color:rgba(148,163,184,0.5);margin-bottom:8px;font-weight:600;">Confidence Level</div>
                         <div style="font-family:'DM Mono',monospace;font-size:clamp(20px,4vw,28px);color:{conf_color};font-weight:600;">
-                            {conf_label} · {round(conf*100)}%
+                            {conf_label} Â· {round(conf*100)}%
                         </div>
                     </div>
                 </div>
