@@ -3,12 +3,16 @@ import pandas as pd
 import numpy as np
 import time
 import plotly.express as px
-
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
-
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+import joblib
+import os
+from datetime import datetime
 # -----------------------------------
 # CONFIG
 # -----------------------------------
@@ -27,6 +31,41 @@ if "prob_history" not in st.session_state:
 # -----------------------------------
 # STADIUM NIGHT THEME CSS
 # -----------------------------------
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond...');
+
+/* ... all your existing CSS ... */
+
+/* ========== ADD THIS AT THE END OF YOUR CSS ========== */
+/* Column Card Styles for Fan Pulse Arena */
+.column-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.column-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(251,191,36,0.2);
+}
+
+/* Optional: Add responsive behavior */
+@media (max-width: 768px) {
+    .column-card {
+        margin-bottom: 20px;
+    }
+}
+</style>
+
+<!-- Floating Cricket Balls -->
+<div class="cricket-ball-1"></div>
+...
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -1043,35 +1082,105 @@ team_data = {
 # -----------------------------------
 # WIN RATE STATS
 # -----------------------------------
+# ============================================
+# NEW FUNCTIONS FOR FAN PULSE ARENA (ADD THESE)
+# ============================================
 @st.cache_data
-def compute_win_rates():
-    matches = pd.read_csv("matches.csv")
-    valid_teams = set(team_data.keys())
-
-    name_map = {
-        "Delhi Daredevils": "Delhi Capitals",
-        "Kings XI Punjab": "Punjab Kings",
-        "Royal Challengers Bengaluru": "Royal Challengers Bangalore",
-        "Rising Pune Supergiants": "Rising Pune Supergiant"
+def generate_training_data():
+    """Generate synthetic cricket mood data for training"""
+    np.random.seed(42)
+    n_samples = 1000
+    
+    data = {
+        'over_number': np.random.randint(1, 21, n_samples),
+        'runs_in_over': np.random.randint(0, 36, n_samples),
+        'wickets_in_over': np.random.choice([0, 1, 2, 3], n_samples, p=[0.7, 0.2, 0.08, 0.02]),
+        'run_rate': np.random.uniform(4, 12, n_samples),
+        'required_rate': np.random.uniform(5, 15, n_samples),
+        'time_of_match': np.random.choice(['morning', 'afternoon', 'evening', 'night'], n_samples),
+        'match_importance': np.random.choice(['league', 'playoff', 'final'], n_samples, p=[0.6, 0.3, 0.1]),
     }
-    matches["team1"] = matches["team1"].replace(name_map)
-    matches["team2"] = matches["team2"].replace(name_map)
-    matches["winner"] = matches["winner"].replace(name_map)
+    
+    moods = []
+    for i in range(n_samples):
+        if data['wickets_in_over'][i] >= 2:
+            moods.append('angry')
+        elif data['runs_in_over'][i] > 15 and data['wickets_in_over'][i] == 0:
+            moods.append('excited')
+        elif data['run_rate'][i] > data['required_rate'][i]:
+            moods.append('excited')
+        elif data['wickets_in_over'][i] == 1:
+            moods.append('neutral')
+        else:
+            moods.append(np.random.choice(['angry', 'neutral', 'excited'], p=[0.2, 0.5, 0.3]))
+    
+    data['mood'] = moods
+    return pd.DataFrame(data)
 
-    stats = {}
-    for team in valid_teams:
-        played = matches[(matches["team1"] == team) | (matches["team2"] == team)]
-        played = played[played["result"] == "normal"]
-        wins = played[played["winner"] == team].shape[0]
-        total = played.shape[0]
-        stats[team] = {"wins": wins, "total": total, "rate": round((wins / total * 100), 1) if total > 0 else 0}
-    return stats
 
-win_stats = compute_win_rates()
+def train_mood_predictor(df):
+    """Train XGBoost model to predict fan mood"""
+    with st.spinner("🧠 Training AI model on fan sentiment data..."):
+        from sklearn.preprocessing import LabelEncoder
+        from sklearn.model_selection import train_test_split
+        import xgboost as xgb
+        import joblib
+        
+        le_time = LabelEncoder()
+        le_importance = LabelEncoder()
+        le_mood = LabelEncoder()
+        
+        df['time_encoded'] = le_time.fit_transform(df['time_of_match'])
+        df['importance_encoded'] = le_importance.fit_transform(df['match_importance'])
+        df['mood_encoded'] = le_mood.fit_transform(df['mood'])
+        
+        features = ['over_number', 'runs_in_over', 'wickets_in_over', 
+                   'run_rate', 'required_rate', 'time_encoded', 'importance_encoded']
+        X = df[features]
+        y = df['mood_encoded']
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        model = xgb.XGBClassifier(n_estimators=100, max_depth=4, learning_rate=0.1, random_state=42)
+        model.fit(X_train, y_train)
+        
+        accuracy = model.score(X_test, y_test)
+        
+        joblib.dump(model, 'mood_predictor.pkl')
+        joblib.dump(le_time, 'le_time.pkl')
+        joblib.dump(le_importance, 'le_importance.pkl')
+        joblib.dump(le_mood, 'le_mood.pkl')
+        
+        return model, le_time, le_importance, le_mood, accuracy
 
+
+def predict_current_mood(over, runs, wickets, run_rate, req_rate, time, importance, encoders):
+    """Use trained model to predict fan sentiment"""
+    model, le_time, le_importance, le_mood = encoders
+    
+    input_data = pd.DataFrame([{
+        'over_number': over,
+        'runs_in_over': runs,
+        'wickets_in_over': wickets,
+        'run_rate': run_rate,
+        'required_rate': req_rate,
+        'time_encoded': le_time.transform([time])[0],
+        'importance_encoded': le_importance.transform([importance])[0]
+    }])
+    
+    pred_encoded = model.predict(input_data)[0]
+    pred_proba = model.predict_proba(input_data)[0]
+    
+    mood = le_mood.inverse_transform([pred_encoded])[0]
+    confidence = max(pred_proba) * 100
+    
+    return mood, confidence
 # -----------------------------------
 # MODEL
 # -----------------------------------
+# ============================================
+# ORIGINAL MODEL FOR MATCH ANALYSIS (KEEP THIS)
+# ============================================
 @st.cache_resource
 def train_model():
     matches = pd.read_csv("matches.csv")
@@ -1110,6 +1219,11 @@ def train_model():
     X = final_df.drop('result', axis=1)
     y = final_df['result']
 
+    from sklearn.compose import ColumnTransformer
+    from sklearn.preprocessing import OneHotEncoder
+    from sklearn.pipeline import Pipeline
+    from xgboost import XGBClassifier
+
     preprocessor = ColumnTransformer([
         ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
         ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
@@ -1147,6 +1261,7 @@ with st.sidebar:
 
     if st.button("🔥  Fan Pulse Arena", key="nav_fanpulse"):
         st.session_state.page = "FanPulse"
+
 
     st.markdown('<div style="height:1px; background:rgba(251,191,36,0.1); margin:20px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
@@ -1707,269 +1822,513 @@ if st.session_state.page == "Analysis":
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-    # -----------------------------------
-# FAN PULSE ARENA PAGE
 # -----------------------------------
-if st.session_state.page == "FanPulse":
+# PROFESSIONAL FAN PULSE ARENA PAGE
+# -----------------------------------
+elif st.session_state.page == "FanPulse":
     
+    # ============================================
+    # ADD CUSTOM CSS FOR GLASSMORPHISM & ANIMATIONS
+    # ============================================
     st.markdown("""
-        <div class="hero-wrapper" style="padding-bottom:clamp(24px,5vw,40px);">
-            <div class="hero-eyebrow">Fan Engagement Hub</div>
-            <div class="hero-title" style="font-size:clamp(36px,8vw,72px);margin-bottom:clamp(12px,2vw,16px);">
-                Fan Pulse Arena 🔥
-            </div>
-            <div class="hero-subtitle">
-                Real-time community mood and polls. Share how you're feeling and vote for the best players.
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="main-pad">', unsafe_allow_html=True)
+    <style>
+    /* Glassmorphism Card */
+    .glass-card {
+        background: rgba(30, 41, 59, 0.4);
+        backdrop-filter: blur(12px);
+        border-radius: 28px;
+        border: 1px solid rgba(251, 191, 36, 0.25);
+        box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        padding: 24px;
+        height: 100%;
+    }
+    .glass-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(251, 191, 36, 0.5);
+        box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(251, 191, 36, 0.2);
+    }
     
-    # Initialize session state for Fan Pulse
+    /* Animated Mood Buttons */
+    .mood-btn {
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        cursor: pointer;
+        background: rgba(15, 23, 42, 0.6);
+        border: none;
+        border-radius: 60px;
+        padding: 12px 0;
+        font-size: 28px;
+        text-align: center;
+        width: 100%;
+        transition: transform 0.15s, background 0.2s;
+    }
+    .mood-btn:hover {
+        transform: scale(1.02);
+        background: rgba(251, 191, 36, 0.15);
+    }
+    .mood-btn:active {
+        transform: scale(0.96);
+    }
+    
+    /* Glow Button for Predict */
+    .glow-btn {
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        border: none;
+        border-radius: 40px;
+        padding: 14px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #0f172a;
+        transition: all 0.2s;
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        width: 100%;
+        cursor: pointer;
+    }
+    .glow-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+    }
+    .glow-btn:active {
+        transform: translateY(1px);
+    }
+    
+    /* Circular Gauge */
+    .circular-gauge {
+        width: 140px;
+        height: 140px;
+        margin: 0 auto;
+        position: relative;
+    }
+    .circular-gauge svg {
+        transform: rotate(-90deg);
+    }
+    .gauge-bg {
+        stroke: #334155;
+        stroke-width: 12;
+        fill: none;
+    }
+    .gauge-fill {
+        stroke: #fbbf24;
+        stroke-width: 12;
+        fill: none;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.8s ease;
+    }
+    .gauge-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        font-size: 32px;
+        font-weight: bold;
+        color: #fbbf24;
+    }
+    
+    /* Blinking live indicator */
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.2; }
+        100% { opacity: 1; }
+    }
+    .live-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        margin-left: 10px;
+        animation: blink 1.2s infinite;
+        vertical-align: middle;
+    }
+    
+    /* Toast notification */
+    .toast-success {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 40px;
+        font-size: 14px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: fadeInUp 0.3s ease-out;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Dark/Light mode toggle */
+    .theme-toggle {
+        background: rgba(30,41,59,0.6);
+        border-radius: 40px;
+        padding: 5px;
+        display: inline-flex;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .theme-option {
+        padding: 6px 16px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    .theme-option.active {
+        background: #fbbf24;
+        color: #0f172a;
+    }
+    
+    /* Responsive tweaks */
+    @media (max-width: 768px) {
+        .glass-card { padding: 16px; }
+        .circular-gauge { width: 100px; height: 100px; }
+        .gauge-text { font-size: 24px; }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # ============================================
+    # DARK/LIGHT MODE TOGGLE (Using session state)
+    # ============================================
+    if 'theme' not in st.session_state:
+        st.session_state.theme = "dark"
+    
+    col_theme, col_empty = st.columns([1, 5])
+    with col_theme:
+        if st.button("🌙" if st.session_state.theme == "dark" else "☀️", key="theme_toggle"):
+            st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
+            st.rerun()
+    
+    # Apply theme class to main container via markdown (optional)
+    theme_bg = "#0f172a" if st.session_state.theme == "dark" else "#f1f5f9"
+    theme_text = "#e2e8f0" if st.session_state.theme == "dark" else "#0f172a"
+    st.markdown(f"""
+    <style>
+        [data-testid="stAppViewContainer"] {{
+            background: {theme_bg};
+        }}
+        .glass-card {{
+            background: { 'rgba(30,41,59,0.4)' if st.session_state.theme == "dark" else 'rgba(255,255,255,0.7)' };
+        }}
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # ============================================
+    # INITIALIZE SESSION STATES
+    # ============================================
     if 'mood_votes' not in st.session_state:
         st.session_state.mood_votes = {'😡': 0, '😐': 0, '🔥': 0}
     if 'poll_votes' not in st.session_state:
-        st.session_state.poll_votes = {
-            'Virat Kohli': 0,
-            'Rohit Sharma': 0,
-            'KL Rahul': 0,
-            'Shubman Gill': 0
-        }
+        st.session_state.poll_votes = {}
     if 'current_poll' not in st.session_state:
         st.session_state.current_poll = "Best Powerplay Opener"
+    if 'model_trained' not in st.session_state:
+        st.session_state.model_trained = False
+    if 'ml_predictions' not in st.session_state:
+        st.session_state.ml_predictions = []
+    if 'toast_msg' not in st.session_state:
+        st.session_state.toast_msg = None
     
-    # Create two columns for the features
-    col1, col2 = st.columns(2, gap="large")
+    # ============================================
+    # HELPER TO SHOW TOAST
+    # ============================================
+    def show_toast(message):
+        st.session_state.toast_msg = message
     
-    # ========== COLUMN 1: MOOD METER ==========
+    # ============================================
+    # HEADER WITH LIVE INDICATOR
+    # ============================================
+    st.markdown(f"""
+        <div class="glass-card" style="margin-bottom: 30px; text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 32px;">🔥</span>
+                        <span style="font-size: 28px; font-weight: 700; color: {theme_text};">Fan Pulse Arena</span>
+                        <span class="live-dot"></span>
+                        <span style="font-size: 12px; color: #10b981;">LIVE</span>
+                    </div>
+                    <div style="font-size: 14px; color: #94a3b8; margin-top: 8px;">
+                        Real‑time crowd sentiment · AI predictions
+                    </div>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); border-radius: 60px; padding: 5px 12px;">
+                    <span style="font-size: 12px;">👥 {sum(st.session_state.mood_votes.values())} votes today</span>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Display toast if exists
+    if st.session_state.toast_msg:
+        st.markdown(f"""
+            <div class="toast-success">{st.session_state.toast_msg}</div>
+            <script>setTimeout(() => {{ document.querySelector('.toast-success')?.remove(); }}, 2000);</script>
+        """, unsafe_allow_html=True)
+        st.session_state.toast_msg = None
+    
+    # ============================================
+    # 3-COLUMN LAYOUT WITH GLASS CARDS
+    # ============================================
+    col1, col2, col3 = st.columns(3, gap="large")
+    
+    # ---------- COLUMN 1: MOOD METER WITH CIRCULAR GAUGE ----------
     with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("""
-            <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.15);
-                        border-radius:28px;padding:clamp(24px,5vw,32px);
-                        backdrop-filter:blur(20px);">
-                <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
-                            color:rgba(251,191,36,0.8);margin-bottom:20px;font-weight:600;">
-                    📊 Live Mood Meter
-                </div>
-                <div style="font-size:18px;font-weight:500;color:#f8fafc;margin-bottom:24px;">
-                    How are you feeling right now?
-                </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <span style="font-size: 20px;">📊</span>
+                <span style="font-size: 13px; letter-spacing: 2px; color: #fbbf24;">LIVE MOOD METER</span>
+                <span class="live-dot"></span>
+            </div>
         """, unsafe_allow_html=True)
         
-        # Mood buttons
-        mood_col1, mood_col2, mood_col3 = st.columns(3)
+        # Animated mood buttons
+        btn_cols = st.columns(3)
+        moods = ['😡', '😐', '🔥']
+        mood_names = ['ANGRY', 'NEUTRAL', 'EXCITED']
+        for i, (emoji, name) in enumerate(zip(moods, mood_names)):
+            with btn_cols[i]:
+                if st.button(f"{emoji}<br><span style='font-size:12px'>{name}</span>", key=f"mood_{name}", help=f"Click to vote {name}"):
+                    st.session_state.mood_votes[emoji] += 1
+                    show_toast(f"🎉 You voted {emoji}!")
+                    st.rerun()
         
-        with mood_col1:
-            if st.button("😡 ANGRY", key="mood_angry", use_container_width=True):
-                st.session_state.mood_votes['😡'] += 1
-                st.rerun()
-        
-        with mood_col2:
-            if st.button("😐 NEUTRAL", key="mood_neutral", use_container_width=True):
-                st.session_state.mood_votes['😐'] += 1
-                st.rerun()
-        
-        with mood_col3:
-            if st.button("🔥 EXCITED", key="mood_excited", use_container_width=True):
-                st.session_state.mood_votes['🔥'] += 1
-                st.rerun()
-        
-        # Calculate percentages
         total_votes = sum(st.session_state.mood_votes.values())
         
+        # Circular gauge for dominant mood percentage
         if total_votes > 0:
-            angry_pct = (st.session_state.mood_votes['😡'] / total_votes) * 100
-            neutral_pct = (st.session_state.mood_votes['😐'] / total_votes) * 100
-            excited_pct = (st.session_state.mood_votes['🔥'] / total_votes) * 100
+            dominant = max(st.session_state.mood_votes, key=st.session_state.mood_votes.get)
+            dom_pct = (st.session_state.mood_votes[dominant] / total_votes) * 100
+            dom_emoji = dominant
+            dom_text = {'😡':'ANGRY','😐':'NEUTRAL','🔥':'EXCITED'}[dominant]
+            dom_color = {'😡':'#ef4444','😐':'#94a3b8','🔥':'#fbbf24'}[dominant]
             
-            st.markdown('<div style="margin-top:24px;"><div style="font-size:12px;color:rgba(251,191,36,0.7);margin-bottom:12px;">Current Mood Distribution</div></div>', unsafe_allow_html=True)
-            
-            # Angry bar
+            # SVG circular gauge
+            radius = 50
+            circumference = 2 * 3.14159 * radius
+            stroke_dash = (dom_pct / 100) * circumference
             st.markdown(f"""
-                <div style="margin-bottom:12px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                        <span style="font-size:12px;">😡 ANGRY</span>
-                        <span style="font-size:12px;color:#fbbf24;">{angry_pct:.1f}%</span>
-                    </div>
-                    <div class="prob-bar-track">
-                        <div class="prob-bar-fill" style="width:{angry_pct}%;background:linear-gradient(90deg,#dc2626,#ef4444);"></div>
-                    </div>
-                    <div style="font-size:10px;color:rgba(148,163,184,0.5);margin-top:4px;">{st.session_state.mood_votes['😡']} votes</div>
+                <div class="circular-gauge">
+                    <svg width="140" height="140" viewBox="0 0 120 120">
+                        <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+                        <circle class="gauge-fill" cx="60" cy="60" r="50" stroke="{dom_color}"
+                                stroke-dasharray="{stroke_dash} {circumference}"
+                                stroke-dashoffset="0"></circle>
+                    </svg>
+                    <div class="gauge-text">{dom_emoji}<br><span style="font-size: 12px;">{dom_text}</span></div>
                 </div>
             """, unsafe_allow_html=True)
             
-            # Neutral bar
-            st.markdown(f"""
-                <div style="margin-bottom:12px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                        <span style="font-size:12px;">😐 NEUTRAL</span>
-                        <span style="font-size:12px;color:#fbbf24;">{neutral_pct:.1f}%</span>
+            # Progress bars for all moods
+            for emoji, name, color in zip(['😡','😐','🔥'], ['ANGRY','NEUTRAL','EXCITED'], ['#ef4444','#94a3b8','#fbbf24']):
+                cnt = st.session_state.mood_votes[emoji]
+                pct = (cnt/total_votes)*100 if total_votes else 0
+                st.markdown(f"""
+                    <div style="margin: 12px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>{emoji} {name}</span>
+                            <span style="color:{color};">{pct:.0f}%</span>
+                        </div>
+                        <div style="background:#334155; border-radius:20px; height:6px; overflow:hidden;">
+                            <div style="width:{pct}%; background:{color}; height:100%; border-radius:20px; transition:width 0.5s;"></div>
+                        </div>
+                        <div style="font-size:10px; color:#64748b;">{cnt} votes</div>
                     </div>
-                    <div class="prob-bar-track">
-                        <div class="prob-bar-fill" style="width:{neutral_pct}%;background:linear-gradient(90deg,#94a3b8,#cbd5e1);"></div>
-                    </div>
-                    <div style="font-size:10px;color:rgba(148,163,184,0.5);margin-top:4px;">{st.session_state.mood_votes['😐']} votes</div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # Excited bar
-            st.markdown(f"""
-                <div style="margin-bottom:12px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                        <span style="font-size:12px;">🔥 EXCITED</span>
-                        <span style="font-size:12px;color:#fbbf24;">{excited_pct:.1f}%</span>
-                    </div>
-                    <div class="prob-bar-track">
-                        <div class="prob-bar-fill" style="width:{excited_pct}%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div>
-                    </div>
-                    <div style="font-size:10px;color:rgba(148,163,184,0.5);margin-top:4px;">{st.session_state.mood_votes['🔥']} votes</div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # Determine dominant mood
-            moods = {'😡': angry_pct, '😐': neutral_pct, '🔥': excited_pct}
-            dominant = max(moods, key=moods.get)
-            dominant_text = {"😡": "ANGRY", "😐": "NEUTRAL", "🔥": "EXCITED"}[dominant]
-            
-            st.info(f"💡 **Fan Sentiment:** The crowd is feeling {dominant} {dominant_text} right now!")
+                """, unsafe_allow_html=True)
         else:
-            st.info("👆 Click on a mood button above to start the voting!")
+            st.info("Click any mood to start voting!")
         
-        st.metric("Total Mood Votes", total_votes)
-        
+        st.markdown(f'<div style="text-align:center; margin-top:15px;"><span style="font-size:28px;">{total_votes}</span><br><span style="font-size:11px;">TOTAL VOTES</span></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # ========== COLUMN 2: BEST ROLE POLLS ==========
+    # ---------- COLUMN 2: ROLE POLLS (Enhanced) ----------
     with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("""
-            <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.15);
-                        border-radius:28px;padding:clamp(24px,5vw,32px);
-                        backdrop-filter:blur(20px);">
-                <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
-                            color:rgba(251,191,36,0.8);margin-bottom:20px;font-weight:600;">
-                    🏆 Best Role Polls
-                </div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <span style="font-size: 20px;">🏆</span>
+                <span style="font-size: 13px; letter-spacing: 2px; color: #fbbf24;">ROLE POLLS</span>
+            </div>
         """, unsafe_allow_html=True)
         
-        # Poll type selector
         poll_type = st.selectbox(
-            "Select Poll Category",
+            "Select Category",
             ["Best Powerplay Opener", "Most Clutch Finisher", "Best Death Bowler", "MVP of the Tournament"],
-            key="poll_selector"
+            key="poll_type_select",
+            label_visibility="collapsed"
         )
         
-        # Dynamic player options
         player_options = {
             "Best Powerplay Opener": ["Rohit Sharma", "Jos Buttler", "Quinton de Kock", "David Warner"],
             "Most Clutch Finisher": ["MS Dhoni", "Hardik Pandya", "Andre Russell", "Kieron Pollard"],
             "Best Death Bowler": ["Jasprit Bumrah", "Kagiso Rabada", "Trent Boult", "Pat Cummins"],
             "MVP of the Tournament": ["Virat Kohli", "Rashid Khan", "Jos Buttler", "Jasprit Bumrah"]
         }
-        
         players = player_options.get(poll_type, ["Player 1", "Player 2", "Player 3", "Player 4"])
         
-        # Reset poll votes when poll type changes
         if st.session_state.current_poll != poll_type:
             st.session_state.current_poll = poll_type
-            st.session_state.poll_votes = {player: 0 for player in players}
+            st.session_state.poll_votes = {p:0 for p in players}
         
-        st.markdown('<div style="margin:20px 0 16px 0;"><div style="font-size:12px;color:rgba(251,191,36,0.7);">Cast your vote</div></div>', unsafe_allow_html=True)
+        st.markdown('<div style="margin:15px 0 10px 0; font-size:12px; color:#cbd5e1;">🗳️ CAST YOUR VOTE</div>', unsafe_allow_html=True)
         
-        # Create vote buttons
-        vote_cols = st.columns(2)
-        for idx, player in enumerate(players):
-            with vote_cols[idx % 2]:
-                if st.button(f"🗳️ Vote for {player}", key=f"poll_{player}_{poll_type}", use_container_width=True):
-                    st.session_state.poll_votes[player] = st.session_state.poll_votes.get(player, 0) + 1
-                    st.success(f"✓ You voted for {player}!")
-                    st.rerun()
+        # 2x2 grid for vote buttons with animations
+        for i in range(0, len(players), 2):
+            cols = st.columns(2)
+            for j, player in enumerate(players[i:i+2]):
+                with cols[j]:
+                    if st.button(f"⭐ {player}", key=f"poll_{player}", use_container_width=True):
+                        st.session_state.poll_votes[player] = st.session_state.poll_votes.get(player,0)+1
+                        show_toast(f"✅ Voted for {player}!")
+                        st.rerun()
         
-        st.markdown('<div style="margin:24px 0 16px 0;"><div style="font-size:12px;color:rgba(251,191,36,0.7);">📊 Poll Results</div></div>', unsafe_allow_html=True)
-        
-        # Display results
-        if st.session_state.poll_votes:
-            votes_df = pd.DataFrame({
-                'Player': list(st.session_state.poll_votes.keys()),
-                'Votes': list(st.session_state.poll_votes.values())
-            }).sort_values('Votes', ascending=True)
-            
-            st.bar_chart(votes_df.set_index('Player'))
-            
-            if votes_df['Votes'].sum() > 0:
-                winner = votes_df.loc[votes_df['Votes'].idxmax(), 'Player']
-                st.success(f"🏆 Current Leader: **{winner}** with {max(st.session_state.poll_votes.values())} votes!")
+        st.markdown('<div style="margin:20px 0 10px 0; font-size:12px; color:#cbd5e1;">📊 LIVE RESULTS</div>', unsafe_allow_html=True)
+        if st.session_state.poll_votes and sum(st.session_state.poll_votes.values())>0:
+            df_votes = pd.DataFrame(list(st.session_state.poll_votes.items()), columns=['Player','Votes']).sort_values('Votes', ascending=True)
+            st.bar_chart(df_votes.set_index('Player'), height=250)
+            winner = max(st.session_state.poll_votes, key=st.session_state.poll_votes.get)
+            winner_votes = st.session_state.poll_votes[winner]
+            st.markdown(f"""
+                <div style="background:#fbbf2410; border-radius:16px; padding:12px; margin-top:12px; text-align:center;">
+                    <div style="font-size:11px; color:#94a3b8;">CURRENT LEADER</div>
+                    <div style="font-size:18px; font-weight:700; color:#fbbf24;">🏆 {winner}</div>
+                    <div style="font-size:12px;">{winner_votes} votes</div>
+                </div>
+            """, unsafe_allow_html=True)
         else:
-            st.info("No votes yet. Be the first to vote!")
+            st.info("No votes yet.")
         
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # ========== LIVE ACTIVITY FEED ==========
-    st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
-    
-    st.markdown("""
-        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.15);
-                    border-radius:28px;padding:clamp(20px,4vw,28px);
-                    backdrop-filter:blur(20px);">
-            <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
-                        color:rgba(251,191,36,0.8);margin-bottom:20px;font-weight:600;">
-                🔄 Live Activity Feed
-            </div>
-    """, unsafe_allow_html=True)
-    
-    # Generate random activity messages
-    import random
-    activities = [
-        f"⚡ A fan just voted {random.choice(['🔥', '😡', '😐'])} in Mood Meter!",
-        f"🗳️ New vote recorded in '{poll_type}' poll",
-        f"📊 Total {total_votes} fans have shared their mood!",
-        f"🏆 {winner if 'winner' in locals() else 'Someone'} is leading the poll!"
-    ]
-    
-    for activity in activities[:3]:
-        st.markdown(f"""
-            <div style="padding:12px 0;border-bottom:1px solid rgba(251,191,36,0.1);
-                        font-size:13px;color:rgba(226,232,240,0.7);">
-                {activity}
+    # ---------- COLUMN 3: AI SENTIMENT ENGINE (Upgraded) ----------
+    with col3:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("""
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <span style="font-size: 20px;">🤖</span>
+                <span style="font-size: 13px; letter-spacing: 2px; color: #fbbf24;">AI SENTIMENT ENGINE</span>
             </div>
         """, unsafe_allow_html=True)
-    
-    st.markdown("""
-            <div style="margin-top:16px;font-size:11px;color:rgba(148,163,184,0.4);text-align:center;">
-                Real-time updates · Powered by Streamlit
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # ========== INSIGHTS SECTION ==========
-    st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
-    
-    st.markdown("""
-        <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.15);
-                    border-radius:28px;padding:clamp(20px,4vw,28px);
-                    backdrop-filter:blur(20px);">
-            <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
-                        color:rgba(251,191,36,0.8);margin-bottom:20px;font-weight:600;">
-                📈 Sentiment Insights
-            </div>
-    """, unsafe_allow_html=True)
-    
-    col_a, col_b, col_c = st.columns(3)
-    with col_a:
-        st.metric("Total Engagement", f"{total_votes} votes")
-    with col_b:
-        if total_votes > 0 and 'excited_pct' in locals():
-            st.metric("Excitement Level", f"{excited_pct:.0f}%")
+        
+        # Inputs in two columns
+        a1, a2 = st.columns(2)
+        with a1:
+            over = st.number_input("Over", 1,20,10, key="ml_over")
+            wickets = st.selectbox("Wickets", [0,1,2,3], key="ml_wickets")
+            run_rate = st.number_input("CRR", 4.0,12.0,7.5,0.1, key="ml_crr")
+        with a2:
+            runs_in_over = st.number_input("Runs", 0,36,8, key="ml_runs")
+            req_rate = st.number_input("RRR", 5.0,15.0,9.0,0.1, key="ml_rrr")
+            time_of_day = st.selectbox("Time", ["morning","afternoon","evening","night"], key="ml_time")
+        
+        # Load or train model
+        import os
+        model_files_exist = all(os.path.exists(f) for f in ['mood_predictor.pkl', 'le_time.pkl', 'le_importance.pkl', 'le_mood.pkl'])
+        if not model_files_exist or not st.session_state.model_trained:
+            with st.spinner("Training XGBoost model..."):
+                df = generate_training_data()
+                model, le_time, le_importance, le_mood, accuracy = train_mood_predictor(df)
+                st.session_state.model_trained = True
+                st.session_state.ml_accuracy = accuracy
+                st.session_state.encoders = (model, le_time, le_importance, le_mood)
         else:
-            st.metric("Excitement Level", "0%")
-    with col_c:
-        st.metric("Active Polls", "4")
+            import joblib
+            model = joblib.load('mood_predictor.pkl')
+            le_time = joblib.load('le_time.pkl')
+            le_importance = joblib.load('le_importance.pkl')
+            le_mood = joblib.load('le_mood.pkl')
+            st.session_state.encoders = (model, le_time, le_importance, le_mood)
+        
+        # Glowing predict button
+        if st.button("🔮 PREDICT SENTIMENT", key="predict_btn", use_container_width=True):
+            mood, confidence = predict_current_mood(
+                over, runs_in_over, wickets, run_rate, req_rate,
+                time_of_day, "league", st.session_state.encoders
+            )
+            mood_emoji = {'angry':'😡','neutral':'😐','excited':'🔥'}.get(mood,'😐')
+            mood_color = {'angry':'#ef4444','neutral':'#94a3b8','excited':'#fbbf24'}.get(mood,'#94a3b8')
+            
+            # Show animated result card
+            st.markdown(f"""
+                <div style="background: linear-gradient(135deg, {mood_color}20, transparent);
+                            border: 1px solid {mood_color}40;
+                            border-radius: 20px;
+                            padding: 18px;
+                            margin-top: 16px;
+                            text-align: center;
+                            animation: fadeInUp 0.4s ease;">
+                    <div style="font-size: 52px;">{mood_emoji}</div>
+                    <div style="font-size: 24px; font-weight: 700; color: {mood_color};">{mood.upper()}</div>
+                    <div style="font-size: 13px;">Confidence: {confidence:.1f}%</div>
+                    <div style="background: #334155; border-radius: 20px; height: 4px; margin-top: 12px;">
+                        <div style="width:{confidence}%; background:{mood_color}; height:100%; border-radius:20px;"></div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.session_state.ml_predictions.append({
+                'timestamp': datetime.now(),
+                'mood': mood,
+                'confidence': confidence
+            })
+        
+        if hasattr(st.session_state, 'ml_accuracy'):
+            st.markdown(f"""
+                <div style="margin-top: 15px; text-align: center; padding: 8px; background: #0f172a; border-radius: 20px;">
+                    <span style="font-size: 11px;">Model Accuracy</span>
+                    <span style="font-size: 14px; font-weight: 700; color: #10b981;"> {st.session_state.ml_accuracy:.1%}</span>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
+    # ============================================
+    # BOTTOM SECTION: ACTIVITY FEED & HISTORY
+    # ============================================
+    st.markdown("---")
+    col_act, col_hist = st.columns(2, gap="large")
+    
+    with col_act:
+        with st.container():
+            st.markdown('<div class="glass-card" style="padding: 20px;">', unsafe_allow_html=True)
+            st.markdown("🔄 **LIVE ACTIVITY FEED**")
+            if st.button("🔄 Refresh", use_container_width=True):
+                import random
+                acts = [
+                    f"⚡ {random.choice(['🔥','😡','😐'])} New mood vote!",
+                    f"🗳️ Vote in {poll_type}",
+                    f"📊 {total_votes} total fans engaged"
+                ]
+                for a in acts:
+                    st.markdown(f'<div style="border-left: 2px solid #fbbf24; padding: 8px 12px; margin: 5px 0; background: rgba(0,0,0,0.2); border-radius: 12px;">{a}</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col_hist:
+        with st.container():
+            st.markdown('<div class="glass-card" style="padding: 20px;">', unsafe_allow_html=True)
+            st.markdown("📜 **RECENT PREDICTIONS**")
+            if st.session_state.ml_predictions:
+                for pred in st.session_state.ml_predictions[-5:][::-1]:
+                    emoji = {'angry':'😡','neutral':'😐','excited':'🔥'}.get(pred['mood'],'😐')
+                    st.markdown(f"""
+                        <div style="display: flex; justify-content: space-between; padding: 8px; margin: 5px 0; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                            <div><span style="font-size: 20px;">{emoji}</span> {pred['mood'].upper()}</div>
+                            <div>{pred['confidence']:.0f}%</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("Click 'Predict Sentiment' above.")
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Footer
     st.markdown("""
-            <div style="margin-top:16px;font-size:11px;color:rgba(148,163,184,0.5);text-align:center;">
-                🤖 XGBoost sentiment forecasting coming soon!
-            </div>
+        <div style="margin-top: 40px; padding: 20px; text-align: center; border-top: 1px solid rgba(251,191,36,0.1);">
+            <span style="font-size: 11px; color: #64748b;">⚡ Real-time sync · 🤖 XGBoost engine · 🔥 Live reactions</span>
+            <div style="font-size: 10px; margin-top: 8px;">© 2025 CricScope · GSSoC Contribution</div>
         </div>
     """, unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
