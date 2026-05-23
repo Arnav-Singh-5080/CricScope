@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+import os
+import pickle
 import plotly.express as px
 
 from sklearn.compose import ColumnTransformer
@@ -1073,7 +1075,6 @@ win_stats = compute_win_rates()
 # -----------------------------------
 # MODEL
 # -----------------------------------
-@st.cache_resource
 def train_model():
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
@@ -1124,7 +1125,33 @@ def train_model():
     pipe.fit(X, y)
     return pipe
 
-pipe = train_model()
+@st.cache_resource
+def load_or_train_model():
+    pkl_path = os.path.join(os.path.dirname(__file__), "pipe.pkl")
+    if os.path.exists(pkl_path):
+        with open(pkl_path, "rb") as f:
+            return pickle.load(f)
+
+    trained_pipe = train_model()
+    with open(pkl_path, "wb") as f:
+        pickle.dump(trained_pipe, f)
+    return trained_pipe
+
+def validate_inputs(runs_left, balls_left, wickets, target, current_score):
+    errors = []
+    if balls_left <= 0:
+        errors.append("Balls left must be > 0.")
+    if wickets < 0 or wickets > 10:
+        errors.append("Wickets in hand must be between 0 and 10.")
+    if runs_left < 0:
+        errors.append("Runs left cannot be negative. Check target vs current score.")
+    if target <= 0:
+        errors.append("Target must be a positive integer.")
+    if current_score < 0:
+        errors.append("Current score cannot be negative.")
+    return errors
+
+pipe = load_or_train_model()
 
 # -----------------------------------
 # SIDEBAR
@@ -1511,6 +1538,18 @@ if st.session_state.page == "Analysis":
         runs_left = target - score
         balls_left = 120 - (overs * 6)
         wickets_left = 10 - wickets  # Our model specifically trained on 'wickets_left'
+
+        input_errors = validate_inputs(
+            runs_left=runs_left,
+            balls_left=balls_left,
+            wickets=wickets_left,
+            target=target,
+            current_score=score
+        )
+        if input_errors:
+            for err in input_errors:
+                st.error(err)
+            st.stop()
     
         # Calculate balls bowled to ensure exact CRR match with training data
         balls_bowled = 120 - balls_left
@@ -1518,9 +1557,6 @@ if st.session_state.page == "Analysis":
         # Safe CRR and RRR calculation (prevents division by zero errors on first/last balls)
         crr = (score * 6) / balls_bowled if balls_bowled > 0 else 0
         rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
-
-        loaded_xgb = xgb.XGBClassifier()
-        loaded_xgb.load_model('xgb_win_prob_model.json')
 
         # Map current UI team names to the historical names used during model training.
         # The model was trained before aliases were applied, so it knows teams by their
@@ -1612,7 +1648,7 @@ if st.session_state.page == "Analysis":
 
         with st.spinner(""):
             time.sleep(0.4)
-            result = loaded_xgb.predict_proba(input_df)
+            result = pipe.predict_proba(input_df)
 
         loss = result[0][0]
         win = result[0][1]
