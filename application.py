@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+import joblib
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -637,7 +638,11 @@ team_data = {
 # -----------------------------------
 # MODEL
 # -----------------------------------
-@st.cache_resource
+
+# Training utility - intended for offline use to regenerate pipe.pkl.
+# Not decorated with @st.cache_resource because it should never run at
+# app startup in a deployed environment; load_pipeline() below is the
+# sole runtime entry point.
 def train_model():
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
@@ -680,15 +685,37 @@ def train_model():
         ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
     ])
 
-    pipe = Pipeline([
+    trained = Pipeline([
         ('preprocessor', preprocessor),
         ('model', LogisticRegression(max_iter=1000))
     ])
 
-    pipe.fit(X, y)
-    return pipe
+    trained.fit(X, y)
+    return trained
 
-pipe = train_model()
+
+@st.cache_resource
+def load_pipeline():
+    """Load the prediction pipeline exactly once per server process.
+
+    Attempts to deserialise pipe.pkl via joblib (sub-second on any hardware).
+    If the artifact is absent (e.g. a fresh development clone), falls back to
+    train_model() and immediately serialises the result to pipe.pkl so that
+    every subsequent cold start is fast without manual intervention.
+
+    @st.cache_resource pins the returned object in Streamlit's resource cache,
+    meaning it is shared across all user sessions and reruns with no additional
+    disk I/O or training cost.
+    """
+    try:
+        return joblib.load("pipe.pkl")
+    except FileNotFoundError:
+        trained = train_model()
+        joblib.dump(trained, "pipe.pkl")
+        return trained
+
+
+pipe = load_pipeline()
 
 # -----------------------------------
 # SIDEBAR
