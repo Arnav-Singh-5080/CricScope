@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+import joblib
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -688,7 +689,25 @@ def train_model():
     pipe.fit(X, y)
     return pipe
 
-pipe = train_model()
+
+@st.cache_resource
+def load_pipeline():
+    """Load the pre-trained pipeline from disk exactly once per server process.
+
+    Uses joblib for efficient deserialization. @st.cache_resource ensures the
+    object is shared across all Streamlit sessions and reruns so disk I/O and
+    deserialization happen only once at startup, not on every user interaction.
+
+    If pipe.pkl is missing, falls back to training from raw data via
+    train_model() so the app remains functional during development.
+    """
+    try:
+        return joblib.load("pipe.pkl")
+    except FileNotFoundError:
+        return train_model()
+
+
+pipe = load_pipeline()
 
 # -----------------------------------
 # SIDEBAR
