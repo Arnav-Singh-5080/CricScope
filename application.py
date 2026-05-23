@@ -2,22 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
-import os
 import joblib
+
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score
-
-from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
-import logging
-
-logging.basicConfig(level=logging.INFO)
 # -----------------------------------
 # CONFIG
 # -----------------------------------
@@ -644,52 +634,12 @@ team_data = {
     }
 }
 
-def get_model(model_name='logistic'):
-    """
-    Returns the requested machine learning model.
-
-    Args:
-        model_name (str):
-            logistic,
-            random_forest,
-            xgboost
-
-    Returns:
-        sklearn model
-    """
-
-    models = {
-        'logistic': LogisticRegression(max_iter=1000),
-        'random_forest': RandomForestClassifier(),
-        'xgboost': XGBClassifier()
-    }
-
-    return models[model_name]
-
-
-
 # -----------------------------------
 # MODEL
 # -----------------------------------
 
 @st.cache_resource
-def train_model(model_name='logistic'):
-    """
-    Loads datasets, preprocesses cricket data,
-    trains selected model, evaluates using
-    train-test split and cross-validation,
-    and saves model for faster future loading.
-
-    Args:
-        model_name(str)
-
-    Returns:
-        trained pipeline
-    """
-    model_path = f"{model_name}_model.pkl"
-
-    if os.path.exists(model_path):
-        return joblib.load(model_path)
+def train_model():
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
 
@@ -709,28 +659,12 @@ def train_model(model_name='logistic'):
     df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
     df['wickets'] = 10 - df['wickets']
 
-    
-    balls_played = 120 - df['balls_left']
+    df['over'] = df['over'].replace(0, 0.1)
 
-    balls_played = balls_played.replace(0,1)
+    df['crr'] = df['current_score'] / (df['over'] + df['ball'] / 6)
+    df['rrr'] = (df['runs_left'] * 6) / df['balls_left']
 
-    df['crr'] = (
-         df['current_score']*6
-    )/balls_played
-
-
-    df['rrr'] = (
-        df['runs_left']*6
-    )/df['balls_left']
-
-
-    df.replace(
-        [np.inf,-np.inf],
-        np.nan,
-        inplace=True
-    )
-    
-   
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
@@ -741,50 +675,39 @@ def train_model(model_name='logistic'):
 
     X = final_df.drop('result', axis=1)
     y = final_df['result']
-    X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42
-)
 
     preprocessor = ColumnTransformer([
         ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
         ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
     ])
 
-
     pipe = Pipeline([
         ('preprocessor', preprocessor),
-        ('model', get_model(model_name))
+        ('model', LogisticRegression(max_iter=1000))
     ])
-    
 
-    scores = cross_val_score(
-        pipe,
-        X_train,
-        y_train,
-        cv=5
-    )
+    pipe.fit(X, y)
+    return pipe
 
-    logging.info(f"Cross Validation Scores: {scores}")
-    logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
-    logging.info(
-    f"Test Accuracy: {accuracy_score(y_test,predictions):.4f}"
-    )
-    pipe.fit(X_train, y_train)
 
-    predictions = pipe.predict(X_test)
+@st.cache_resource
+def load_pipeline():
+    """Load the pre-trained pipeline from disk exactly once per server process.
 
-    print(
-        f"Test Accuracy: {accuracy_score(y_test,predictions):.4f}"
-    )
+    Uses joblib for efficient deserialization. @st.cache_resource ensures the
+    object is shared across all Streamlit sessions and reruns so disk I/O and
+    deserialization happen only once at startup, not on every user interaction.
 
-    joblib.dump(pipe, model_path)
+    If pipe.pkl is missing, falls back to training from raw data via
+    train_model() so the app remains functional during development.
+    """
+    try:
+        return joblib.load("pipe.pkl")
+    except FileNotFoundError:
+        return train_model()
 
-    return pipe    
 
-pipe = train_model()
+pipe = load_pipeline()
 
 # -----------------------------------
 # SIDEBAR
