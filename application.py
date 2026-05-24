@@ -1096,9 +1096,17 @@ if st.session_state.page == "Analysis":
         crr = score / overs if overs > 0 else 0
         rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
 
+        team_aliases = {
+            "Punjab Kings": "Kings XI Punjab",
+        }
+        batting_team_model = team_aliases.get(batting_team, batting_team)
+        bowling_team_model = team_aliases.get(bowling_team, bowling_team)
+        if batting_team_model != batting_team or bowling_team_model != bowling_team:
+            st.caption("Using historical team name for model compatibility.")
+
         input_df = pd.DataFrame({
-            'batting_team': [batting_team],
-            'bowling_team': [bowling_team],
+            'batting_team': [batting_team_model],
+            'bowling_team': [bowling_team_model],
             'city': ['Mumbai'],
             'runs_left': [runs_left],
             'balls_left': [balls_left],
@@ -1228,3 +1236,28 @@ if st.session_state.page == "Analysis":
         """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
+
+# CSV Export
+        st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
+        export_df = pd.DataFrame({
+            'batting_team': [batting_team],
+            'bowling_team': [bowling_team],
+            'target': [target],
+            'current_score': [score],
+            'overs_completed': [overs],
+            'wickets_fallen': [wickets],
+            'runs_left': [runs_left],
+            'balls_left': [balls_left],
+            'crr': [round(crr, 2)],
+            'rrr': [round(rrr, 2)],
+            'batting_team_win_prob': [bat_pct],
+            'bowling_team_win_prob': [bowl_pct],
+            'verdict': [verdict],
+            'confidence': [conf_label]
+        })
+        st.download_button(
+            label="📥 Download Prediction as CSV",
+            data=export_df.to_csv(index=False),
+            file_name="cricscope_prediction.csv",
+            mime="text/csv"
+        )
