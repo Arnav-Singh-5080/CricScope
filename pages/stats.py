@@ -365,23 +365,27 @@ with col_bat:
     </div>
     """, unsafe_allow_html=True)
 
-    for i, row in top_batters.iterrows():
-        bar_pct = int(row["Runs"] / top_batters["Runs"].max() * 100)
-        rank_color = "#d4af37" if i == 0 else "rgba(200,185,140,0.35)"
-        st.markdown(f"""
-        <div style="display:flex; align-items:center; margin-bottom:0.5rem; gap:0.8rem;">
-            <span style="color:{rank_color}; font-family:'DM Mono',monospace; font-size:11px; width:1.4rem;">#{i+1}</span>
-            <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:13px; color:#e2dfd8;">{row['Player']}</span>
-                    <span class="stat-badge">{int(row['Runs'])} runs</span>
-                </div>
-                <div class="win-bar-wrap" style="margin:4px 0 0 0;">
-                    <div class="win-bar-fill" style="width:{bar_pct}%;"></div>
+    max_runs = top_batters["Runs"].max() if not top_batters.empty else None
+    if top_batters.empty or pd.isna(max_runs) or max_runs == 0:
+        st.info("No batting data available for this team.")
+    else:
+        for i, row in top_batters.iterrows():
+            bar_pct = int(row["Runs"] / max_runs * 100)
+            rank_color = "#d4af37" if i == 0 else "rgba(200,185,140,0.35)"
+            st.markdown(f"""
+            <div style="display:flex; align-items:center; margin-bottom:0.5rem; gap:0.8rem;">
+                <span style="color:{rank_color}; font-family:'DM Mono',monospace; font-size:11px; width:1.4rem;">#{i+1}</span>
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:13px; color:#e2dfd8;">{row['Player']}</span>
+                        <span class="stat-badge">{int(row['Runs'])} runs</span>
+                    </div>
+                    <div class="win-bar-wrap" style="margin:4px 0 0 0;">
+                        <div class="win-bar-fill" style="width:{bar_pct}%;"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
 with col_bowl:
     st.markdown(f"""
@@ -393,23 +397,27 @@ with col_bowl:
     </div>
     """, unsafe_allow_html=True)
 
-    for i, row in top_bowlers.iterrows():
-        bar_pct = int(row["Wickets"] / top_bowlers["Wickets"].max() * 100)
-        rank_color = "#d4af37" if i == 0 else "rgba(200,185,140,0.35)"
-        st.markdown(f"""
-        <div style="display:flex; align-items:center; margin-bottom:0.5rem; gap:0.8rem;">
-            <span style="color:{rank_color}; font-family:'DM Mono',monospace; font-size:11px; width:1.4rem;">#{i+1}</span>
-            <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:13px; color:#e2dfd8;">{row['Player']}</span>
-                    <span class="stat-badge">{int(row['Wickets'])} wkts</span>
-                </div>
-                <div class="win-bar-wrap" style="margin:4px 0 0 0;">
-                    <div class="win-bar-fill" style="width:{bar_pct}%;"></div>
+    max_wickets = top_bowlers["Wickets"].max() if not top_bowlers.empty else None
+    if top_bowlers.empty or pd.isna(max_wickets) or max_wickets == 0:
+        st.info("No bowling data available for this team.")
+    else:
+        for i, row in top_bowlers.iterrows():
+            bar_pct = int(row["Wickets"] / max_wickets * 100)
+            rank_color = "#d4af37" if i == 0 else "rgba(200,185,140,0.35)"
+            st.markdown(f"""
+            <div style="display:flex; align-items:center; margin-bottom:0.5rem; gap:0.8rem;">
+                <span style="color:{rank_color}; font-family:'DM Mono',monospace; font-size:11px; width:1.4rem;">#{i+1}</span>
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:13px; color:#e2dfd8;">{row['Player']}</span>
+                        <span class="stat-badge">{int(row['Wickets'])} wkts</span>
+                    </div>
+                    <div class="win-bar-wrap" style="margin:4px 0 0 0;">
+                        <div class="win-bar-fill" style="width:{bar_pct}%;"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
 st.markdown('<div style="height:1px; background:linear-gradient(90deg, transparent, rgba(212,175,55,0.15), transparent); margin:40px 0;"></div>', unsafe_allow_html=True)
 
