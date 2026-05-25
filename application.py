@@ -6,6 +6,8 @@ import time
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.pipeline import Pipeline
 
 # -----------------------------------
@@ -813,7 +815,7 @@ team_data = {
 # MODEL
 # -----------------------------------
 @st.cache_resource
-def train_model():
+def train_model(model_type="logistic"):
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
 
@@ -862,15 +864,23 @@ def train_model():
         ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
     ])
 
+    if model_type == "random_forest":
+        clf = RandomForestClassifier(n_estimators=100, random_state=42)
+    elif model_type == "xgboost":
+        clf = XGBClassifier(n_estimators=100, use_label_encoder=False,
+                            eval_metric='logloss', random_state=42)
+    else:
+        clf = LogisticRegression(max_iter=1000)
+
     pipe = Pipeline([
         ('preprocessor', preprocessor),
-        ('model', LogisticRegression(max_iter=1000))
+        ('model', clf)
     ])
 
     pipe.fit(X, y)
     return pipe
 
-pipe = train_model()
+    
 
 # -----------------------------------
 # SIDEBAR
@@ -890,6 +900,19 @@ with st.sidebar:
 
     if st.button("◉  Match Analysis", key="nav_analysis"):
         st.session_state.page = "Analysis"
+    
+    st.markdown('<div class="sidebar-section-label">Prediction Engine</div>', unsafe_allow_html=True)
+
+    model_choice = st.selectbox(
+        "ML Model",
+        options=["logistic", "random_forest", "xgboost"],
+        format_func=lambda x: {
+            "logistic": "⚡ Logistic Regression",
+            "random_forest": "🌲 Random Forest",
+            "xgboost": "🚀 XGBoost"
+        }[x],
+        key="model_choice"
+    )
 
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:20px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
@@ -1181,6 +1204,7 @@ if st.session_state.page == "Analysis":
                 win = 0.0
                 lose = 1.0
             else:
+                pipe = train_model(st.session_state.get("model_choice", "logistic"))
                 proba = pipe.predict_proba(input_df)[0]
                 win = proba[1]
                 lose = proba[0]
