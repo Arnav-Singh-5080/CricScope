@@ -1074,6 +1074,11 @@ if st.session_state.page == "Analysis":
 
     st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
 
+    # ---- SAME-TEAM GUARD ----
+    if batting_team == bowling_team:
+        st.error("Batting team and bowling team cannot be the same. Please select two different teams.")
+        st.stop()
+
     # ---- TEAM VS DISPLAY ----
     t1 = team_data[batting_team]
     if bowling_team in team_data:
