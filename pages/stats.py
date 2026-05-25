@@ -1,20 +1,33 @@
 import pandas as pd
 import streamlit as st
 
-#  page config 
+from theme_utils import init_theme, render_theme_toggle, theme_stylesheet
+
+#  page config
 st.set_page_config(
     page_title="CricScope · Stats",
     page_icon="📊",
     layout="wide",
 )
 
-# shared CSS (matches application.py dark-gold aesthetic) 
+theme = init_theme()
+
+with st.sidebar:
+    st.markdown(
+        "<div style='padding:28px 20px 8px;font-family:Cormorant Garamond,serif;"
+        "font-size:22px;font-weight:600;letter-spacing:2px;color:#d4af37;'>CRICSCOPE</div>",
+        unsafe_allow_html=True,
+    )
+    render_theme_toggle()
+
+st.markdown(theme_stylesheet(st.session_state.theme), unsafe_allow_html=True)
+
+# shared CSS (dark-gold aesthetic + theme-aware classes)
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap');
 
 html, body, [class*="css"] {
-    background-color: #0a0a0f;
     color: #e8e0d0;
     font-family: 'DM Sans', sans-serif;
 }
@@ -66,11 +79,27 @@ html, body, [class*="css"] {
 }
 
 h1, h2, h3 { font-family: 'Cormorant Garamond', serif; color: #d4af37; }
+
+.stats-theme-body .stats-subtitle { color: #888; }
+.stats-theme-body .stats-muted { color: #aaa; }
+.stats-theme-body .stats-footer { color: #444; }
+.stats-theme-body .stats-card-value { color: #d4af37; }
+.stats-theme-body .stats-card-value-muted { color: #888; }
+.stats-theme-body .stats-venue-text { color: #e8e0d0; }
+.stats-theme-body .stats-rank-muted { color: #888; }
+.stats-theme-body .stats-player-name { font-size: 0.88rem; color: #e8e0d0; }
+
+.stats-pad {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 clamp(32px, 6vw, 80px);
+}
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown('<div class="stats-theme-body stats-pad">', unsafe_allow_html=True)
 
-#  data loading 
+#  data loading
 @st.cache_data
 def load_data():
     matches = pd.read_csv("matches.csv")
@@ -80,17 +109,17 @@ def load_data():
 
 matches, deliveries = load_data()
 
-#  page header 
+#  page header
 st.markdown("""
 <div style='text-align:center; padding: 2rem 0 1rem 0;'>
     <h1 style='font-size:3rem; margin-bottom:0;'>📊 CricScope Stats</h1>
-    <p style='color:#888; font-size:1rem; margin-top:0.3rem;'>
+    <p class="stats-subtitle" style='font-size:1rem; margin-top:0.3rem;'>
         Historical team performance · Head-to-head records · Venue analysis
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-#  team list 
+#  team list
 all_teams = sorted(set(matches["team1"].dropna()) | set(matches["team2"].dropna()))
 
 
@@ -126,8 +155,8 @@ else:
     with ca:
         st.markdown(f"""
         <div class="glass-card" style="text-align:center;">
-            <div style="font-size:2.2rem; font-weight:700; color:#d4af37;">{a_wins}</div>
-            <div style="color:#aaa; font-size:0.85rem;">{team_a} Wins</div>
+            <div class="stats-card-value" style="font-size:2.2rem; font-weight:700;">{a_wins}</div>
+            <div class="stats-muted" style="font-size:0.85rem;">{team_a} Wins</div>
             <div class="win-bar-wrap"><div class="win-bar-fill" style="width:{a_pct}%;"></div></div>
             <span class="stat-pill">{a_pct}%</span>
         </div>
@@ -135,16 +164,16 @@ else:
     with cb:
         st.markdown(f"""
         <div class="glass-card" style="text-align:center;">
-            <div style="font-size:2.2rem; font-weight:700; color:#888;">{total}</div>
-            <div style="color:#aaa; font-size:0.85rem;">Total Matches</div>
-            <div style="margin-top:0.5rem; color:#666; font-size:0.8rem;">No Result: {no_result}</div>
+            <div class="stats-card-value-muted" style="font-size:2.2rem; font-weight:700;">{total}</div>
+            <div class="stats-muted" style="font-size:0.85rem;">Total Matches</div>
+            <div class="stats-muted" style="margin-top:0.5rem; font-size:0.8rem;">No Result: {no_result}</div>
         </div>
         """, unsafe_allow_html=True)
     with cc:
         st.markdown(f"""
         <div class="glass-card" style="text-align:center;">
-            <div style="font-size:2.2rem; font-weight:700; color:#d4af37;">{b_wins}</div>
-            <div style="color:#aaa; font-size:0.85rem;">{team_b} Wins</div>
+            <div class="stats-card-value" style="font-size:2.2rem; font-weight:700;">{b_wins}</div>
+            <div class="stats-muted" style="font-size:0.85rem;">{team_b} Wins</div>
             <div class="win-bar-wrap"><div class="win-bar-fill" style="width:{b_pct}%;"></div></div>
             <span class="stat-pill">{b_pct}%</span>
         </div>
@@ -162,13 +191,12 @@ else:
 
 st.markdown("---")
 
-# SECTION 2 — Top Run Scorers & Wicket Takers per Team 
+# SECTION 2 — Top Run Scorers & Wicket Takers per Team
 st.markdown('<div class="section-title">🏏 Player Performance by Team</div>', unsafe_allow_html=True)
 
 selected_team = st.selectbox("Select Team", all_teams, key="player_team")
 
 # batting — runs scored while batting for selected team
-# deliveries has batting_team column
 team_batting = deliveries[deliveries["batting_team"] == selected_team]
 top_batters = (
     team_batting.groupby("batsman")["batsman_runs"]
@@ -180,7 +208,6 @@ top_batters = (
 top_batters.columns = ["Player", "Runs"]
 
 # bowling — wickets taken while bowling against selected team's opponent
-# wicket_kind excludes run outs (credited to fielder not bowler)
 team_bowling = deliveries[deliveries["bowling_team"] == selected_team]
 wicket_deliveries = team_bowling[
     team_bowling["dismissal_kind"].notna() &
@@ -200,7 +227,7 @@ col_bat, col_bowl = st.columns(2)
 with col_bat:
     st.markdown(f"""
     <div class="glass-card">
-        <div style="font-size:1rem; color:#d4af37; font-weight:600; margin-bottom:0.8rem;">
+        <div class="gold" style="font-size:1rem; font-weight:600; margin-bottom:0.8rem;">
             🏏 Top Run Scorers — {selected_team}
         </div>
     </div>
@@ -208,13 +235,14 @@ with col_bat:
 
     for i, row in top_batters.iterrows():
         bar_pct = int(row["Runs"] / top_batters["Runs"].max() * 100)
-        rank_color = "#d4af37" if i == 0 else "#888"
+        rank_color = "#d4af37" if i == 0 else ""
+        rank_class = "stats-card-value" if i == 0 else "stats-rank-muted"
         st.markdown(f"""
         <div style="display:flex; align-items:center; margin-bottom:0.5rem; gap:0.8rem;">
-            <span style="color:{rank_color}; font-family:'DM Mono'; width:1.2rem;">#{i+1}</span>
+            <span class="{rank_class}" style="font-family:'DM Mono'; width:1.2rem;">#{i+1}</span>
             <div style="flex:1;">
                 <div style="display:flex; justify-content:space-between;">
-                    <span style="font-size:0.88rem;">{row['Player']}</span>
+                    <span class="stats-player-name">{row['Player']}</span>
                     <span class="stat-pill">{int(row['Runs'])} runs</span>
                 </div>
                 <div class="win-bar-wrap" style="margin:3px 0 0 0;">
@@ -227,7 +255,7 @@ with col_bat:
 with col_bowl:
     st.markdown(f"""
     <div class="glass-card">
-        <div style="font-size:1rem; color:#d4af37; font-weight:600; margin-bottom:0.8rem;">
+        <div class="gold" style="font-size:1rem; font-weight:600; margin-bottom:0.8rem;">
             🎯 Top Wicket Takers — {selected_team}
         </div>
     </div>
@@ -235,13 +263,13 @@ with col_bowl:
 
     for i, row in top_bowlers.iterrows():
         bar_pct = int(row["Wickets"] / top_bowlers["Wickets"].max() * 100)
-        rank_color = "#d4af37" if i == 0 else "#888"
+        rank_class = "stats-card-value" if i == 0 else "stats-rank-muted"
         st.markdown(f"""
         <div style="display:flex; align-items:center; margin-bottom:0.5rem; gap:0.8rem;">
-            <span style="color:{rank_color}; font-family:'DM Mono'; width:1.2rem;">#{i+1}</span>
+            <span class="{rank_class}" style="font-family:'DM Mono'; width:1.2rem;">#{i+1}</span>
             <div style="flex:1;">
                 <div style="display:flex; justify-content:space-between;">
-                    <span style="font-size:0.88rem;">{row['Player']}</span>
+                    <span class="stats-player-name">{row['Player']}</span>
                     <span class="stat-pill">{int(row['Wickets'])} wkts</span>
                 </div>
                 <div class="win-bar-wrap" style="margin:3px 0 0 0;">
@@ -259,7 +287,6 @@ st.markdown('<div class="section-title">🏟️ Venue Performance</div>', unsafe
 
 venue_team = st.selectbox("Select Team for Venue Analysis", all_teams, key="venue_team")
 
-# matches where team played (home or away)
 team_matches = matches[
     (matches["team1"] == venue_team) | (matches["team2"] == venue_team)
 ].copy()
@@ -285,7 +312,7 @@ for _, row in venue_stats.iterrows():
     st.markdown(f"""
     <div class="glass-card" style="padding:1rem 1.5rem; margin-bottom:0.7rem;">
         <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
-            <span style="font-size:0.9rem; color:#e8e0d0;">{row['venue']}</span>
+            <span class="stats-venue-text" style="font-size:0.9rem;">{row['venue']}</span>
             <div>
                 <span class="stat-pill">P {int(row['Played'])}</span>
                 <span class="stat-pill">W {int(row['Won'])}</span>
@@ -300,9 +327,11 @@ for _, row in venue_stats.iterrows():
     </div>
     """, unsafe_allow_html=True)
 
-#  footer 
+st.markdown('</div>', unsafe_allow_html=True)
+
+#  footer
 st.markdown("""
-<div style='text-align:center; padding:2rem 0; color:#444; font-size:0.8rem;'>
+<div class="stats-theme-body stats-footer" style='text-align:center; padding:2rem 0; font-size:0.8rem;'>
     CricScope Stats · IPL 2008–2020 · Data via Kaggle
 </div>
 """, unsafe_allow_html=True)

@@ -8,6 +8,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
+from theme_utils import init_theme, render_theme_toggle, theme_stylesheet
+
 # -----------------------------------
 # CONFIG
 # -----------------------------------
@@ -20,6 +22,7 @@ if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 if "last_prediction" not in st.session_state:
     st.session_state.last_prediction = None
+init_theme()
 
 # -----------------------------------
 # LUXURY CSS
@@ -282,8 +285,8 @@ section[data-testid="stSidebar"] > div {
 .input-card {
     background: rgba(255,255,255,0.025);
     border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 20px;
-    padding: 28px 32px;
+    border-radius: 16px;
+    padding: 14px 28px;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     transition: border-color 0.3s ease;
@@ -298,37 +301,11 @@ section[data-testid="stSidebar"] > div {
     letter-spacing: 2px;
     text-transform: uppercase;
     color: rgba(212,175,55,0.5);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     font-weight: 500;
 }
 
-/* ---- STREAMLIT INPUT OVERRIDES ---- */
-.stSelectbox > div > div,
-.stNumberInput > div > div > input,
-.stSlider > div {
-    background: rgba(255,255,255,0.03) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 10px !important;
-    color: #e2dfd8 !important;
-}
-
-.stSelectbox label, .stNumberInput label, .stSlider label, .stTextInput label {
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 10px !important;
-    letter-spacing: 1.8px !important;
-    text-transform: uppercase !important;
-    color: rgba(200,185,140,0.5) !important;
-    font-weight: 500 !important;
-}
-
-/* Slider track */
-.stSlider [data-testid="stSlider"] > div {
-    background: rgba(212,175,55,0.15) !important;
-}
-
-.stSlider [data-testid="stSlider"] > div > div {
-    background: linear-gradient(90deg, #d4af37, #f0d060) !important;
-}
+/* Match Analysis input sizing — injected on Analysis page (see ANALYSIS_INPUT_CSS) */
 
 /* ---- TEAM VS CARD ---- */
 .team-vs-wrapper {
@@ -375,29 +352,67 @@ section[data-testid="stSidebar"] > div {
     object-fit: contain;
 }
 
-/* ---- ANALYZE BUTTON ---- */
-.stButton.analyze-btn > button {
-    background: linear-gradient(135deg, #c9a227 0%, #d4af37 40%, #e8c84a 100%);
-    color: #0a0800;
-    border: none;
-    border-radius: 14px;
-    height: 52px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 32px rgba(212,175,55,0.2), 0 0 0 0 rgba(212,175,55,0);
-    width: 100%;
+/* Run Analysis button — injected on Analysis page (see ANALYSIS_INPUT_CSS) */
+
+/* ---- FIXTURE (team vs) ---- */
+.fixture-wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 12px;
 }
 
-.stButton.analyze-btn > button:hover {
-    box-shadow: 0 12px 48px rgba(212,175,55,0.35), 0 0 60px rgba(212,175,55,0.1);
-    transform: translateY(-2px);
-    filter: brightness(1.05);
-    color: #0a0800;
-    border: none;
+.fixture-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 16px 14px;
+    text-align: center;
+}
+
+.fixture-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fixture-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    mix-blend-mode: screen;
+}
+
+.fixture-abbr {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-top: 10px;
+}
+
+.fixture-role {
+    font-size: 9px;
+    color: rgba(200,185,140,0.3);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+}
+
+.fixture-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: rgba(212,175,55,0.2);
+    letter-spacing: -2px;
 }
 
 /* ---- PREDICTION CARD ---- */
@@ -570,6 +585,7 @@ hr {
     padding: 0 60px 60px;
 }
 
+
 /* ---- SCROLLBAR ---- */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: #0c0c0c; }
@@ -595,6 +611,8 @@ hr {
 
 </style>
 """, unsafe_allow_html=True)
+
+st.markdown(theme_stylesheet(st.session_state.theme), unsafe_allow_html=True)
 
 # -----------------------------------
 # TEAM DATA
@@ -708,6 +726,10 @@ with st.sidebar:
 
     if st.button("◉  Match Analysis", key="nav_analysis"):
         st.session_state.page = "Analysis"
+
+    st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:16px 0;"></div>', unsafe_allow_html=True)
+    render_theme_toggle()
+    st.markdown(theme_stylesheet(st.session_state.theme), unsafe_allow_html=True)
 
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:16px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
@@ -869,138 +891,188 @@ if st.session_state.page == "Dashboard":
 # -----------------------------------
 # ANALYSIS PAGE
 # -----------------------------------
+ANALYSIS_INPUT_CSS = """
+<style>
+section[data-testid="stMain"] [data-testid="stSelectbox"] > div > div,
+section[data-testid="stMain"] [data-testid="stNumberInput"] > div > div > input,
+section[data-testid="stMain"] [data-testid="stSlider"] > div {
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 8px !important;
+    color: #e2dfd8 !important;
+    min-height: 30px !important;
+    font-size: 11px !important;
+}
+section[data-testid="stMain"] [data-testid="stNumberInput"] > div > div > input {
+    padding: 5px 10px !important;
+}
+section[data-testid="stMain"] [data-testid="stSelectbox"] > div > div {
+    padding: 3px 8px !important;
+}
+section[data-testid="stMain"] [data-testid="stSelectbox"] label,
+section[data-testid="stMain"] [data-testid="stNumberInput"] label,
+section[data-testid="stMain"] [data-testid="stSlider"] label {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 10px !important;
+    letter-spacing: 1.8px !important;
+    text-transform: uppercase !important;
+    color: rgba(200,185,140,0.5) !important;
+    font-weight: 500 !important;
+}
+section[data-testid="stMain"] [data-testid="stSelectbox"],
+section[data-testid="stMain"] [data-testid="stNumberInput"],
+section[data-testid="stMain"] [data-testid="stSlider"] {
+    max-width: 240px !important;
+    width: 100% !important;
+    margin-bottom: 0.35rem !important;
+}
+section[data-testid="stMain"] [data-testid="stNumberInput"] > div,
+section[data-testid="stMain"] [data-testid="stSelectbox"] > div {
+    max-width: 240px !important;
+}
+section[data-testid="stMain"] [data-testid="stSlider"] [data-testid="stSlider"] > div {
+    background: rgba(212,175,55,0.15) !important;
+}
+section[data-testid="stMain"] [data-testid="stSlider"] [data-testid="stSlider"] > div > div {
+    background: linear-gradient(90deg, #d4af37, #f0d060) !important;
+}
+section[data-testid="stMain"] [data-testid="stHorizontalBlock"] [data-testid="column"] {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+}
+section[data-testid="stMain"] [data-testid="stButton"] {
+    max-width: 240px !important;
+    margin-top: 4px !important;
+}
+section[data-testid="stMain"] [data-testid="stButton"] > button {
+    background: linear-gradient(135deg, #1a5c4a 0%, #248f6e 55%, #2db88a 100%) !important;
+    color: #f0faf6 !important;
+    border: 1px solid rgba(45, 184, 138, 0.45) !important;
+    border-radius: 8px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-width: 200px !important;
+    width: auto !important;
+    padding: 0 18px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 4px 18px rgba(36, 143, 110, 0.35) !important;
+}
+</style>
+"""
+
 if st.session_state.page == "Analysis":
 
     st.markdown("""
-        <div class="hero-wrapper" style="padding-bottom:32px;">
+        <div class="hero-wrapper" style="padding-bottom:28px;">
             <div class="hero-eyebrow">Win Probability Engine</div>
             <div class="hero-title" style="font-size:clamp(36px,4vw,56px); margin-bottom:10px;">Match Analysis</div>
             <div class="hero-subtitle">Configure the match state below to compute real-time win probabilities.</div>
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="main-pad">', unsafe_allow_html=True)
-    st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+    st.markdown(ANALYSIS_INPUT_CSS, unsafe_allow_html=True)
 
-    teams = list(team_data.keys())
+    gutter_l, analysis_center, gutter_r = st.columns([1.5, 7, 1.5])
 
-    # ---- INPUT SECTION ----
-    st.markdown("""
-        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                    color:rgba(212,175,55,0.4);margin-bottom:20px;font-weight:500;">
-            Match Configuration
-        </div>
-    """, unsafe_allow_html=True)
+    with analysis_center:
+        st.markdown('<div class="main-pad">', unsafe_allow_html=True)
+        st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1, 1], gap="large")
+        teams = list(team_data.keys())
 
-    with col1:
-        st.markdown('<div class="input-card">', unsafe_allow_html=True)
-        st.markdown('<div class="input-label">Teams</div>', unsafe_allow_html=True)
-        batting_team = st.selectbox("Batting Team", teams, key="bat")
-        bowling_team = st.selectbox("Bowling Team", [t for t in teams if t != batting_team], key="bowl")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col2:
-        st.markdown('<div class="input-card">', unsafe_allow_html=True)
-        st.markdown('<div class="input-label">Match State</div>', unsafe_allow_html=True)
-        target = st.number_input("Target Score", min_value=50, max_value=300, value=180, step=1)
-        score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
-        col_ov, col_wk = st.columns(2)
-        with col_ov:
-            overs = st.slider("Overs Completed", min_value=1, max_value=19, value=10)
-        with col_wk:
-            wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
-
-    # ---- TEAM VS DISPLAY ----
-    t1 = team_data[batting_team]
-    if bowling_team in team_data:
-        t2 = team_data[bowling_team]
-    else:
-        t2 = team_data[teams[1]]
-
-    st.markdown("""
-        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                    color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
-            Fixture
-        </div>
-    """, unsafe_allow_html=True)
-
-    vs_col1, vs_col2, vs_col3 = st.columns([2, 1, 2])
-
-    with vs_col1:
-        st.markdown(f"""
-            <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);
-                        border-radius:20px;padding:28px;text-align:center;
-                        box-shadow:0 0 40px {t1['color']}12;">
-                <div style="width:100px;height:100px;border-radius:50%;margin:0 auto;
-                            overflow:hidden;background:#111;
-                            box-shadow:0 0 28px {t1['color']}60;
-                            display:flex;align-items:center;justify-content:center;">
-                    <img src="{t1['logo']}"
-                         style="width:100%;height:100%;object-fit:cover;
-                                mix-blend-mode:screen;" />
-                </div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
-                            color:{t1['color']};letter-spacing:3px;margin-top:14px;">
-                    {t1['abbr']}
-                </div>
-                <div style="font-size:10px;color:rgba(200,185,140,0.3);margin-top:4px;letter-spacing:0.5px;">
-                    BATTING
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with vs_col2:
+        # ---- INPUT SECTION ----
         st.markdown("""
-            <div style="display:flex;align-items:center;justify-content:center;height:100%;
-                        font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;
-                        color:rgba(212,175,55,0.2);letter-spacing:-2px;padding:28px 0;">
-                vs
+            <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
+                        color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+                Match Configuration
             </div>
         """, unsafe_allow_html=True)
 
-    with vs_col3:
-        st.markdown(f"""
-            <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);
-                        border-radius:20px;padding:28px;text-align:center;
-                        box-shadow:0 0 40px {t2['color']}12;">
-                <div style="width:100px;height:100px;border-radius:50%;margin:0 auto;
-                            overflow:hidden;background:#111;
-                            box-shadow:0 0 28px {t2['color']}60;
-                            display:flex;align-items:center;justify-content:center;">
-                    <img src="{t2['logo']}"
-                         style="width:100%;height:100%;object-fit:cover;
-                                mix-blend-mode:screen;" />
-                </div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
-                            color:{t2['color']};letter-spacing:3px;margin-top:14px;">
-                    {t2['abbr']}
-                </div>
-                <div style="font-size:10px;color:rgba(200,185,140,0.3);margin-top:4px;letter-spacing:0.5px;">
-                    BOWLING
-                </div>
+        col1, col2 = st.columns([1, 1], gap="medium")
+
+        with col1:
+            st.markdown('<div class="input-card">', unsafe_allow_html=True)
+            st.markdown('<div class="input-label">Teams</div>', unsafe_allow_html=True)
+            batting_team = st.selectbox("Batting Team", teams, key="bat")
+            bowling_team = st.selectbox("Bowling Team", [t for t in teams if t != batting_team], key="bowl")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with col2:
+            st.markdown('<div class="input-card">', unsafe_allow_html=True)
+            st.markdown('<div class="input-label">Match State</div>', unsafe_allow_html=True)
+            target = st.number_input("Target Score", min_value=50, max_value=300, value=180, step=1)
+            score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
+            col_ov, col_wk = st.columns(2)
+            with col_ov:
+                overs = st.slider("Overs Completed", min_value=1, max_value=19, value=10)
+            with col_wk:
+                wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+
+        # ---- TEAM VS DISPLAY ----
+        t1 = team_data[batting_team]
+        if bowling_team in team_data:
+            t2 = team_data[bowling_team]
+        else:
+            t2 = team_data[teams[1]]
+
+        st.markdown("""
+            <div class="fixture-wrap">
+            <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
+                        color:rgba(212,175,55,0.4);margin-bottom:12px;font-weight:500;text-align:center;">
+                Fixture
+            </div>
             </div>
         """, unsafe_allow_html=True)
 
-    st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="fixture-wrap">', unsafe_allow_html=True)
+        vs_col1, vs_col2, vs_col3 = st.columns([2, 0.6, 2], gap="small")
 
-    # ---- ANALYZE BUTTON ----
-    st.markdown('<div class="analyze-btn">', unsafe_allow_html=True)
-    analyze = st.button("Run Analysis", key="analyze_btn", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+        with vs_col1:
+            st.markdown(f"""
+                <div class="fixture-card" style="box-shadow:0 0 24px {t1['color']}10;">
+                    <div class="fixture-logo" style="box-shadow:0 0 18px {t1['color']}50;">
+                        <img src="{t1['logo']}" alt="{t1['abbr']}" />
+                    </div>
+                    <div class="fixture-abbr" style="color:{t1['color']};">{t1['abbr']}</div>
+                    <div class="fixture-role">BATTING</div>
+                </div>
+            """, unsafe_allow_html=True)
 
-    # ---- PREDICTION OUTPUT ----
-    if analyze:
-        runs_left = target - score
-        balls_left = 120 - (overs * 6)
-        crr = score / overs if overs > 0 else 0
-        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
+        with vs_col2:
+            st.markdown('<div class="fixture-vs">vs</div>', unsafe_allow_html=True)
 
-        input_df = pd.DataFrame({
+        with vs_col3:
+            st.markdown(f"""
+                <div class="fixture-card" style="box-shadow:0 0 24px {t2['color']}10;">
+                    <div class="fixture-logo" style="box-shadow:0 0 18px {t2['color']}50;">
+                        <img src="{t2['logo']}" alt="{t2['abbr']}" />
+                    </div>
+                    <div class="fixture-abbr" style="color:{t2['color']};">{t2['abbr']}</div>
+                    <div class="fixture-role">BOWLING</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)  # close fixture-wrap
+        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+
+        # ---- ANALYZE BUTTON ----
+        analyze = st.button("Run Analysis", key="analyze_btn", type="primary")
+
+        # ---- PREDICTION OUTPUT ----
+        if analyze:
+            runs_left = target - score
+            balls_left = 120 - (overs * 6)
+            crr = score / overs if overs > 0 else 0
+            rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
+
+            input_df = pd.DataFrame({
             'batting_team': [batting_team],
             'bowling_team': [bowling_team],
             'city': ['Mumbai'],
@@ -1010,125 +1082,124 @@ if st.session_state.page == "Analysis":
             'target': [target],
             'crr': [crr],
             'rrr': [rrr]
-        })
+            })
 
-        with st.spinner(""):
-            time.sleep(0.4)
-            proba = pipe.predict_proba(input_df)[0]
+            with st.spinner(""):
+                time.sleep(0.4)
+                proba = pipe.predict_proba(input_df)[0]
 
-        win = proba[1]
-        lose = proba[0]
+            win = proba[1]
+            lose = proba[0]
 
-        st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
-        st.markdown("""
-            <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                        color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
-                Prediction Output
-            </div>
-        """, unsafe_allow_html=True)
+            st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+            st.markdown("""
+                <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
+                            color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+                    Prediction Output
+                </div>
+            """, unsafe_allow_html=True)
 
-        res_col1, res_col2 = st.columns(2, gap="large")
+            res_col1, res_col2 = st.columns(2, gap="large")
 
-        with res_col1:
-            bat_pct = round(win * 100)
+            with res_col1:
+                bat_pct = round(win * 100)
+                st.markdown(f"""
+                    <div class="prediction-card">
+                        <div class="prediction-label">Batting Team · {t1['abbr']}</div>
+                        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                                    font-weight:500;color:#c8b870;margin-bottom:16px;">
+                            {batting_team}
+                        </div>
+                        <div class="win-probability">{bat_pct}%</div>
+                        <div class="win-prob-label">Win Probability</div>
+                        <div class="prob-bar-track">
+                            <div class="prob-bar-fill" style="width:{bat_pct}%;"></div>
+                        </div>
+                        <div class="prob-bar-labels">
+                            <span>0%</span><span>{bat_pct}%</span><span>100%</span>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-chip">
+                                <div class="metric-chip-value">{score}</div>
+                                <div class="metric-chip-label">Score</div>
+                            </div>
+                            <div class="metric-chip">
+                                <div class="metric-chip-value">{runs_left}</div>
+                                <div class="metric-chip-label">Needed</div>
+                            </div>
+                            <div class="metric-chip">
+                                <div class="metric-chip-value">{balls_left}</div>
+                                <div class="metric-chip-label">Balls Left</div>
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+            with res_col2:
+                bowl_pct = round(lose * 100)
+                st.markdown(f"""
+                    <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
+                                border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;">
+                        <div class="prediction-label">Bowling Team · {t2['abbr']}</div>
+                        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                                    font-weight:500;color:#c8b870;margin-bottom:16px;">
+                            {bowling_team}
+                        </div>
+                        <div style="font-family:'DM Mono',monospace;font-size:72px;font-weight:500;
+                                    color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
+                            {bowl_pct}%
+                        </div>
+                        <div class="win-prob-label">Win Probability</div>
+                        <div class="prob-bar-track">
+                            <div style="height:100%;border-radius:100px;
+                                        background:rgba(200,185,140,0.2);
+                                        width:{bowl_pct}%;transition:width 0.8s ease;"></div>
+                        </div>
+                        <div class="prob-bar-labels">
+                            <span>0%</span><span>{bowl_pct}%</span><span>100%</span>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-chip">
+                                <div class="metric-chip-value">{round(crr, 2)}</div>
+                                <div class="metric-chip-label">CRR</div>
+                            </div>
+                            <div class="metric-chip">
+                                <div class="metric-chip-value">{round(rrr, 2)}</div>
+                                <div class="metric-chip-label">RRR</div>
+                            </div>
+                            <div class="metric-chip">
+                                <div class="metric-chip-value">{10 - wickets}</div>
+                                <div class="metric-chip-label">In Hand</div>
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
+            verdict = batting_team if win > 0.5 else bowling_team
+            conf = max(win, lose)
+            conf_label = "High" if conf > 0.75 else "Moderate" if conf > 0.55 else "Close"
+
             st.markdown(f"""
-                <div class="prediction-card">
-                    <div class="prediction-label">Batting Team · {t1['abbr']}</div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                                font-weight:500;color:#c8b870;margin-bottom:16px;">
-                        {batting_team}
-                    </div>
-                    <div class="win-probability">{bat_pct}%</div>
-                    <div class="win-prob-label">Win Probability</div>
-                    <div class="prob-bar-track">
-                        <div class="prob-bar-fill" style="width:{bat_pct}%;"></div>
-                    </div>
-                    <div class="prob-bar-labels">
-                        <span>0%</span><span>{bat_pct}%</span><span>100%</span>
-                    </div>
-                    <div class="metrics-row">
-                        <div class="metric-chip">
-                            <div class="metric-chip-value">{score}</div>
-                            <div class="metric-chip-label">Score</div>
+                <div style="background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.1);
+                            border-radius:16px;padding:20px 28px;display:flex;
+                            align-items:center;justify-content:space-between;">
+                    <div>
+                        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+                                    color:rgba(212,175,55,0.35);margin-bottom:6px;">Model Verdict</div>
+                        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                                    font-weight:500;color:#f0e8cc;">
+                            {verdict} favoured to win
                         </div>
-                        <div class="metric-chip">
-                            <div class="metric-chip-value">{runs_left}</div>
-                            <div class="metric-chip-label">Needed</div>
-                        </div>
-                        <div class="metric-chip">
-                            <div class="metric-chip-value">{balls_left}</div>
-                            <div class="metric-chip-label">Balls Left</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+                                    color:rgba(212,175,55,0.35);margin-bottom:6px;">Confidence</div>
+                        <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
+                            {conf_label} · {round(conf*100)}%
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
 
-        with res_col2:
-            bowl_pct = round(lose * 100)
-            st.markdown(f"""
-                <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
-                            border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;">
-                    <div class="prediction-label">Bowling Team · {t2['abbr']}</div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                                font-weight:500;color:#c8b870;margin-bottom:16px;">
-                        {bowling_team}
-                    </div>
-                    <div style="font-family:'DM Mono',monospace;font-size:72px;font-weight:500;
-                                color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
-                        {bowl_pct}%
-                    </div>
-                    <div class="win-prob-label">Win Probability</div>
-                    <div class="prob-bar-track">
-                        <div style="height:100%;border-radius:100px;
-                                    background:rgba(200,185,140,0.2);
-                                    width:{bowl_pct}%;transition:width 0.8s ease;"></div>
-                    </div>
-                    <div class="prob-bar-labels">
-                        <span>0%</span><span>{bowl_pct}%</span><span>100%</span>
-                    </div>
-                    <div class="metrics-row">
-                        <div class="metric-chip">
-                            <div class="metric-chip-value">{round(crr, 2)}</div>
-                            <div class="metric-chip-label">CRR</div>
-                        </div>
-                        <div class="metric-chip">
-                            <div class="metric-chip-value">{round(rrr, 2)}</div>
-                            <div class="metric-chip-label">RRR</div>
-                        </div>
-                        <div class="metric-chip">
-                            <div class="metric-chip-value">{10 - wickets}</div>
-                            <div class="metric-chip-label">In Hand</div>
-                        </div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
-        # ---- SUMMARY ROW ----
-        st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
-        verdict = batting_team if win > 0.5 else bowling_team
-        conf = max(win, lose)
-        conf_label = "High" if conf > 0.75 else "Moderate" if conf > 0.55 else "Close"
-
-        st.markdown(f"""
-            <div style="background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.1);
-                        border-radius:16px;padding:20px 28px;display:flex;
-                        align-items:center;justify-content:space-between;">
-                <div>
-                    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                color:rgba(212,175,55,0.35);margin-bottom:6px;">Model Verdict</div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                                font-weight:500;color:#f0e8cc;">
-                        {verdict} favoured to win
-                    </div>
-                </div>
-                <div style="text-align:right;">
-                    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                color:rgba(212,175,55,0.35);margin-bottom:6px;">Confidence</div>
-                    <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
-                        {conf_label} · {round(conf*100)}%
-                    </div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
+        st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
