@@ -767,17 +767,17 @@ def train_model(model_name='logistic'):
         cv=5
     )
 
+    pipe.fit(X_train, y_train)
+    predictions = pipe.predict(X_test)
+
     logging.info(f"Cross Validation Scores: {scores}")
     logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
     logging.info(
-    f"Test Accuracy: {accuracy_score(y_test,predictions):.4f}"
+        f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}"
     )
-    pipe.fit(X_train, y_train)
-
-    predictions = pipe.predict(X_test)
 
     print(
-        f"Test Accuracy: {accuracy_score(y_test,predictions):.4f}"
+        f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}"
     )
 
     joblib.dump(pipe, model_path)
