@@ -992,9 +992,16 @@ if st.session_state.page == "Analysis":
 
     with col1:
         st.markdown('<div class="input-card">', unsafe_allow_html=True)
-        st.markdown('<div class="input-label">Teams</div>', unsafe_allow_html=True)
+        st.markdown('<div class="input-label">Teams & Venue</div>', unsafe_allow_html=True)
         batting_team = st.selectbox("Batting Team", teams, key="bat")
         bowling_team = st.selectbox("Bowling Team", [t for t in teams if t != batting_team], key="bowl")
+        
+        match_cities = sorted([
+            "Mumbai", "Kolkata", "Delhi", "Bengaluru", "Chennai",
+            "Hyderabad", "Jaipur", "Mohali", "Pune", "Rajkot", 
+            "Abu Dhabi", "Sharjah", "Durban", "Centurion", "Visakhapatnam"
+        ])
+        selected_city = st.selectbox("Match Venue (City)", match_cities, key="city_select")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
@@ -1099,7 +1106,7 @@ if st.session_state.page == "Analysis":
         input_df = pd.DataFrame({
             'batting_team': [batting_team],
             'bowling_team': [bowling_team],
-            'city': ['Mumbai'],
+            'city': [selected_city],
             'runs_left': [runs_left],
             'balls_left': [balls_left],
             'wickets': [10 - wickets],
