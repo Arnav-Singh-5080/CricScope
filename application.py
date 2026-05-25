@@ -2,11 +2,18 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+import logging
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.metrics import accuracy_score
+from xgboost import XGBClassifier
 
 # -----------------------------------
 # CONFIG
@@ -635,10 +642,50 @@ team_data = {
 }
 
 # -----------------------------------
-# MODEL
+# MODEL SELECTION HELPER
+# -----------------------------------
+def get_model(model_name='logistic'):
+    """Return a scikit-learn estimator based on the given model name."""
+    models = {
+        'logistic':          LogisticRegression(max_iter=1000),
+        'decision_tree':     DecisionTreeClassifier(random_state=42),
+        'random_forest':     RandomForestClassifier(n_estimators=100, random_state=42),
+        'gradient_boosting': GradientBoostingClassifier(n_estimators=100, random_state=42),
+        'svm':               SVC(probability=True, random_state=42),
+        'xgboost':           XGBClassifier(
+                                 n_estimators=100, use_label_encoder=False,
+                                 eval_metric='logloss', random_state=42
+                             ),
+    }
+    if model_name not in models:
+        raise ValueError(
+            f"Unknown model: '{model_name}'. "
+            f"Choose from: {list(models.keys())}"
+        )
+    return models[model_name]
+
+
+# -----------------------------------
+# MODEL DISPLAY NAMES (for UI)
+# -----------------------------------
+MODEL_OPTIONS = {
+    'Logistic Regression':     'logistic',
+    'Decision Tree':           'decision_tree',
+    'Random Forest':           'random_forest',
+    'Gradient Boosting':       'gradient_boosting',
+    'Support Vector Machine':  'svm',
+    'XGBoost':                 'xgboost',
+}
+
+
+# -----------------------------------
+# TRAINING PIPELINE
 # -----------------------------------
 @st.cache_resource
-def train_model():
+def train_model(model_name='logistic'):
+    """Train and return a prediction pipeline for the given model type."""
+    logging.basicConfig(level=logging.INFO)
+
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
 
@@ -675,20 +722,39 @@ def train_model():
     X = final_df.drop('result', axis=1)
     y = final_df['result']
 
+    # Train-test split for evaluation
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
     preprocessor = ColumnTransformer([
         ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
         ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
     ])
 
+    model = get_model(model_name)
     pipe = Pipeline([
         ('preprocessor', preprocessor),
-        ('model', LogisticRegression(max_iter=1000))
+        ('model', model)
     ])
 
-    pipe.fit(X, y)
-    return pipe
+    # CORRECT ORDER: fit first, then predict, then evaluate
+    pipe.fit(X_train, y_train)
+    predictions = pipe.predict(X_test)
 
-pipe = train_model()
+    accuracy = accuracy_score(y_test, predictions)
+    logging.info(f"[{model_name}] Test Accuracy: {accuracy:.4f}")
+
+    cv_scores = cross_val_score(pipe, X_train, y_train, cv=5)
+    logging.info(
+        f"[{model_name}] Cross-Val Accuracy: "
+        f"mean={cv_scores.mean():.4f}, std={cv_scores.std():.4f}"
+    )
+
+    # Refit on full data for production predictions
+    pipe.fit(X, y)
+
+    return pipe
 
 # -----------------------------------
 # SIDEBAR
@@ -708,6 +774,21 @@ with st.sidebar:
 
     if st.button("◉  Match Analysis", key="nav_analysis"):
         st.session_state.page = "Analysis"
+
+    st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:16px 0;"></div>', unsafe_allow_html=True)
+
+    # ---- MODEL SELECTION ----
+    st.markdown('<div class="sidebar-section-label">Model Settings</div>', unsafe_allow_html=True)
+
+    selected_model_label = st.selectbox(
+        "Prediction Model",
+        list(MODEL_OPTIONS.keys()),
+        key="model_selector"
+    )
+    selected_model = MODEL_OPTIONS[selected_model_label]
+
+    # Train / load the selected model pipeline
+    pipe = train_model(selected_model)
 
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:16px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
@@ -791,14 +872,14 @@ if st.session_state.page == "Dashboard":
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
+    st.markdown(f"""
         <div class="stats-row">
             <div class="stat-pill">
                 <div class="stat-value">8</div>
                 <div class="stat-label">IPL Teams</div>
             </div>
             <div class="stat-pill">
-                <div class="stat-value">ML</div>
+                <div class="stat-value">{selected_model_label}</div>
                 <div class="stat-label">Model Type</div>
             </div>
             <div class="stat-pill">
