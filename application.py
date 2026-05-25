@@ -97,7 +97,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 9px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(180,160,100,0.35);
+    color: rgba(220,205,150,0.72);
     padding: 12px 28px 6px;
     font-weight: 500;
 }
@@ -109,7 +109,7 @@ section[data-testid="stSidebar"] > div {
     background: transparent;
     border: none;
     border-radius: 0;
-    color: rgba(220,210,180,0.65);
+    color: rgba(235,225,200,0.88);
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     font-weight: 400;
@@ -255,7 +255,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 10px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(200,185,140,0.4);
+    color: rgba(220,205,170,0.72);
 }
 
 /* ---- ANALYSIS SECTION ---- */
@@ -585,7 +585,7 @@ hr {
 }
 .profile-link:hover { background: rgba(212,175,55,0.07); }
 .profile-link span {
-    font-size: 11px; color: rgba(200,185,140,0.55);
+    font-size: 11px; color: rgba(230,220,190,0.82);
     font-weight: 400; letter-spacing: 0.2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     transition: color 0.2s;
@@ -766,7 +766,7 @@ with st.sidebar:
 
     st.markdown("""
         <div style="text-align:center;margin-top:16px;padding-bottom:24px;font-size:9px;
-                    letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,185,140,0.18);">
+                    letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,195,160,0.5);">
             CricScope v2.0 · IPL Edition
         </div>
     """, unsafe_allow_html=True)
