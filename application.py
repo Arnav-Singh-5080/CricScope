@@ -784,8 +784,6 @@ def train_model(model_name='logistic'):
 
     return pipe    
 
-pipe = train_model()
-
 # -----------------------------------
 # SIDEBAR
 # -----------------------------------
@@ -796,6 +794,22 @@ with st.sidebar:
             <span class="sidebar-tagline">Match Intelligence Platform</span>
         </div>
     """, unsafe_allow_html=True)
+
+    st.markdown('<div class="sidebar-section-label">Model Engine</div>', unsafe_allow_html=True)
+    model_choice = st.selectbox(
+        "Classifier Model",
+        ["Logistic Regression", "Random Forest", "XGBoost"],
+        key="model_select",
+        label_visibility="collapsed"
+    )
+
+    model_map = {
+        "Logistic Regression": "logistic",
+        "Random Forest": "random_forest",
+        "XGBoost": "xgboost"
+    }
+    selected_model_key = model_map[model_choice]
+    pipe = train_model(selected_model_key)
 
     st.markdown('<div class="sidebar-section-label">Navigation</div>', unsafe_allow_html=True)
 
