@@ -709,6 +709,9 @@ with st.sidebar:
     if st.button("◉  Match Analysis", key="nav_analysis"):
         st.session_state.page = "Analysis"
 
+    if st.button("◈  Privacy Policy", key="nav_privacy"):
+        st.session_state.page = "Privacy"
+
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:16px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
 
@@ -992,6 +995,264 @@ if st.session_state.page == "Analysis":
     st.markdown('<div class="analyze-btn">', unsafe_allow_html=True)
     analyze = st.button("Run Analysis", key="analyze_btn", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+# -----------------------------------
+# PRIVACY POLICY PAGE
+# -----------------------------------
+if st.session_state.page == "Privacy":
+
+    st.markdown("""
+        <div class="hero-wrapper">
+            <div class="hero-eyebrow">Legal · Data Protection</div>
+
+            <div class="hero-badge">
+                <div class="hero-dot"></div>
+                Privacy & Transparency
+            </div>
+
+            <div class="hero-title"
+                 style="font-size: clamp(30px, 7vw, 68px);">
+                 Privacy Policy
+            </div>
+
+            <div class="hero-subtitle">
+                CricScope values user trust and transparency.
+                This policy explains how data is collected,
+                used, secured, and protected while using
+                the platform.
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="main-pad">
+
+        <!-- POLICY CARD -->
+        <div style="
+            background:rgba(255,255,255,0.025);
+            border:1px solid rgba(212,175,55,0.08);
+            border-radius:24px;
+            padding: clamp(20px, 5vw, 40px);
+            margin-top:32px;
+            backdrop-filter: blur(20px);
+        ">
+
+            <!-- SECTION -->
+            <div style="margin-bottom:36px;">
+                <div style="
+                    font-size:10px;
+                    letter-spacing:3px;
+                    text-transform:uppercase;
+                    color:rgba(212,175,55,0.45);
+                    margin-bottom:10px;
+                    font-weight:600;
+                ">
+                    01 · Information Collection
+                </div>
+
+                <div style="
+                    font-family:'Cormorant Garamond',serif;
+                    font-size:32px;
+                    color:#f0e8cc;
+                    margin-bottom:12px;
+                ">
+                    What We Collect
+                </div>
+
+                <div style="
+                    font-size:14px;
+                    line-height:1.9;
+                    color:rgba(220,210,185,0.65);
+                    max-width:900px;
+                ">
+                    CricScope may collect limited technical and usage-related
+                    information including browser type, device metadata,
+                    session analytics, and interaction patterns to improve
+                    prediction performance and user experience.
+                    <br><br>
+                    No sensitive financial or personal identification data
+                    is intentionally collected through the platform.
+                </div>
+            </div>
+
+            <!-- SECTION -->
+            <div style="margin-bottom:36px;">
+                <div style="
+                    font-size:10px;
+                    letter-spacing:3px;
+                    text-transform:uppercase;
+                    color:rgba(212,175,55,0.45);
+                    margin-bottom:10px;
+                    font-weight:600;
+                ">
+                    02 · Usage of Data
+                </div>
+
+                <div style="
+                    font-family:'Cormorant Garamond',serif;
+                    font-size:32px;
+                    color:#f0e8cc;
+                    margin-bottom:12px;
+                ">
+                    How Data Is Used
+                </div>
+
+                <div style="
+                    font-size:14px;
+                    line-height:1.9;
+                    color:rgba(220,210,185,0.65);
+                    max-width:900px;
+                ">
+                    Data collected through CricScope is used strictly
+                    for analytics, model optimization, performance monitoring,
+                    debugging, and enhancing prediction accuracy.
+                    <br><br>
+                    User activity is never sold to third-party advertisers.
+                </div>
+            </div>
+
+            <!-- SECTION -->
+            <div style="margin-bottom:36px;">
+                <div style="
+                    font-size:10px;
+                    letter-spacing:3px;
+                    text-transform:uppercase;
+                    color:rgba(212,175,55,0.45);
+                    margin-bottom:10px;
+                    font-weight:600;
+                ">
+                    03 · Security
+                </div>
+
+                <div style="
+                    font-family:'Cormorant Garamond',serif;
+                    font-size:32px;
+                    color:#f0e8cc;
+                    margin-bottom:12px;
+                ">
+                    Data Protection
+                </div>
+
+                <div style="
+                    font-size:14px;
+                    line-height:1.9;
+                    color:rgba(220,210,185,0.65);
+                    max-width:900px;
+                ">
+                    CricScope implements modern security standards
+                    including encrypted connections, secure session handling,
+                    and controlled access practices to protect platform data.
+                    <br><br>
+                    While no system guarantees absolute protection,
+                    continuous monitoring and best practices are followed
+                    to minimize risks.
+                </div>
+            </div>
+
+            <!-- SECTION -->
+            <div style="margin-bottom:36px;">
+                <div style="
+                    font-size:10px;
+                    letter-spacing:3px;
+                    text-transform:uppercase;
+                    color:rgba(212,175,55,0.45);
+                    margin-bottom:10px;
+                    font-weight:600;
+                ">
+                    04 · Third-Party Services
+                </div>
+
+                <div style="
+                    font-family:'Cormorant Garamond',serif;
+                    font-size:32px;
+                    color:#f0e8cc;
+                    margin-bottom:12px;
+                ">
+                    External Integrations
+                </div>
+
+                <div style="
+                    font-size:14px;
+                    line-height:1.9;
+                    color:rgba(220,210,185,0.65);
+                    max-width:900px;
+                ">
+                    CricScope may use third-party libraries,
+                    APIs, analytics tools, and visualization services
+                    required for machine learning and interface rendering.
+                    <br><br>
+                    These services operate under their own
+                    privacy policies and compliance standards.
+                </div>
+            </div>
+
+            <!-- SECTION -->
+            <div>
+                <div style="
+                    font-size:10px;
+                    letter-spacing:3px;
+                    text-transform:uppercase;
+                    color:rgba(212,175,55,0.45);
+                    margin-bottom:10px;
+                    font-weight:600;
+                ">
+                    05 · Contact
+                </div>
+
+                <div style="
+                    font-family:'Cormorant Garamond',serif;
+                    font-size:32px;
+                    color:#f0e8cc;
+                    margin-bottom:12px;
+                ">
+                    Questions & Requests
+                </div>
+
+                <div style="
+                    font-size:14px;
+                    line-height:1.9;
+                    color:rgba(220,210,185,0.65);
+                    max-width:900px;
+                ">
+                    For privacy-related concerns, policy clarification,
+                    or data inquiries, users may contact the platform
+                    administrator directly.
+                </div>
+
+                <div style="
+                    margin-top:18px;
+                    display:inline-flex;
+                    align-items:center;
+                    gap:10px;
+                    padding:12px 18px;
+                    border-radius:12px;
+                    background:rgba(212,175,55,0.06);
+                    border:1px solid rgba(212,175,55,0.12);
+                    color:#d4af37;
+                    font-size:13px;
+                    letter-spacing:0.5px;
+                ">
+                    ✉ privacy@cricscope.ai
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTNOTE -->
+        <div style="
+            text-align:center;
+            padding:24px 0 10px;
+            color:rgba(200,185,140,0.22);
+            font-size:10px;
+            letter-spacing:2px;
+            text-transform:uppercase;
+        ">
+            Last Updated · May 2026
+        </div>
+
+    </div>
+    """, unsafe_allow_html=True)
+
 
     # ---- PREDICTION OUTPUT ----
     if analyze:
