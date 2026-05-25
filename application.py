@@ -7,7 +7,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-
+from team_mapper import standardize_team_name, clean_teams
 # -----------------------------------
 # CONFIG
 # -----------------------------------
@@ -637,10 +637,17 @@ team_data = {
 # -----------------------------------
 # MODEL
 # -----------------------------------
+# -----------------------------------
+# MODEL
+# -----------------------------------
 @st.cache_resource
-def train_model():
+def train_model():                     
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
+
+    
+    matches = clean_teams(matches)
+    deliveries = clean_teams(deliveries)
 
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
 
@@ -667,8 +674,9 @@ def train_model():
 
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
-    final_df = df[['batting_team', 'bowling_team', 'city',
-                   'runs_left', 'balls_left', 'wickets',
+    
+    final_df = df[['batting_team', 'bowling_team', 'venue', 'toss_winner', 
+                   'toss_decision', 'runs_left', 'balls_left', 'wickets',
                    'target', 'crr', 'rrr', 'result']]
     final_df.dropna(inplace=True)
 
@@ -676,7 +684,8 @@ def train_model():
     y = final_df['result']
 
     preprocessor = ColumnTransformer([
-        ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
+        ('cat', OneHotEncoder(handle_unknown='ignore'), 
+         ['batting_team', 'bowling_team', 'venue', 'toss_winner', 'toss_decision']),
         ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
     ])
 
@@ -687,6 +696,7 @@ def train_model():
 
     pipe.fit(X, y)
     return pipe
+
 
 pipe = train_model()
 
@@ -993,17 +1003,26 @@ if st.session_state.page == "Analysis":
     analyze = st.button("Run Analysis", key="analyze_btn", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---- PREDICTION OUTPUT ----
     if analyze:
+        # === PROBLEM 1 FIX: Standardize team names ===
+        bat_std = standardize_team_name(batting_team)
+        bowl_std = standardize_team_name(bowling_team)
+
         runs_left = target - score
         balls_left = 120 - (overs * 6)
         crr = score / overs if overs > 0 else 0
         rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
 
+        # Problem 3: Default toss values (you can enhance UI later)
+        toss_winner = bat_std
+        toss_decision = "bat"
+
         input_df = pd.DataFrame({
-            'batting_team': [batting_team],
-            'bowling_team': [bowling_team],
-            'city': ['Mumbai'],
+            'batting_team': [bat_std],
+            'bowling_team': [bowl_std],
+            'venue': ['Wankhede Stadium'],      # Better signal than city
+            'toss_winner': [toss_winner],
+            'toss_decision': [toss_decision],
             'runs_left': [runs_left],
             'balls_left': [balls_left],
             'wickets': [10 - wickets],
@@ -1015,7 +1034,6 @@ if st.session_state.page == "Analysis":
         with st.spinner(""):
             time.sleep(0.4)
             proba = pipe.predict_proba(input_df)[0]
-
         win = proba[1]
         lose = proba[0]
 
