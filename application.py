@@ -1526,9 +1526,11 @@ if st.session_state.page == "Analysis":
         st.markdown('<div class="input-label">Match State</div>', unsafe_allow_html=True)
         target = st.number_input("Target Score", min_value=50, max_value=300, value=180, step=1)
         score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
-        col_ov, col_wk = st.columns(2)
+        col_ov, col_ball, col_wk = st.columns(3)
         with col_ov:
             overs = st.slider("Overs Completed", min_value=0, max_value=20, value=10)
+        with col_ball:
+            balls_in_over = st.slider("Balls in Current Over", min_value=0, max_value=5, value=0, step=1)
         with col_wk:
             wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1615,7 +1617,11 @@ if st.session_state.page == "Analysis":
 
     # ---- PREDICTION OUTPUT ----
     if analyze:
-        runs_left, balls_left, crr, rrr = safe_calculate_rates(score, target, overs)
+        runs_left = target - score
+        total_balls_bowled = overs * 6 + balls_in_over
+        balls_left = max(120 - total_balls_bowled, 0)
+        crr = score / (total_balls_bowled / 6) if total_balls_bowled > 0 else 0.0
+        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
 
         input_df = pd.DataFrame({
             'batting_team': [batting_team],
