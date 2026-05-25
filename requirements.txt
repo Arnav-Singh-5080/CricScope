@@ -7,3 +7,5 @@ joblib
 seaborn
 plotly
 xgboost
+requests
+streamlit-autorefresh
