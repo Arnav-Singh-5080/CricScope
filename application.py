@@ -1012,7 +1012,7 @@ if st.session_state.page == "Analysis":
             'rrr': [rrr]
         })
 
-        with st.spinner(""):
+        with st.spinner("⚡ Computing Match Intelligence & Win Probabilities..."):
             time.sleep(0.4)
             proba = pipe.predict_proba(input_df)[0]
 
