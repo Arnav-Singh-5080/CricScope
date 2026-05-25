@@ -664,11 +664,15 @@ def train_model():
 
     # Correct current run rate (crr) using correct overs bowled denominator:
     # (over - 1) + (ball / 6)
+    # We use a safe denominator to avoid division-by-zero warnings or inf/nan values.
     overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
-    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
+    safe_overs_bowled = np.where(overs_bowled > 0, overs_bowled, 1.0)
+    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / safe_overs_bowled, 0.0)
 
-    # Correct required run rate (rrr) avoiding division by zero when balls_left is 0
-    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
+    # Correct required run rate (rrr) avoiding division by zero when balls_left is 0.
+    # We use a safe denominator to prevent division-by-zero warnings or inf/nan values.
+    safe_balls_left = np.where(df['balls_left'] > 0, df['balls_left'], 1.0)
+    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / safe_balls_left, 0.0)
 
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
 

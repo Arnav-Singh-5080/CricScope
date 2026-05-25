@@ -11,16 +11,18 @@ def calculate_balls_left_df(over, ball):
     return df['balls_left'].tolist()
 
 def calculate_crr_df(current_score, over, ball):
-    # Replicates pandas training logic
+    # Replicates pandas training logic using safe denominators
     df = pd.DataFrame({'current_score': current_score, 'over': over, 'ball': ball})
     overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
-    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
+    safe_overs_bowled = np.where(overs_bowled > 0, overs_bowled, 1.0)
+    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / safe_overs_bowled, 0.0)
     return df['crr'].tolist()
 
 def calculate_rrr_df(runs_left, balls_left):
-    # Replicates pandas training logic
+    # Replicates pandas training logic using safe denominators
     df = pd.DataFrame({'runs_left': runs_left, 'balls_left': balls_left})
-    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
+    safe_balls_left = np.where(df['balls_left'] > 0, df['balls_left'], 1.0)
+    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / safe_balls_left, 0.0)
     return df['rrr'].tolist()
 
 def calculate_prediction_inputs(target, score, overs):
@@ -64,6 +66,23 @@ class TestCricScopeCalculations(unittest.TestCase):
     def test_rrr_division_by_zero_handling(self):
         # When balls_left = 0, RRR should be 0.0 (no division by zero or infinity)
         self.assertEqual(calculate_rrr_df([10], [0]), [0.0])
+
+    def test_rrr_division_by_zero_no_warnings(self):
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            
+            # Execute RRR and CRR calculations with zero/boundary values
+            rrr_results = calculate_rrr_df([10, 20, 30], [0, 6, 0])
+            crr_results = calculate_crr_df([0, 6, 12], [1, 2, 1], [0, 0, 0])
+            
+            # Assert that no RuntimeWarnings were generated
+            runtime_warnings = [warning for warning in w if issubclass(warning.category, RuntimeWarning)]
+            self.assertEqual(len(runtime_warnings), 0, f"Found unexpected RuntimeWarnings: {runtime_warnings}")
+            
+            # Assert correct values are calculated
+            self.assertEqual(rrr_results, [0.0, 20.0, 0.0])
+            self.assertEqual(crr_results, [0.0, 6.0, 0.0])
 
     def test_prediction_inputs_normal(self):
         # 10 overs completed, target 180, score 80
