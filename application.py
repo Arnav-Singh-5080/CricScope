@@ -53,7 +53,8 @@ footer { visibility: hidden; }
 section[data-testid="stSidebar"] {
     background: #0c0c0c;
     border-right: 1px solid rgba(212,175,55,0.12);
-    width: 260px !important;
+    width: 300px !important;
+    min-width: 300px !important;
 }
 
 section[data-testid="stSidebar"] > div {
@@ -61,26 +62,26 @@ section[data-testid="stSidebar"] > div {
 }
 
 .sidebar-brand {
-    padding: 36px 28px 24px;
+    padding: 40px 32px 28px;
     border-bottom: 1px solid rgba(212,175,55,0.1);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .sidebar-logo-text {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 600;
-    letter-spacing: 3px;
+    letter-spacing: 3.5px;
     background: linear-gradient(135deg, #f0d060 0%, #d4af37 40%, #a07820 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .sidebar-tagline {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 2.5px;
     text-transform: uppercase;
     color: rgba(212,175,55,0.45);
@@ -94,12 +95,12 @@ section[data-testid="stSidebar"] > div {
 }
 
 .sidebar-section-label {
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.75);
-    padding: 12px 28px 8px;
-    font-weight: 600;
+    color: rgba(180,160,100,0.35);
+    padding: 14px 32px 8px;
+    font-weight: 500;
 }
 
 /* ---- NAV BUTTONS ---- */
@@ -112,9 +113,9 @@ section[data-testid="stSidebar"] > div {
     color: rgba(240,235,220,0.85);
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     letter-spacing: 0.5px;
-    padding: 11px 28px;
+    padding: 13px 32px;
     height: auto;
     transition: all 0.2s ease;
     position: relative;
@@ -575,23 +576,197 @@ hr {
 ::-webkit-scrollbar-track { background: #0c0c0c; }
 ::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); border-radius: 4px; }
 
-/* ---- PROFILE CARD LINKS ---- */
+/* ============================================================
+   SIDEBAR PROFILE SECTION - Premium Glassmorphism
+   ============================================================ */
+
+/* Kill Streamlit global link styles inside sidebar */
+section[data-testid="stSidebar"] a,
+section[data-testid="stSidebar"] a:visited,
+section[data-testid="stSidebar"] a:hover,
+section[data-testid="stSidebar"] a:active {
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+/* Outer wrapper */
+.profile-section {
+    padding: 0 16px 10px;
+}
+
+/* ---- Profile identity card ---- */
+.profile-card {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(212, 175, 55, 0.14);
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    padding: 22px 20px 18px;
+    margin-bottom: 10px;
+}
+
+.profile-card:hover {
+    border-color: rgba(212, 175, 55, 0.26);
+    box-shadow: 0 6px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Ambient top glow */
+.profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: radial-gradient(ellipse 90% 100% at 50% 0%, rgba(212,175,55,0.09) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Avatar - centered, 48px */
+.profile-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c9a227 0%, #d4af37 50%, #f0d060 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 700;
+    color: #0a0800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 0 2px rgba(212,175,55,0.25), 0 0 20px rgba(212,175,55,0.25), 0 3px 12px rgba(0,0,0,0.4);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 14px;
+}
+
+.profile-card:hover .profile-avatar {
+    box-shadow: 0 0 0 2px rgba(212,175,55,0.45), 0 0 26px rgba(212,175,55,0.35), 0 3px 14px rgba(0,0,0,0.5);
+    transform: scale(1.04);
+}
+
+/* Name */
+.profile-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 600;
+    color: #f0e8cc;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    margin: 0 0 5px 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* Role */
+.profile-role {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(212, 175, 55, 0.45);
+    font-weight: 500;
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+}
+
+/* ---- Contact card ---- */
+.contact-card {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(212, 175, 55, 0.14);
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    padding: 8px 12px 12px;
+}
+
+.contact-card:hover {
+    border-color: rgba(212, 175, 55, 0.22);
+}
+
+/* Each contact row */
 .profile-link {
-    display: flex; align-items: center; gap: 10px;
-    text-decoration: none; padding: 8px 10px;
-    border-radius: 9px; margin-bottom: 4px;
-    background: transparent;
-    transition: background 0.2s ease;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+    padding: 9px 10px !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    transition: background 0.2s ease, transform 0.2s ease !important;
+    color: inherit !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
 }
-.profile-link:hover { background: rgba(212,175,55,0.07); }
-.profile-link span {
-    font-size: 11px; color: rgba(200,185,140,0.55);
-    font-weight: 400; letter-spacing: 0.2px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    transition: color 0.2s;
+
+.profile-link:hover {
+    background: rgba(212, 175, 55, 0.07) !important;
+    transform: translateX(2px) !important;
+    text-decoration: none !important;
 }
-.profile-link:hover span { color: rgba(212,175,55,0.8); }
-.profile-link svg { flex-shrink: 0; }
+
+/* Icon - plain, no badge box */
+.profile-link-icon {
+    font-size: 12px;
+    color: rgba(212, 175, 55, 0.6);
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+    text-decoration: none !important;
+    transition: color 0.2s ease;
+}
+
+.profile-link:hover .profile-link-icon {
+    color: rgba(212, 175, 55, 0.9);
+}
+
+/* Link text */
+.profile-link-text {
+    font-size: 12px;
+    color: rgba(200, 185, 140, 0.55);
+    font-weight: 400;
+    letter-spacing: 0.2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none !important;
+}
+
+.profile-link:hover .profile-link-text {
+    color: rgba(212, 175, 55, 0.82);
+}
+
+/* Version footer */
+.sidebar-version {
+    text-align: center;
+    padding: 16px 0 24px;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(200, 185, 140, 0.18);
+    font-weight: 400;
+    transition: color 0.3s ease;
+}
+
+.sidebar-version:hover {
+    color: rgba(200, 185, 140, 0.3);
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -652,16 +827,18 @@ def train_model():
 
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
-    df['balls_left'] = 120 - (df['over'] * 6 + df['ball'])
+    
+    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
+    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
 
     df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
     df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
     df['wickets'] = 10 - df['wickets']
 
-    df['over'] = df['over'].replace(0, 0.1)
+    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
+    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
 
-    df['crr'] = df['current_score'] / (df['over'] + df['ball'] / 6)
-    df['rrr'] = (df['runs_left'] * 6) / df['balls_left']
+    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
 
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
@@ -715,64 +892,31 @@ with st.sidebar:
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:16px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
 
-    # Profile card — rendered as separate st.markdown blocks to stay within Streamlit's HTML allowlist
-    st.markdown("""
-        <div style="padding:0 18px 8px;">
-            <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(212,175,55,0.12);
-                        border-radius:16px;padding:20px 18px 14px;position:relative;overflow:hidden;">
-                <div style="position:absolute;top:0;left:0;right:0;height:60px;
-                            background:radial-gradient(ellipse at 50% 0%,rgba(212,175,55,0.08) 0%,transparent 70%);
-                            pointer-events:none;"></div>
-                <div style="width:44px;height:44px;border-radius:50%;
-                            background:linear-gradient(135deg,#c9a227,#f0d060);
-                            display:flex;align-items:center;justify-content:center;
-                            font-size:16px;font-weight:700;color:#0a0800;
-                            margin-bottom:12px;box-shadow:0 0 18px rgba(212,175,55,0.25);">AS</div>
-                <div style="font-size:17px;font-weight:600;color:#f0e8cc;
-                            letter-spacing:0.5px;margin-bottom:3px;">Arnav Singh</div>
-                <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                            color:rgba(212,175,55,0.4);margin-bottom:18px;font-weight:500;">ML · Data · Analytics</div>
-                <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin-bottom:12px;"></div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # Links rendered as st.markdown with href — Streamlit allows plain <a> with href+target
-    st.markdown("""
-        <div style="padding:0 18px;">
-            <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(212,175,55,0.12);
-                        border-top:none;border-radius:0 0 16px 16px;padding:4px 10px 14px;">
-                <p style="margin:0 0 2px 0;padding:8px 8px;">
-                    <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">✉</span>
-                    <a href="mailto:itsarnav.singh80@gmail.com"
-                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
-                        itsarnav.singh80@gmail.com
-                    </a>
-                </p>
-                <p style="margin:0 0 2px 0;padding:8px 8px;">
-                    <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">in</span>
-                    <a href="https://www.linkedin.com/in/arnav-singh-a87847351" target="_blank"
-                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
-                        linkedin.com/in/arnav-singh
-                    </a>
-                </p>
-                <p style="margin:0;padding:8px 8px;">
-                    <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">&#9670;</span>
-                    <a href="https://github.com/Arnav-Singh-5080" target="_blank"
-                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
-                        Arnav-Singh-5080
-                    </a>
-                </p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-        <div style="text-align:center;margin-top:16px;padding-bottom:24px;font-size:9px;
-                    letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,185,140,0.18);">
-            CricScope v2.0 · IPL Edition
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="profile-section">'
+        '<div class="profile-card">'
+        '<div class="profile-avatar">AS</div>'
+        '<div class="profile-name">Arnav Singh</div>'
+        '<div class="profile-role">ML &middot; Data &middot; Analytics</div>'
+        '</div>'
+        '<div class="contact-card">'
+        '<a href="mailto:itsarnav.singh80@gmail.com" class="profile-link">'
+        '<span class="profile-link-icon">&#9993;</span>'
+        '<span class="profile-link-text">itsarnav.singh80@gmail.com</span>'
+        '</a>'
+        '<a href="https://www.linkedin.com/in/arnav-singh-a87847351" target="_blank" class="profile-link">'
+        '<span class="profile-link-icon">in</span>'
+        '<span class="profile-link-text">linkedin.com/in/arnav-singh</span>'
+        '</a>'
+        '<a href="https://github.com/Arnav-Singh-5080" target="_blank" class="profile-link">'
+        '<span class="profile-link-icon">&#9670;</span>'
+        '<span class="profile-link-text">Arnav-Singh-5080</span>'
+        '</a>'
+        '</div>'
+        '</div>'
+        '<div class="sidebar-version">CricScope v2.0 &middot; IPL Edition</div>',
+        unsafe_allow_html=True
+    )
 
 # -----------------------------------
 # DASHBOARD PAGE
@@ -902,6 +1046,16 @@ if st.session_state.page == "Analysis":
         st.markdown('<div class="input-label">Teams</div>', unsafe_allow_html=True)
         batting_team = st.selectbox("Batting Team", teams, key="bat")
         bowling_team = st.selectbox("Bowling Team", [t for t in teams if t != batting_team], key="bowl")
+        cities = [
+            'Abu Dhabi', 'Ahmedabad', 'Bangalore', 'Bengaluru', 'Bloemfontein', 
+            'Cape Town', 'Centurion', 'Chandigarh', 'Chennai', 'Cuttack', 
+            'Delhi', 'Dharamsala', 'Durban', 'East London', 'Hyderabad', 
+            'Indore', 'Jaipur', 'Johannesburg', 'Kanpur', 'Kimberley', 
+            'Kochi', 'Kolkata', 'Mohali', 'Mumbai', 'Nagpur', 
+            'Port Elizabeth', 'Pune', 'Raipur', 'Rajkot', 'Ranchi', 
+            'Sharjah', 'Visakhapatnam'
+        ]
+        selected_city = st.selectbox("Select Host City", cities, index=cities.index('Mumbai'), key="city")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
@@ -911,7 +1065,7 @@ if st.session_state.page == "Analysis":
         score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
         col_ov, col_wk = st.columns(2)
         with col_ov:
-            overs = st.slider("Overs Completed", min_value=1, max_value=19, value=10)
+            overs = st.slider("Overs Completed", min_value=0, max_value=20, value=10)
         with col_wk:
             wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -999,14 +1153,14 @@ if st.session_state.page == "Analysis":
     # ---- PREDICTION OUTPUT ----
     if analyze:
         runs_left = target - score
-        balls_left = 120 - (overs * 6)
-        crr = score / overs if overs > 0 else 0
-        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
+        balls_left = max(120 - (overs * 6), 0)
+        crr = score / overs if overs > 0 else 0.0
+        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
 
         input_df = pd.DataFrame({
             'batting_team': [batting_team],
             'bowling_team': [bowling_team],
-            'city': ['Mumbai'],
+            'city': [selected_city],
             'runs_left': [runs_left],
             'balls_left': [balls_left],
             'wickets': [10 - wickets],
@@ -1017,10 +1171,16 @@ if st.session_state.page == "Analysis":
 
         with st.spinner(""):
             time.sleep(0.4)
-            proba = pipe.predict_proba(input_df)[0]
-
-        win = proba[1]
-        lose = proba[0]
+            if runs_left <= 0:
+                win = 1.0
+                lose = 0.0
+            elif balls_left <= 0:
+                win = 0.0
+                lose = 1.0
+            else:
+                proba = pipe.predict_proba(input_df)[0]
+                win = proba[1]
+                lose = proba[0]
 
         st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
         st.markdown("""
@@ -1135,3 +1295,4 @@ if st.session_state.page == "Analysis":
         """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
+    
