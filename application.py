@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+import shap
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -44,12 +48,10 @@ html, body, [class*="css"], .stApp {
     min-height: 100vh;
 }
 
-/* Hide only Streamlit branding — leave header & sidebar toggle untouched */
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
 
-/* ---- SIDEBAR ---- */
 section[data-testid="stSidebar"] {
     background: #0c0c0c;
     border-right: 1px solid rgba(212,175,55,0.12);
@@ -102,7 +104,6 @@ section[data-testid="stSidebar"] > div {
     font-weight: 500;
 }
 
-/* ---- NAV BUTTONS ---- */
 .stButton > button {
     width: 100%;
     text-align: left;
@@ -137,13 +138,11 @@ section[data-testid="stSidebar"] > div {
     outline: none;
 }
 
-/* ---- MAIN CONTENT AREA ---- */
 .block-container {
     padding: 0 !important;
     max-width: 100% !important;
 }
 
-/* ---- HERO SECTION ---- */
 .hero-wrapper {
     padding: 64px 60px 40px;
     border-bottom: 1px solid rgba(212,175,55,0.08);
@@ -219,7 +218,6 @@ section[data-testid="stSidebar"] > div {
     50% { opacity: 0.5; transform: scale(0.8); }
 }
 
-/* ---- STAT PILLS ---- */
 .stats-row {
     display: flex;
     gap: 16px;
@@ -258,7 +256,6 @@ section[data-testid="stSidebar"] > div {
     color: rgba(200,185,140,0.4);
 }
 
-/* ---- ANALYSIS SECTION ---- */
 .section-header {
     padding: 40px 60px 0;
 }
@@ -278,7 +275,6 @@ section[data-testid="stSidebar"] > div {
     letter-spacing: 0.3px;
 }
 
-/* ---- INPUT CARD ---- */
 .input-card {
     background: rgba(255,255,255,0.025);
     border: 1px solid rgba(255,255,255,0.07);
@@ -302,7 +298,6 @@ section[data-testid="stSidebar"] > div {
     font-weight: 500;
 }
 
-/* ---- STREAMLIT INPUT OVERRIDES ---- */
 .stSelectbox > div > div,
 .stNumberInput > div > div > input,
 .stSlider > div {
@@ -321,7 +316,6 @@ section[data-testid="stSidebar"] > div {
     font-weight: 500 !important;
 }
 
-/* Slider track */
 .stSlider [data-testid="stSlider"] > div {
     background: rgba(212,175,55,0.15) !important;
 }
@@ -330,7 +324,6 @@ section[data-testid="stSidebar"] > div {
     background: linear-gradient(90deg, #d4af37, #f0d060) !important;
 }
 
-/* ---- TEAM VS CARD ---- */
 .team-vs-wrapper {
     background: rgba(255,255,255,0.02);
     border: 1px solid rgba(255,255,255,0.07);
@@ -342,40 +335,6 @@ section[data-testid="stSidebar"] > div {
     overflow: hidden;
 }
 
-.team-vs-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,0.04) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.team-abbr {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    margin-top: 14px;
-}
-
-.vs-divider {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 48px;
-    font-weight: 300;
-    color: rgba(212,175,55,0.25);
-    line-height: 1;
-    letter-spacing: -2px;
-}
-
-.team-logo-glow {
-    border-radius: 50%;
-    transition: box-shadow 0.3s ease;
-    width: 90px;
-    height: 90px;
-    object-fit: contain;
-}
-
-/* ---- ANALYZE BUTTON ---- */
 .stButton.analyze-btn > button {
     background: linear-gradient(135deg, #c9a227 0%, #d4af37 40%, #e8c84a 100%);
     color: #0a0800;
@@ -400,7 +359,6 @@ section[data-testid="stSidebar"] > div {
     border: none;
 }
 
-/* ---- PREDICTION CARD ---- */
 .prediction-card {
     background: rgba(212,175,55,0.04);
     border: 1px solid rgba(212,175,55,0.18);
@@ -435,15 +393,6 @@ section[data-testid="stSidebar"] > div {
     font-weight: 500;
 }
 
-.win-team-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 38px;
-    font-weight: 600;
-    color: #f0e0a0;
-    line-height: 1;
-    margin-bottom: 8px;
-}
-
 .win-probability {
     font-family: 'DM Mono', monospace;
     font-size: 72px;
@@ -464,7 +413,6 @@ section[data-testid="stSidebar"] > div {
     margin-bottom: 28px;
 }
 
-/* ---- PROGRESS BAR CUSTOM ---- */
 .prob-bar-wrapper {
     position: relative;
     margin: 20px 0 14px;
@@ -495,7 +443,6 @@ section[data-testid="stSidebar"] > div {
     letter-spacing: 0.5px;
 }
 
-/* ---- METRICS ROW ---- */
 .metrics-row {
     display: flex;
     gap: 10px;
@@ -526,7 +473,6 @@ section[data-testid="stSidebar"] > div {
     color: rgba(180,165,115,0.35);
 }
 
-/* ---- STRAY STREAMLIT COMPONENTS ---- */
 .stProgress > div > div {
     background: linear-gradient(90deg, #b8962e, #d4af37) !important;
     border-radius: 100px !important;
@@ -558,24 +504,20 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
     font-size: 28px !important;
 }
 
-/* ---- SEPARATOR ---- */
 hr {
     border: none;
     border-top: 1px solid rgba(212,175,55,0.08);
     margin: 0;
 }
 
-/* ---- CONTENT PADDING ---- */
 .main-pad {
     padding: 0 60px 60px;
 }
 
-/* ---- SCROLLBAR ---- */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: #0c0c0c; }
 ::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); border-radius: 4px; }
 
-/* ---- PROFILE CARD LINKS ---- */
 .profile-link {
     display: flex; align-items: center; gap: 10px;
     text-decoration: none; padding: 8px 10px;
@@ -667,9 +609,7 @@ def train_model():
 
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
-    final_df = df[['batting_team', 'bowling_team', 'city',
-                   'runs_left', 'balls_left', 'wickets',
-                   'target', 'crr', 'rrr', 'result']]
+    final_df = df[['batting_team', 'bowling_team', 'city','runs_left', 'balls_left', 'wickets','target', 'crr', 'rrr', 'result']]
     final_df.dropna(inplace=True)
 
     X = final_df.drop('result', axis=1)
@@ -686,9 +626,9 @@ def train_model():
     ])
 
     pipe.fit(X, y)
-    return pipe
+    return pipe, X
 
-pipe = train_model()
+pipe, training_data = train_model()
 
 # -----------------------------------
 # SIDEBAR
@@ -712,7 +652,6 @@ with st.sidebar:
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:16px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
 
-    # Profile card — rendered as separate st.markdown blocks to stay within Streamlit's HTML allowlist
     st.markdown("""
         <div style="padding:0 18px 8px;">
             <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(212,175,55,0.12);
@@ -734,7 +673,6 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
-    # Links rendered as st.markdown with href — Streamlit allows plain <a> with href+target
     st.markdown("""
         <div style="padding:0 18px;">
             <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(212,175,55,0.12);
@@ -742,21 +680,21 @@ with st.sidebar:
                 <p style="margin:0 0 2px 0;padding:8px 8px;">
                     <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">✉</span>
                     <a href="mailto:itsarnav.singh80@gmail.com"
-                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
                         itsarnav.singh80@gmail.com
                     </a>
                 </p>
                 <p style="margin:0 0 2px 0;padding:8px 8px;">
                     <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">in</span>
                     <a href="https://www.linkedin.com/in/arnav-singh-a87847351" target="_blank"
-                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
                         linkedin.com/in/arnav-singh
                     </a>
                 </p>
                 <p style="margin:0;padding:8px 8px;">
                     <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">&#9670;</span>
                     <a href="https://github.com/Arnav-Singh-5080" target="_blank"
-                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
                         Arnav-Singh-5080
                     </a>
                 </p>
@@ -839,7 +777,7 @@ if st.session_state.page == "Dashboard":
                                 box-shadow:0 0 20px {tdata['color']}50;
                                 display:flex;align-items:center;justify-content:center;">
                         <img src="{tdata['logo']}"
-                             style="width:100%;height:100%;object-fit:cover;
+                            style="width:100%;height:100%;object-fit:cover;
                                     mix-blend-mode:screen;border-radius:50%;" />
                     </div>
                     <div style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600;
@@ -884,7 +822,6 @@ if st.session_state.page == "Analysis":
 
     teams = list(team_data.keys())
 
-    # ---- INPUT SECTION ----
     st.markdown("""
         <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
                     color:rgba(212,175,55,0.4);margin-bottom:20px;font-weight:500;">
@@ -915,7 +852,6 @@ if st.session_state.page == "Analysis":
 
     st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
 
-    # ---- TEAM VS DISPLAY ----
     t1 = team_data[batting_team]
     if bowling_team in team_data:
         t2 = team_data[bowling_team]
@@ -941,7 +877,7 @@ if st.session_state.page == "Analysis":
                             box-shadow:0 0 28px {t1['color']}60;
                             display:flex;align-items:center;justify-content:center;">
                     <img src="{t1['logo']}"
-                         style="width:100%;height:100%;object-fit:cover;
+                        style="width:100%;height:100%;object-fit:cover;
                                 mix-blend-mode:screen;" />
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
@@ -973,7 +909,7 @@ if st.session_state.page == "Analysis":
                             box-shadow:0 0 28px {t2['color']}60;
                             display:flex;align-items:center;justify-content:center;">
                     <img src="{t2['logo']}"
-                         style="width:100%;height:100%;object-fit:cover;
+                        style="width:100%;height:100%;object-fit:cover;
                                 mix-blend-mode:screen;" />
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
@@ -988,7 +924,6 @@ if st.session_state.page == "Analysis":
 
     st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
 
-    # ---- ANALYZE BUTTON ----
     st.markdown('<div class="analyze-btn">', unsafe_allow_html=True)
     analyze = st.button("Run Analysis", key="analyze_btn", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1130,5 +1065,82 @@ if st.session_state.page == "Analysis":
                 </div>
             </div>
         """, unsafe_allow_html=True)
+
+        # ---- SHAP EXPLAINABILITY ----
+        preprocessor = pipe.named_steps['preprocessor']
+        model = pipe.named_steps['model']
+
+        input_transformed = preprocessor.transform(input_df)
+        background = preprocessor.transform(training_data.sample(100, random_state=42))
+        explainer = shap.LinearExplainer(model, background)
+        shap_values = explainer.shap_values(input_transformed)
+
+        feature_names = (
+            preprocessor.named_transformers_['cat']
+            .get_feature_names_out(
+                ['batting_team', 'bowling_team', 'city']
+            ).tolist()
+            + ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr']
+        )
+
+        shap_df = pd.DataFrame({
+            'Feature': feature_names,
+            'SHAP Value': shap_values[0]
+        })
+
+        numeric_features = ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr']
+        shap_df = shap_df[shap_df['Feature'].isin(numeric_features)]
+        shap_df = shap_df.reindex(
+            shap_df['SHAP Value'].abs().sort_values(ascending=False).index
+        )
+        shap_df['Impact'] = shap_df['SHAP Value'].apply(
+            lambda x: '✅ Positive' if x > 0 else '❌ Negative'
+        )
+        shap_df['SHAP Value'] = shap_df['SHAP Value'].round(4)
+
+        st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+        st.markdown("""
+            <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
+                        color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+                Why This Prediction?
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+            <div style="background:rgba(255,255,255,0.02);
+                        border:1px solid rgba(212,175,55,0.15);
+                        border-radius:20px;padding:28px 32px;">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                            color:#f0e8cc;margin-bottom:20px;">
+                    Key Factors Driving {batting_team}'s Win Probability
+                </div>
+        """, unsafe_allow_html=True)
+
+        for _, row in shap_df.iterrows():
+            bar_width = min(abs(row['SHAP Value']) * 500, 100)
+            bar_color = '#d4af37' if row['SHAP Value'] > 0 else 'rgba(200,100,100,0.7)'
+            st.markdown(f"""
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;
+                                margin-bottom:6px;">
+                        <span style="font-size:13px;color:#e2dfd8;letter-spacing:0.5px;">
+                            {row['Impact']} &nbsp; {row['Feature']}
+                        </span>
+                        <span style="font-family:'DM Mono',monospace;
+                                    font-size:12px;color:rgba(200,185,140,0.6);">
+                            {row['SHAP Value']:+.4f}
+                        </span>
+                    </div>
+                    <div style="height:6px;background:rgba(255,255,255,0.05);
+                                border-radius:100px;overflow:hidden;">
+                        <div style="height:100%;width:{bar_width}%;
+                                    background:{bar_color};
+                                    border-radius:100px;
+                                    box-shadow:0 0 8px {bar_color};"></div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
