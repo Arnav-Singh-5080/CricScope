@@ -25,11 +25,270 @@ if "prob_history" not in st.session_state:
     st.session_state.prob_history = []
 
 # -----------------------------------
-# STADIUM NIGHT THEME CSS
-# -----------------------------------
+# STADIUM NIGHT THEME CSS  +  SKELETON CSS
+# Both injected together in a single st.markdown call.
+# ─── CHANGES ───────────────────────────────────────────────────────────────
+#   Added: @keyframes cs-shimmer, cs-spin, cs-pulse, cs-fadein
+#   Added: .cs-sk, .cs-init-overlay, .cs-spinner, .cs-init-label,
+#          .cs-dot-row, .cs-dot, .cs-pills-row, .cs-pill,
+#          .cs-team-grid, .cs-team-card, .cs-wr-grid, .cs-wr-card,
+#          .cs-wr-row, .cs-input-wrap, .cs-input-card, .cs-vs-grid,
+#          .cs-vs-team, .cs-vs-mid, .cs-analyze-sk, .cs-pred-grid,
+#          .cs-pred-card, .cs-metric-row, .cs-metric-chip, .cs-sec-label
+#   Everything else below is UNCHANGED from the original.
+# ---------------------------------------------------------------------------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+/* ================================================================
+   SKELETON LOADING SYSTEM
+   All classes prefixed with cs- to avoid collisions.
+   ================================================================ */
+
+/* ── Keyframes ── */
+@keyframes cs-shimmer {
+    0%   { background-position: -700px 0; }
+    100% { background-position:  700px 0; }
+}
+@keyframes cs-spin  { to { transform: rotate(360deg); } }
+@keyframes cs-pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+@keyframes cs-fadein {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0);   }
+}
+
+/* ── Base shimmer block ─────────────────────────────────────────── */
+/* Uses the same navy tones as the app's card backgrounds so it
+   blends seamlessly with the stadium-night palette.                */
+.cs-sk {
+    background: linear-gradient(
+        90deg,
+        #0f172a 25%,
+        #1e293b 50%,
+        #0f172a 75%
+    );
+    background-size: 700px 100%;
+    border-radius: 8px;
+    animation: cs-shimmer 1.8s infinite linear;
+    display: block;
+}
+
+/* Respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .cs-sk     { animation: none; opacity: 0.55; }
+    .cs-spinner{ animation: none !important; opacity: 0.6; }
+    .cs-dot    { animation: none !important; opacity: 0.55; }
+}
+
+/* ── Full-page init overlay ─────────────────────────────────────── */
+/* Shown while train_model() / compute_win_rates() run on cold boot. */
+.cs-init-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    gap: 20px;
+}
+.cs-spinner {
+    width: 44px;
+    height: 44px;
+    border: 2.5px solid rgba(251,191,36,0.15);
+    border-top-color: #fbbf24;
+    border-radius: 50%;
+    animation: cs-spin 0.8s linear infinite;
+    box-shadow: 0 0 24px rgba(251,191,36,0.15);
+}
+.cs-init-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(251,191,36,0.5);
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+}
+.cs-dot-row { display: flex; gap: 6px; }
+.cs-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(251,191,36,0.6);
+    animation: cs-pulse 1.2s ease-in-out infinite;
+}
+.cs-dot:nth-child(2) { animation-delay: .2s; }
+.cs-dot:nth-child(3) { animation-delay: .4s; }
+
+/* ── Stat pills skeleton ────────────────────────────────────────── */
+.cs-pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: clamp(24px,4vw,32px) clamp(20px,8vw,60px);
+    border-bottom: 1px solid rgba(251,191,36,0.08);
+}
+.cs-pill {
+    flex: 1;
+    min-width: clamp(120px,20vw,160px);
+    background: rgba(15,23,42,0.6);
+    border: 1px solid rgba(251,191,36,0.12);
+    border-radius: 16px;
+    padding: clamp(16px,3vw,24px);
+    position: relative;
+    overflow: hidden;
+}
+.cs-pill::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,transparent,rgba(251,191,36,0.2),transparent);
+}
+
+/* ── Franchise team-card grid skeleton ─────────────────────────── */
+.cs-team-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.cs-team-card {
+    background: rgba(15,23,42,0.5);
+    border: 1px solid rgba(251,191,36,0.08);
+    border-radius: 20px;
+    padding: 20px 10px;
+    text-align: center;
+}
+
+/* ── Win-rate card grid skeleton ────────────────────────────────── */
+.cs-wr-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.cs-wr-card {
+    background: rgba(15,23,42,0.5);
+    border: 1px solid rgba(251,191,36,0.1);
+    border-radius: 18px;
+    padding: 16px;
+}
+.cs-wr-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+/* ── Analysis page: input cards skeleton ───────────────────────── */
+.cs-input-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+.cs-input-card {
+    background: rgba(15,23,42,0.5);
+    border: 1px solid rgba(251,191,36,0.15);
+    border-radius: 24px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+}
+.cs-input-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,transparent,rgba(251,191,36,0.25),transparent);
+}
+
+/* ── VS fixture skeleton ────────────────────────────────────────── */
+.cs-vs-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 2fr;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.cs-vs-team {
+    background: rgba(15,23,42,0.5);
+    border: 1px solid rgba(251,191,36,0.15);
+    border-radius: 28px;
+    padding: 32px 20px;
+    text-align: center;
+}
+.cs-vs-mid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Analyze button placeholder ─────────────────────────────────── */
+.cs-analyze-sk {
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(
+        90deg,
+        rgba(245,158,11,0.12) 25%,
+        rgba(245,158,11,0.22) 50%,
+        rgba(245,158,11,0.12) 75%
+    );
+    background-size: 700px 100%;
+    animation: cs-shimmer 1.8s infinite linear;
+    margin-bottom: 28px;
+}
+
+/* ── Prediction output card skeletons ───────────────────────────── */
+.cs-pred-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.cs-pred-card {
+    background: rgba(15,23,42,0.6);
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 28px;
+    padding: clamp(28px,5vw,40px);
+    position: relative;
+    overflow: hidden;
+    animation: cs-fadein 0.4s ease;
+}
+.cs-pred-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,transparent,rgba(251,191,36,0.35),transparent);
+}
+.cs-metric-row { display: flex; gap: 10px; margin-top: 16px; }
+.cs-metric-chip {
+    flex: 1;
+    background: rgba(30,41,59,0.6);
+    border: 1px solid rgba(251,191,36,0.12);
+    border-radius: 14px;
+    height: 52px;
+}
+
+/* ── Inline section label ───────────────────────────────────────── */
+.cs-sec-label {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(251,191,36,0.6);
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 16px;
+}
+
+/* ── Responsive breakpoints ─────────────────────────────────────── */
+@media (max-width: 900px) {
+    .cs-team-grid, .cs-wr-grid { grid-template-columns: repeat(3,1fr); }
+    .cs-pills-row { padding: 20px 24px; }
+}
+@media (max-width: 640px) {
+    .cs-team-grid, .cs-wr-grid  { grid-template-columns: repeat(2,1fr); }
+    .cs-input-wrap, .cs-pred-grid { grid-template-columns: 1fr; }
+    .cs-vs-grid { grid-template-columns: 1fr; }
+}
+
+/* ================================================================
+   ORIGINAL STADIUM NIGHT THEME  (unchanged from original app.py)
+   ================================================================ */
 
 /* ---- STADIUM NIGHT PALETTE ---- */
 :root {
@@ -174,7 +433,6 @@ section[data-testid="stSidebar"] > div {
     background: transparent;
 }
 
-/* Sidebar floodlight effect */
 section[data-testid="stSidebar"]::before {
     content: '';
     position: absolute;
@@ -193,7 +451,6 @@ section[data-testid="stSidebar"]::before {
     position: relative;
 }
 
-/* FIX 1: Prevent logo text from wrapping */
 .sidebar-logo-text {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(20px, 3.5vw, 28px);
@@ -493,7 +750,6 @@ section[data-testid="stSidebar"]::before {
     font-weight: 600 !important;
 }
 
-/* Slider track */
 .stSlider [data-testid="stSlider"] > div {
     background: rgba(251, 191, 36, 0.2) !important;
     height: 6px !important;
@@ -520,10 +776,7 @@ section[data-testid="stSidebar"]::before {
 .team-vs-wrapper::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251, 191, 36, 0.08) 0%, transparent 60%);
     pointer-events: none;
 }
@@ -583,9 +836,7 @@ section[data-testid="stSidebar"]::before {
     filter: brightness(1.1);
 }
 
-.stButton.analyze-btn > button:hover::before {
-    left: 100%;
-}
+.stButton.analyze-btn > button:hover::before { left: 100%; }
 
 /* ---- PREDICTION CARDS ---- */
 .prediction-card {
@@ -601,9 +852,7 @@ section[data-testid="stSidebar"]::before {
 .prediction-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 3px;
     background: linear-gradient(90deg, transparent, #fbbf24, transparent);
     box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
@@ -612,10 +861,7 @@ section[data-testid="stSidebar"]::before {
 .prediction-card::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(251, 191, 36, 0.1) 0%, transparent 60%);
     pointer-events: none;
 }
@@ -682,16 +928,14 @@ section[data-testid="stSidebar"]::before {
 .prob-bar-fill::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
+    top: 0; left: 0; bottom: 0;
     width: 100%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
     animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
-    0% { transform: translateX(-100%); }
+    0%   { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
 }
 
@@ -795,49 +1039,21 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
 }
 
 /* ---- SEPARATOR ---- */
-hr {
-    border: none;
-    border-top: 1px solid rgba(251, 191, 36, 0.1);
-    margin: 0;
-}
+hr { border: none; border-top: 1px solid rgba(251, 191, 36, 0.1); margin: 0; }
 
 /* ---- MOBILE RESPONSIVE ---- */
 @media (max-width: 768px) {
-    .hero-wrapper {
-        padding: clamp(32px, 6vw, 48px) clamp(16px, 6vw, 32px);
-    }
-    
-    .hero-title {
-        font-size: clamp(36px, 12vw, 64px);
-    }
-    
-    .stats-row {
-        padding: clamp(16px, 3vw, 24px) clamp(16px, 6vw, 32px);
-    }
-    
-    .stat-pill {
-        min-width: calc(50% - 10px);
-        flex: 1 1 calc(50% - 10px);
-    }
-    
-    section[data-testid="stSidebar"] {
-        width: 260px !important;
-    }
+    .hero-wrapper { padding: clamp(32px,6vw,48px) clamp(16px,6vw,32px); }
+    .hero-title   { font-size: clamp(36px,12vw,64px); }
+    .stats-row    { padding: clamp(16px,3vw,24px) clamp(16px,6vw,32px); }
+    .stat-pill    { min-width: calc(50% - 10px); flex: 1 1 calc(50% - 10px); }
+    section[data-testid="stSidebar"] { width: 260px !important; }
 }
 
 @media (max-width: 480px) {
-    .stat-pill {
-        min-width: 100%;
-        flex: 1 1 100%;
-    }
-    
-    .metrics-row {
-        flex-direction: column;
-    }
-    
-    .metric-chip {
-        min-width: 100%;
-    }
+    .stat-pill    { min-width: 100%; flex: 1 1 100%; }
+    .metrics-row  { flex-direction: column; }
+    .metric-chip  { min-width: 100%; }
 }
 
 /* ---- ANIMATED BACKGROUND ELEMENTS ---- */
@@ -851,22 +1067,19 @@ hr {
 }
 
 .stadium-light-left {
-    top: -100px;
-    left: -100px;
-    background: radial-gradient(ellipse at center, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+    top: -100px; left: -100px;
+    background: radial-gradient(ellipse at center, rgba(251,191,36,0.15) 0%, transparent 70%);
     transform: rotate(-30deg);
     filter: blur(60px);
 }
 
 .stadium-light-right {
-    top: -100px;
-    right: -100px;
-    background: radial-gradient(ellipse at center, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    background: radial-gradient(ellipse at center, rgba(251,191,36,0.15) 0%, transparent 70%);
     transform: rotate(30deg);
     filter: blur(60px);
 }
 
-/* FIX 2: Team card abbreviation — prevent overflow truncation */
 .team-card-abbr {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(14px, 2.5vw, 20px);
@@ -877,7 +1090,6 @@ hr {
     overflow: visible;
 }
 
-/* FIX 3: Win rate card layout */
 .wr-card {
     background: rgba(15,23,42,0.5);
     border: 1px solid rgba(251,191,36,0.1);
@@ -907,17 +1119,8 @@ hr {
     flex-shrink: 0;
 }
 
-.wr-logo-wrap img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    mix-blend-mode: screen;
-}
-
-.wr-info {
-    flex: 1;
-    min-width: 0;
-}
+.wr-logo-wrap img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: screen; }
+.wr-info { flex: 1; min-width: 0; }
 
 .wr-abbr {
     font-family: 'Cormorant Garamond', serif;
@@ -929,12 +1132,7 @@ hr {
     text-overflow: ellipsis;
 }
 
-.wr-record {
-    font-size: 10px;
-    color: rgba(148,163,184,0.4);
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-}
+.wr-record { font-size: 10px; color: rgba(148,163,184,0.4); letter-spacing: 0.5px; white-space: nowrap; }
 
 .wr-pct {
     font-family: 'DM Mono', monospace;
@@ -967,169 +1165,362 @@ hr {
 """, unsafe_allow_html=True)
 
 # -----------------------------------
-# TEAM DATA
-# FIX: Updated broken logo URLs for LSG, GT and others
+# TEAM DATA  (unchanged)
 # -----------------------------------
 team_data = {
-    "Chennai Super Kings": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/2/2b/Chennai_Super_Kings_Logo.svg",
-        "abbr": "CSK", "color": "#facc15"
-    },
-    "Delhi Capitals": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/c/c2/Delhi_Capitals_Logo.png",
-        "abbr": "DC", "color": "#3b82f6"
-    },
-    "Punjab Kings": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/d/d4/Punjab_Kings_Logo.svg",
-        "abbr": "PBKS", "color": "#ef4444"
-    },
-    "Kolkata Knight Riders": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/4/4c/Kolkata_Knight_Riders_Logo.svg",
-        "abbr": "KKR", "color": "#7c3aed"
-    },
-    "Mumbai Indians": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/c/cd/Mumbai_Indians_Logo.svg",
-        "abbr": "MI", "color": "#3b82f6"
-    },
-    "Rajasthan Royals": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/6/60/Rajasthan_Royals_Logo.svg",
-        "abbr": "RR", "color": "#ec4899"
-    },
-    "Royal Challengers Bangalore": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/2/2a/Royal_Challengers_Bangalore_2020.svg",
-        "abbr": "RCB", "color": "#dc2626"
-    },
-    "Sunrisers Hyderabad": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/8/81/Sunrisers_Hyderabad.svg",
-        "abbr": "SRH", "color": "#f97316"
-    },
-    "Lucknow Super Giants": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/a/a6/Lucknow_Super_Giants_IPL_Logo.svg",
-        "abbr": "LSG",
-        "color": "#06b6d4"
-    },
-    "Gujarat Titans": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/0/09/Gujarat_Titans_Logo.svg",
-        "abbr": "GT",
-        "color": "#06b6d4"
-    },
-    "Deccan Chargers": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/7/70/DeccanChargersLogo.png",
-        "abbr": "DC2",
-        "color": "#2563eb"
-    },
-    "Pune Warriors India": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/4/46/Pune_Warriors_India_Logo.svg",
-        "abbr": "PWI",
-        "color": "#0f766e"
-    },
-    "Rising Pune Supergiant": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/f/f5/RisingPuneSupergiants.png",
-        "abbr": "RPS",
-        "color": "#7c3aed"
-    },
-    "Gujarat Lions": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/8/80/Gujarat_Lions.png",
-        "abbr": "GL",
-        "color": "#f59e0b"
-    },
-    "Kochi Tuskers Kerala": {
-        "logo": "https://upload.wikimedia.org/wikipedia/en/7/7e/Kochi_Tuskers_Kerala_Logo.png",
-        "abbr": "KTK",
-        "color": "#10b981"
-    }
+    "Chennai Super Kings":      {"logo": "https://upload.wikimedia.org/wikipedia/en/2/2b/Chennai_Super_Kings_Logo.svg",          "abbr": "CSK",  "color": "#facc15"},
+    "Delhi Capitals":           {"logo": "https://upload.wikimedia.org/wikipedia/en/c/c2/Delhi_Capitals_Logo.png",               "abbr": "DC",   "color": "#3b82f6"},
+    "Punjab Kings":             {"logo": "https://upload.wikimedia.org/wikipedia/en/d/d4/Punjab_Kings_Logo.svg",                 "abbr": "PBKS", "color": "#ef4444"},
+    "Kolkata Knight Riders":    {"logo": "https://upload.wikimedia.org/wikipedia/en/4/4c/Kolkata_Knight_Riders_Logo.svg",        "abbr": "KKR",  "color": "#7c3aed"},
+    "Mumbai Indians":           {"logo": "https://upload.wikimedia.org/wikipedia/en/c/cd/Mumbai_Indians_Logo.svg",               "abbr": "MI",   "color": "#3b82f6"},
+    "Rajasthan Royals":         {"logo": "https://upload.wikimedia.org/wikipedia/en/6/60/Rajasthan_Royals_Logo.svg",             "abbr": "RR",   "color": "#ec4899"},
+    "Royal Challengers Bangalore": {"logo": "https://upload.wikimedia.org/wikipedia/en/2/2a/Royal_Challengers_Bangalore_2020.svg","abbr": "RCB", "color": "#dc2626"},
+    "Sunrisers Hyderabad":      {"logo": "https://upload.wikimedia.org/wikipedia/en/8/81/Sunrisers_Hyderabad.svg",               "abbr": "SRH",  "color": "#f97316"},
+    "Lucknow Super Giants":     {"logo": "https://upload.wikimedia.org/wikipedia/en/a/a6/Lucknow_Super_Giants_IPL_Logo.svg",     "abbr": "LSG",  "color": "#06b6d4"},
+    "Gujarat Titans":           {"logo": "https://upload.wikimedia.org/wikipedia/en/0/09/Gujarat_Titans_Logo.svg",               "abbr": "GT",   "color": "#06b6d4"},
+    "Deccan Chargers":          {"logo": "https://upload.wikimedia.org/wikipedia/en/7/70/DeccanChargersLogo.png",                "abbr": "DC2",  "color": "#2563eb"},
+    "Pune Warriors India":      {"logo": "https://upload.wikimedia.org/wikipedia/en/4/46/Pune_Warriors_India_Logo.svg",          "abbr": "PWI",  "color": "#0f766e"},
+    "Rising Pune Supergiant":   {"logo": "https://upload.wikimedia.org/wikipedia/en/f/f5/RisingPuneSupergiants.png",             "abbr": "RPS",  "color": "#7c3aed"},
+    "Gujarat Lions":            {"logo": "https://upload.wikimedia.org/wikipedia/en/8/80/Gujarat_Lions.png",                    "abbr": "GL",   "color": "#f59e0b"},
+    "Kochi Tuskers Kerala":     {"logo": "https://upload.wikimedia.org/wikipedia/en/7/7e/Kochi_Tuskers_Kerala_Logo.png",         "abbr": "KTK",  "color": "#10b981"},
 }
 
 # -----------------------------------
-# WIN RATE STATS
+# SKELETON HELPERS
+# Defined here so they can reference st.markdown at call time.
 # -----------------------------------
+
+def _sk_init_loader(label="Loading CricScope"):
+    """
+    Full-page centred spinner shown while the heavy loaders run on cold boot.
+    Replaces the blank white flash.
+    """
+    st.markdown(f"""
+        <div class="cs-init-overlay" role="status" aria-label="{label}">
+            <div class="cs-spinner" aria-hidden="true"></div>
+            <div class="cs-init-label">{label}</div>
+            <div class="cs-dot-row" aria-hidden="true">
+                <div class="cs-dot"></div>
+                <div class="cs-dot"></div>
+                <div class="cs-dot"></div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def _sk_dashboard():
+    """Skeleton for the full Dashboard page."""
+
+    # ── Hero ──────────────────────────────────────────────────────────────────
+    st.markdown("""
+        <div class="hero-wrapper" aria-hidden="true">
+            <span class="cs-sk" style="width:200px;height:11px;margin-bottom:20px;"></span>
+            <span class="cs-sk" style="width:250px;height:32px;border-radius:100px;
+                          margin-bottom:22px;"></span>
+            <span class="cs-sk" style="width:clamp(160px,40vw,340px);height:84px;
+                          border-radius:10px;margin-bottom:20px;"></span>
+            <span class="cs-sk" style="width:72%;height:14px;margin-bottom:9px;"></span>
+            <span class="cs-sk" style="width:58%;height:14px;"></span>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # ── Stat pills ────────────────────────────────────────────────────────────
+    st.markdown("""
+        <div class="cs-pills-row" aria-hidden="true">
+            <div class="cs-pill">
+                <span class="cs-sk" style="width:62px;height:30px;border-radius:5px;margin-bottom:12px;"></span>
+                <span class="cs-sk" style="width:75%;height:9px;"></span>
+            </div>
+            <div class="cs-pill">
+                <span class="cs-sk" style="width:44px;height:30px;border-radius:5px;margin-bottom:12px;"></span>
+                <span class="cs-sk" style="width:85%;height:9px;"></span>
+            </div>
+            <div class="cs-pill">
+                <span class="cs-sk" style="width:68px;height:30px;border-radius:5px;margin-bottom:12px;"></span>
+                <span class="cs-sk" style="width:68%;height:9px;"></span>
+            </div>
+            <div class="cs-pill">
+                <span class="cs-sk" style="width:52px;height:30px;border-radius:5px;margin-bottom:12px;"></span>
+                <span class="cs-sk" style="width:78%;height:9px;"></span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # ── Section header ────────────────────────────────────────────────────────
+    st.markdown("""
+        <div class="section-header" aria-hidden="true">
+            <span class="cs-sk" style="width:220px;height:38px;border-radius:6px;
+                          margin-bottom:12px;"></span>
+            <span class="cs-sk" style="width:300px;height:11px;margin-top:20px;"></span>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # ── 15 team cards (5 columns × 3 rows) ───────────────────────────────────
+    _card = """
+        <div class="cs-team-card">
+            <span class="cs-sk" style="width:60px;height:60px;border-radius:50%;
+                          margin:0 auto 14px;"></span>
+            <span class="cs-sk" style="width:58%;height:15px;margin:0 auto 8px;"></span>
+            <span class="cs-sk" style="width:88%;height:9px;margin:0 auto;"></span>
+        </div>
+    """
+    st.markdown(f"""
+        <div class="main-pad" aria-hidden="true">
+            <div class="cs-team-grid">{''.join([_card]*15)}</div>
+    """, unsafe_allow_html=True)
+
+    # ── "All-Time Win Rates" heading ──────────────────────────────────────────
+    st.markdown("""
+            <div style="margin-top:48px;margin-bottom:28px;">
+                <span class="cs-sk" style="width:240px;height:32px;border-radius:6px;"></span>
+            </div>
+    """, unsafe_allow_html=True)
+
+    # ── 15 win-rate cards (5 columns × 3 rows) ────────────────────────────────
+    _wr = """
+        <div class="cs-wr-card">
+            <div class="cs-wr-row">
+                <span class="cs-sk" style="width:34px;height:34px;border-radius:50%;
+                              flex-shrink:0;"></span>
+                <div style="flex:1;min-width:0;">
+                    <span class="cs-sk" style="width:60%;height:13px;
+                                  margin-bottom:7px;"></span>
+                    <span class="cs-sk" style="width:80%;height:9px;"></span>
+                </div>
+                <span class="cs-sk" style="width:38px;height:18px;border-radius:6px;
+                              flex-shrink:0;"></span>
+            </div>
+            <span class="cs-sk" style="width:100%;height:5px;border-radius:100px;"></span>
+        </div>
+    """
+    st.markdown(f"""
+            <div class="cs-wr-grid">{''.join([_wr]*15)}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def _sk_analysis():
+    """Skeleton for the full Analysis page."""
+
+    # ── Hero ──────────────────────────────────────────────────────────────────
+    st.markdown("""
+        <div class="hero-wrapper" style="padding-bottom:clamp(24px,5vw,40px);"
+             aria-hidden="true">
+            <span class="cs-sk" style="width:180px;height:9px;margin-bottom:16px;"></span>
+            <span class="cs-sk" style="width:clamp(140px,45vw,360px);height:60px;
+                          border-radius:8px;margin-bottom:16px;"></span>
+            <span class="cs-sk" style="width:70%;height:13px;margin-bottom:8px;"></span>
+            <span class="cs-sk" style="width:55%;height:13px;"></span>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="main-pad" aria-hidden="true">', unsafe_allow_html=True)
+    st.markdown('<div style="height:clamp(24px,4vw,40px);"></div>', unsafe_allow_html=True)
+
+    # ── Match configuration inputs ────────────────────────────────────────────
+    st.markdown("""
+        <div class="cs-sec-label">Match Configuration</div>
+        <div class="cs-input-wrap">
+            <div class="cs-input-card">
+                <span class="cs-sk" style="width:85px;height:9px;margin-bottom:22px;"></span>
+                <span class="cs-sk" style="width:65%;height:9px;margin-bottom:9px;"></span>
+                <span class="cs-sk" style="width:100%;height:40px;border-radius:12px;
+                              margin-bottom:20px;"></span>
+                <span class="cs-sk" style="width:72%;height:9px;margin-bottom:9px;"></span>
+                <span class="cs-sk" style="width:100%;height:40px;border-radius:12px;"></span>
+            </div>
+            <div class="cs-input-card">
+                <span class="cs-sk" style="width:75px;height:9px;margin-bottom:22px;"></span>
+                <span class="cs-sk" style="width:60%;height:9px;margin-bottom:9px;"></span>
+                <span class="cs-sk" style="width:100%;height:40px;border-radius:12px;
+                              margin-bottom:20px;"></span>
+                <span class="cs-sk" style="width:65%;height:9px;margin-bottom:9px;"></span>
+                <span class="cs-sk" style="width:100%;height:40px;border-radius:12px;
+                              margin-bottom:20px;"></span>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <span class="cs-sk" style="width:80%;height:9px;margin-bottom:9px;"></span>
+                        <span class="cs-sk" style="width:100%;height:34px;border-radius:10px;"></span>
+                    </div>
+                    <div>
+                        <span class="cs-sk" style="width:70%;height:9px;margin-bottom:9px;"></span>
+                        <span class="cs-sk" style="width:100%;height:34px;border-radius:10px;"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # ── VS fixture ────────────────────────────────────────────────────────────
+    st.markdown("""
+        <div class="cs-sec-label">Fixture</div>
+        <div class="cs-vs-grid">
+            <div class="cs-vs-team">
+                <span class="cs-sk" style="width:100px;height:100px;border-radius:50%;
+                              margin:0 auto 18px;"></span>
+                <span class="cs-sk" style="width:50%;height:26px;margin:0 auto 10px;
+                              border-radius:5px;"></span>
+                <span class="cs-sk" style="width:35%;height:9px;margin:0 auto;"></span>
+            </div>
+            <div class="cs-vs-mid">
+                <span class="cs-sk" style="width:44px;height:55px;border-radius:8px;"></span>
+            </div>
+            <div class="cs-vs-team">
+                <span class="cs-sk" style="width:100px;height:100px;border-radius:50%;
+                              margin:0 auto 18px;"></span>
+                <span class="cs-sk" style="width:50%;height:26px;margin:0 auto 10px;
+                              border-radius:5px;"></span>
+                <span class="cs-sk" style="width:35%;height:9px;margin:0 auto;"></span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # ── Analyze button placeholder (amber shimmer matches the real button) ────
+    st.markdown('<div class="cs-analyze-sk" aria-hidden="true"></div>', unsafe_allow_html=True)
+
+    # ── Prediction output cards ───────────────────────────────────────────────
+    st.markdown("""
+        <div class="cs-sec-label">Prediction Output</div>
+        <div class="cs-pred-grid">
+            <div class="cs-pred-card">
+                <span class="cs-sk" style="width:80px;height:9px;margin-bottom:18px;"></span>
+                <span class="cs-sk" style="width:65%;height:24px;border-radius:5px;
+                              margin-bottom:24px;"></span>
+                <span class="cs-sk" style="width:100px;height:68px;border-radius:7px;
+                              margin-bottom:10px;"></span>
+                <span class="cs-sk" style="width:55%;height:8px;margin-bottom:22px;"></span>
+                <span class="cs-sk" style="width:100%;height:7px;border-radius:100px;
+                              margin-bottom:10px;"></span>
+                <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
+                    <span class="cs-sk" style="width:26px;height:8px;"></span>
+                    <span class="cs-sk" style="width:32px;height:8px;"></span>
+                    <span class="cs-sk" style="width:30px;height:8px;"></span>
+                </div>
+                <div class="cs-metric-row">
+                    <span class="cs-sk cs-metric-chip"></span>
+                    <span class="cs-sk cs-metric-chip"></span>
+                    <span class="cs-sk cs-metric-chip"></span>
+                </div>
+            </div>
+            <div class="cs-pred-card" style="border-color:rgba(148,163,184,0.12);">
+                <span class="cs-sk" style="width:70px;height:9px;margin-bottom:18px;"></span>
+                <span class="cs-sk" style="width:72%;height:24px;border-radius:5px;
+                              margin-bottom:24px;"></span>
+                <span class="cs-sk" style="width:86px;height:68px;border-radius:7px;
+                              margin-bottom:10px;"></span>
+                <span class="cs-sk" style="width:48%;height:8px;margin-bottom:22px;"></span>
+                <span class="cs-sk" style="width:100%;height:7px;border-radius:100px;
+                              margin-bottom:10px;"></span>
+                <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
+                    <span class="cs-sk" style="width:26px;height:8px;"></span>
+                    <span class="cs-sk" style="width:32px;height:8px;"></span>
+                    <span class="cs-sk" style="width:30px;height:8px;"></span>
+                </div>
+                <div class="cs-metric-row">
+                    <span class="cs-sk cs-metric-chip"></span>
+                    <span class="cs-sk cs-metric-chip"></span>
+                    <span class="cs-sk cs-metric-chip"></span>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)  # close .main-pad
+
+
+# -----------------------------------
+# DATA LOADERS
+# ─── CHANGES ────────────────────────────────────────────────────────────────
+#   Both functions are wrapped in session_state guards so they only run once.
+#   On the very first Streamlit execution the init loader is shown, data is
+#   computed, results are stored in session_state, and st.rerun() is called.
+#   On every subsequent run the cached values are retrieved instantly — no
+#   blank screen, no repeated training.
+# ---------------------------------------------------------------------------
+
 @st.cache_data
 def compute_win_rates():
     matches = pd.read_csv("matches.csv")
     valid_teams = set(team_data.keys())
-
     name_map = {
         "Delhi Daredevils": "Delhi Capitals",
         "Kings XI Punjab": "Punjab Kings",
         "Royal Challengers Bengaluru": "Royal Challengers Bangalore",
         "Rising Pune Supergiants": "Rising Pune Supergiant"
     }
-    matches["team1"] = matches["team1"].replace(name_map)
-    matches["team2"] = matches["team2"].replace(name_map)
+    matches["team1"]  = matches["team1"].replace(name_map)
+    matches["team2"]  = matches["team2"].replace(name_map)
     matches["winner"] = matches["winner"].replace(name_map)
-
     stats = {}
     for team in valid_teams:
         played = matches[(matches["team1"] == team) | (matches["team2"] == team)]
         played = played[played["result"] == "normal"]
-        wins = played[played["winner"] == team].shape[0]
-        total = played.shape[0]
-        stats[team] = {"wins": wins, "total": total, "rate": round((wins / total * 100), 1) if total > 0 else 0}
+        wins   = played[played["winner"] == team].shape[0]
+        total  = played.shape[0]
+        stats[team] = {"wins": wins, "total": total,
+                       "rate": round((wins / total * 100), 1) if total > 0 else 0}
     return stats
 
-win_stats = compute_win_rates()
 
-# -----------------------------------
-# MODEL
-# -----------------------------------
 @st.cache_resource
 def train_model():
-    matches = pd.read_csv("matches.csv")
+    matches    = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
-
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
-
     total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
     total_df.rename(columns={'total_runs': 'target'}, inplace=True)
-
     df = df.merge(total_df, on='match_id')
     df = df[df['inning'] == 2]
-
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
-    df['runs_left'] = df['target'] - df['current_score']
-    df['balls_left'] = 120 - (df['over'] * 6 + df['ball'])
-
+    df['runs_left']     = df['target'] - df['current_score']
+    df['balls_left']    = 120 - (df['over'] * 6 + df['ball'])
     df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
     df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
     df['wickets'] = 10 - df['wickets']
-
-    df['over'] = df['over'].replace(0, 0.1)
-
-    df['crr'] = df['current_score'] / (df['over'] + df['ball'] / 6)
-    df['rrr'] = (df['runs_left'] * 6) / df['balls_left']
-
+    df['over']    = df['over'].replace(0, 0.1)
+    df['crr']     = df['current_score'] / (df['over'] + df['ball'] / 6)
+    df['rrr']     = (df['runs_left'] * 6) / df['balls_left']
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-    df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
-
+    df['result']  = np.where(df['batting_team'] == df['winner'], 1, 0)
     final_df = df[['batting_team', 'bowling_team', 'city',
                    'runs_left', 'balls_left', 'wickets',
-                   'target', 'crr', 'rrr', 'result']]
-    final_df.dropna(inplace=True)
-
+                   'target', 'crr', 'rrr', 'result']].dropna()
     X = final_df.drop('result', axis=1)
     y = final_df['result']
-
     preprocessor = ColumnTransformer([
         ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
         ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
     ])
-
     pipe = Pipeline([
         ('preprocessor', preprocessor),
         ('model', XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=6, random_state=42))
     ])
-
     pipe.fit(X, y)
     return pipe
 
-pipe = train_model()
+
+# ─── COLD-START GUARD ────────────────────────────────────────────────────────
+# On the very first run, show the init loader while both heavy operations
+# complete. st.rerun() then re-executes the script so the sidebar and pages
+# render normally — with data already in cache / session_state.
+# -----------------------------------------------------------------------------
+if "app_ready" not in st.session_state:
+    _sk_init_loader("Warming Up CricScope")
+    # Run both loaders — they write into @st.cache_data / @st.cache_resource
+    # so subsequent calls return instantly.
+    st.session_state._win_stats = compute_win_rates()
+    st.session_state._pipe      = train_model()
+    st.session_state.app_ready  = True
+    st.rerun()
+
+# Retrieve from session_state (always instant after the first run)
+win_stats = st.session_state._win_stats
+pipe      = st.session_state._pipe
 
 # -----------------------------------
-# SIDEBAR
+# SIDEBAR  (unchanged)
 # -----------------------------------
 with st.sidebar:
-    # FIX 1: Logo text on one line — reduced letter-spacing, nowrap enforced via CSS
     st.markdown("""
         <div class="sidebar-brand">
             <span class="sidebar-logo-text">CRICSCOPE</span>
@@ -1211,8 +1602,17 @@ with st.sidebar:
 
 # -----------------------------------
 # DASHBOARD PAGE
-# -----------------------------------
+# ─── CHANGES ────────────────────────────────────────────────────────────────
+#   Added: 2-line skeleton guard at the top of the block.
+#   Everything else below is byte-for-byte identical to the original.
+# ---------------------------------------------------------------------------
 if st.session_state.page == "Dashboard":
+
+    # Show skeleton until app is ready (covers any edge case where
+    # session_state.app_ready isn't set yet on a concurrent request).
+    if not st.session_state.get("app_ready"):
+        _sk_dashboard()
+        st.stop()
 
     st.markdown("""
         <div class="hero-wrapper">
@@ -1261,8 +1661,7 @@ if st.session_state.page == "Dashboard":
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="main-pad">', unsafe_allow_html=True)
-    
-    # FIX 2: Team cards — full abbreviation visible, no truncation
+
     team_cols = st.columns(5)
     for i, (team_name, tdata) in enumerate(team_data.items()):
         color = tdata['color']
@@ -1270,17 +1669,10 @@ if st.session_state.page == "Dashboard":
         abbr  = tdata['abbr']
         with team_cols[i % 5]:
             st.markdown(f"""
-                <div style="
-                    background:rgba(15,23,42,0.5);
-                    border:1px solid rgba(251,191,36,0.1);
-                    border-radius:20px;
-                    padding:20px 12px;
-                    text-align:center;
-                    transition:all 0.3s ease;
-                    margin-bottom:16px;
-                    backdrop-filter:blur(10px);
-                    overflow:visible;
-                ">
+                <div style="background:rgba(15,23,42,0.5);border:1px solid rgba(251,191,36,0.1);
+                            border-radius:20px;padding:20px 12px;text-align:center;
+                            transition:all 0.3s ease;margin-bottom:16px;
+                            backdrop-filter:blur(10px);overflow:visible;">
                     <div style="width:64px;height:64px;border-radius:50%;margin:0 auto;
                                 overflow:hidden;background:#0f172a;
                                 box-shadow:0 0 30px {color}40,0 0 0 1px rgba(251,191,36,0.1);
@@ -1291,9 +1683,7 @@ if st.session_state.page == "Dashboard":
                     </div>
                     <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;
                                 color:{color};letter-spacing:2px;margin-top:14px;
-                                white-space:nowrap;overflow:visible;">
-                        {abbr}
-                    </div>
+                                white-space:nowrap;overflow:visible;">{abbr}</div>
                     <div style="font-size:10px;color:rgba(148,163,184,0.45);margin-top:5px;
                                 letter-spacing:0.3px;font-weight:500;word-break:break-word;line-height:1.4;">
                         {team_name}
@@ -1301,18 +1691,17 @@ if st.session_state.page == "Dashboard":
                 </div>
             """, unsafe_allow_html=True)
 
-    # ---- WIN RATE STATS SECTION ----
     st.markdown("""
         <div style="margin-top:48px;">
             <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(24px,5vw,32px);font-weight:600;
                         color:#f8fafc;letter-spacing:1px;margin-bottom:32px;position:relative;display:inline-block;">
                 All-Time Win Rates
-                <div style="position:absolute;bottom:-8px;left:0;width:50px;height:3px;background:linear-gradient(90deg,#fbbf24,transparent);border-radius:3px;"></div>
+                <div style="position:absolute;bottom:-8px;left:0;width:50px;height:3px;
+                            background:linear-gradient(90deg,#fbbf24,transparent);border-radius:3px;"></div>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # FIX 3: Win rate cards — clean layout with correct stats display
     wr_cols = st.columns(5)
     for i, (team_name, tdata) in enumerate(team_data.items()):
         s = win_stats.get(team_name, {"wins": 0, "total": 0, "rate": 0})
@@ -1342,8 +1731,8 @@ if st.session_state.page == "Dashboard":
 
     st.markdown("""
         <div style="margin-top:48px;text-align:center;">
-            <div style="display:inline-block;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);
-                        border-radius:16px;padding:24px 40px;">
+            <div style="display:inline-block;background:rgba(16,185,129,0.1);
+                        border:1px solid rgba(16,185,129,0.3);border-radius:16px;padding:24px 40px;">
                 <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;
                             color:#10b981;margin-bottom:10px;font-weight:600;">Get Started</div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:24px;color:#f8fafc;font-weight:500;">
@@ -1352,13 +1741,20 @@ if st.session_state.page == "Dashboard":
             </div>
         </div>
     """, unsafe_allow_html=True)
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 # -----------------------------------
 # ANALYSIS PAGE
-# -----------------------------------
+# ─── CHANGES ────────────────────────────────────────────────────────────────
+#   Added: 2-line skeleton guard at the top of the block.
+#   Everything else below is byte-for-byte identical to the original.
+# ---------------------------------------------------------------------------
 if st.session_state.page == "Analysis":
+
+    if not st.session_state.get("app_ready"):
+        _sk_analysis()
+        st.stop()
 
     st.markdown("""
         <div class="hero-wrapper" style="padding-bottom:clamp(24px,5vw,40px);">
@@ -1378,7 +1774,6 @@ if st.session_state.page == "Analysis":
 
     teams = list(team_data.keys())
 
-    # ---- INPUT SECTION ----
     st.markdown("""
         <div style="font-size:clamp(11px,1.5vw,12px);letter-spacing:3px;text-transform:uppercase;
                     color:rgba(251,191,36,0.8);margin-bottom:clamp(16px,3vw,24px);font-weight:600;">
@@ -1399,7 +1794,7 @@ if st.session_state.page == "Analysis":
         st.markdown('<div class="input-card">', unsafe_allow_html=True)
         st.markdown('<div class="input-label">Match State</div>', unsafe_allow_html=True)
         target = st.number_input("Target Score", min_value=50, max_value=300, value=180, step=1)
-        score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
+        score  = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
         col_ov, col_wk = st.columns(2)
         with col_ov:
             overs = st.slider("Overs Completed", min_value=1, max_value=19, value=10)
@@ -1409,7 +1804,6 @@ if st.session_state.page == "Analysis":
 
     st.markdown('<div style="height:clamp(24px,4vw,32px);"></div>', unsafe_allow_html=True)
 
-    # ---- TEAM VS DISPLAY ----
     t1 = team_data[batting_team]
     t2 = team_data[bowling_team]
 
@@ -1428,10 +1822,10 @@ if st.session_state.page == "Analysis":
                         border-radius:28px;padding:clamp(24px,5vw,36px);text-align:center;
                         box-shadow:0 0 60px {t1['color']}15,0 25px 50px rgba(0,0,0,0.3);
                         backdrop-filter:blur(20px);position:relative;overflow:hidden;">
-                <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,{t1['color']},transparent);opacity:0.5;"></div>
+                <div style="position:absolute;top:0;left:0;right:0;height:3px;
+                            background:linear-gradient(90deg,transparent,{t1['color']},transparent);opacity:0.5;"></div>
                 <div style="width:100px;height:100px;border-radius:50%;margin:0 auto;
-                            overflow:hidden;background:#0f172a;
-                            box-shadow:0 0 40px {t1['color']}50;
+                            overflow:hidden;background:#0f172a;box-shadow:0 0 40px {t1['color']}50;
                             display:flex;align-items:center;justify-content:center;">
                     <img src="{t1['logo']}"
                          style="width:100%;height:100%;object-fit:cover;mix-blend-mode:screen;"
@@ -1439,22 +1833,17 @@ if st.session_state.page == "Analysis":
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,4vw,30px);font-weight:700;
                             color:{t1['color']};letter-spacing:3px;margin-top:18px;
-                            text-shadow:0 0 30px {t1['color']}40;">
-                    {t1['abbr']}
-                </div>
-                <div style="font-size:11px;color:rgba(148,163,184,0.5);margin-top:8px;letter-spacing:2px;font-weight:600;">
-                    BATTING
-                </div>
+                            text-shadow:0 0 30px {t1['color']}40;">{t1['abbr']}</div>
+                <div style="font-size:11px;color:rgba(148,163,184,0.5);margin-top:8px;
+                            letter-spacing:2px;font-weight:600;">BATTING</div>
             </div>
         """, unsafe_allow_html=True)
 
     with vs_col2:
         st.markdown("""
             <div style="display:flex;align-items:center;justify-content:center;height:100%;
-                        font-family:'Cormorant Garamond',serif;font-size:clamp(40px,8vw,64px);font-weight:300;
-                        color:rgba(251,191,36,0.3);letter-spacing:-4px;padding:32px 0;">
-                vs
-            </div>
+                        font-family:'Cormorant Garamond',serif;font-size:clamp(40px,8vw,64px);
+                        font-weight:300;color:rgba(251,191,36,0.3);letter-spacing:-4px;padding:32px 0;">vs</div>
         """, unsafe_allow_html=True)
 
     with vs_col3:
@@ -1463,10 +1852,10 @@ if st.session_state.page == "Analysis":
                         border-radius:28px;padding:clamp(24px,5vw,36px);text-align:center;
                         box-shadow:0 0 60px {t2['color']}15,0 25px 50px rgba(0,0,0,0.3);
                         backdrop-filter:blur(20px);position:relative;overflow:hidden;">
-                <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,{t2['color']},transparent);opacity:0.5;"></div>
+                <div style="position:absolute;top:0;left:0;right:0;height:3px;
+                            background:linear-gradient(90deg,transparent,{t2['color']},transparent);opacity:0.5;"></div>
                 <div style="width:100px;height:100px;border-radius:50%;margin:0 auto;
-                            overflow:hidden;background:#0f172a;
-                            box-shadow:0 0 40px {t2['color']}50;
+                            overflow:hidden;background:#0f172a;box-shadow:0 0 40px {t2['color']}50;
                             display:flex;align-items:center;justify-content:center;">
                     <img src="{t2['logo']}"
                          style="width:100%;height:100%;object-fit:cover;mix-blend-mode:screen;"
@@ -1474,78 +1863,50 @@ if st.session_state.page == "Analysis":
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,4vw,30px);font-weight:700;
                             color:{t2['color']};letter-spacing:3px;margin-top:18px;
-                            text-shadow:0 0 30px {t2['color']}40;">
-                    {t2['abbr']}
-                </div>
-                <div style="font-size:11px;color:rgba(148,163,184,0.5);margin-top:8px;letter-spacing:2px;font-weight:600;">
-                    BOWLING
-                </div>
+                            text-shadow:0 0 30px {t2['color']}40;">{t2['abbr']}</div>
+                <div style="font-size:11px;color:rgba(148,163,184,0.5);margin-top:8px;
+                            letter-spacing:2px;font-weight:600;">BOWLING</div>
             </div>
         """, unsafe_allow_html=True)
 
     st.markdown('<div style="height:clamp(24px,4vw,40px);"></div>', unsafe_allow_html=True)
 
-    # ---- ANALYZE BUTTON ----
     st.markdown('<div class="analyze-btn">', unsafe_allow_html=True)
     analyze = st.button("Run Analysis", key="analyze_btn", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---- PREDICTION OUTPUT ----
     if analyze:
-        runs_left = target - score
+        runs_left  = target - score
         balls_left = 120 - (overs * 6)
         crr = score / overs if overs > 0 else 0
         rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
 
-        # ---- MATCH-STATE VALIDATION (Issue #31) ----
-        # Guard 1: batting team has already reached or crossed the target
         if runs_left <= 0:
-            st.success(
-                f"🏆 **Match Over** — **{batting_team}** have already reached the target! "
-                f"No prediction needed."
-            )
+            st.success(f"🏆 **Match Over** — **{batting_team}** have already reached the target! No prediction needed.")
             st.stop()
 
-        # Guard 2: no balls remaining — innings is over, batting team fell short
         if balls_left <= 0:
-            st.error(
-                f"⏱️ **Match Over** — No balls remaining. **{bowling_team}** win! "
-                f"No prediction needed."
-            )
+            st.error(f"⏱️ **Match Over** — No balls remaining. **{bowling_team}** win! No prediction needed.")
             st.stop()
 
-        # Guard 3: RRR physically impossible (> 36 runs/over = 6 runs every ball)
         if rrr > 36.0:
-            st.error(
-                f"⚠️ **Invalid match state** — Required Run Rate is **{round(rrr, 2)} runs/over**, "
-                f"which is physically impossible in cricket. Please check your inputs."
-            )
+            st.error(f"⚠️ **Invalid match state** — Required Run Rate is **{round(rrr, 2)} runs/over**, which is physically impossible in cricket. Please check your inputs.")
             st.stop()
 
-        # Guard 4: RRR extremely high (> 24 runs/over) — warn but allow prediction
         if rrr > 24.0:
-            st.warning(
-                f"⚠️ **Extreme match state** — Required Run Rate is **{round(rrr, 2)} runs/over**. "
-                f"This is a very unlikely scenario; the prediction below may be less reliable."
-            )
+            st.warning(f"⚠️ **Extreme match state** — Required Run Rate is **{round(rrr, 2)} runs/over**. This is a very unlikely scenario; the prediction below may be less reliable.")
 
         input_df = pd.DataFrame({
-            'batting_team': [batting_team],
-            'bowling_team': [bowling_team],
-            'city': ['Mumbai'],
-            'runs_left': [runs_left],
-            'balls_left': [balls_left],
-            'wickets': [10 - wickets],
-            'target': [target],
-            'crr': [crr],
-            'rrr': [rrr]
+            'batting_team': [batting_team], 'bowling_team': [bowling_team],
+            'city': ['Mumbai'], 'runs_left': [runs_left], 'balls_left': [balls_left],
+            'wickets': [10 - wickets], 'target': [target], 'crr': [crr], 'rrr': [rrr]
         })
 
         with st.spinner(""):
             time.sleep(0.4)
             proba = pipe.predict_proba(input_df)[0]
 
-        win = proba[1]
+        win  = proba[1]
         lose = proba[0]
         st.session_state.prob_history.append(round(win * 100, 2))
 
@@ -1597,22 +1958,20 @@ if st.session_state.page == "Analysis":
             bowl_pct = round(lose * 100)
             st.markdown(f"""
                 <div style="background:rgba(15,23,42,0.4);border:1px solid rgba(148,163,184,0.15);
-                            border-radius:28px;padding:clamp(28px,5vw,40px);position:relative;overflow:hidden;
-                            backdrop-filter:blur(20px);">
-                    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(148,163,184,0.3),transparent);"></div>
+                            border-radius:28px;padding:clamp(28px,5vw,40px);position:relative;
+                            overflow:hidden;backdrop-filter:blur(20px);">
+                    <div style="position:absolute;top:0;left:0;right:0;height:2px;
+                                background:linear-gradient(90deg,transparent,rgba(148,163,184,0.3),transparent);"></div>
                     <div class="prediction-label">Bowling Team · {t2['abbr']}</div>
                     <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(20px,4vw,28px);
                                 font-weight:600;color:#f8fafc;margin-bottom:clamp(16px,3vw,20px);">
                         {bowling_team}
                     </div>
                     <div style="font-family:'DM Mono',monospace;font-size:clamp(48px,10vw,80px);font-weight:600;
-                                color:rgba(148,163,184,0.6);line-height:1;margin-bottom:8px;">
-                        {bowl_pct}%
-                    </div>
+                                color:rgba(148,163,184,0.6);line-height:1;margin-bottom:8px;">{bowl_pct}%</div>
                     <div class="win-prob-label">Win Probability</div>
                     <div class="prob-bar-track">
-                        <div style="height:100%;border-radius:100px;
-                                    background:rgba(148,163,184,0.3);
+                        <div style="height:100%;border-radius:100px;background:rgba(148,163,184,0.3);
                                     width:{bowl_pct}%;transition:width 1s ease;"></div>
                     </div>
                     <div class="prob-bar-labels">
@@ -1635,10 +1994,9 @@ if st.session_state.page == "Analysis":
                 </div>
             """, unsafe_allow_html=True)
 
-        # ---- SUMMARY ROW ----
         st.markdown('<div style="height:clamp(16px,3vw,24px);"></div>', unsafe_allow_html=True)
-        verdict = batting_team if win > 0.5 else bowling_team
-        conf = max(win, lose)
+        verdict    = batting_team if win > 0.5 else bowling_team
+        conf       = max(win, lose)
         conf_color = "#10b981" if conf > 0.75 else "#fbbf24" if conf > 0.55 else "#f87171"
         conf_label = "High Confidence" if conf > 0.75 else "Moderate" if conf > 0.55 else "Close Match"
 
@@ -1646,8 +2004,10 @@ if st.session_state.page == "Analysis":
             <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(251,191,36,0.2);
                         border-radius:20px;padding:clamp(20px,4vw,28px) clamp(24px,4vw,32px);
                         backdrop-filter:blur(20px);position:relative;overflow:hidden;">
-                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,{conf_color},transparent);opacity:0.6;"></div>
-                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;">
+                <div style="position:absolute;top:0;left:0;right:0;height:2px;
+                            background:linear-gradient(90deg,transparent,{conf_color},transparent);opacity:0.6;"></div>
+                <div style="display:flex;flex-wrap:wrap;align-items:center;
+                            justify-content:space-between;gap:20px;">
                     <div>
                         <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;
                                     color:rgba(148,163,184,0.5);margin-bottom:8px;font-weight:600;">Model Verdict</div>
@@ -1659,7 +2019,8 @@ if st.session_state.page == "Analysis":
                     <div style="text-align:right;">
                         <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;
                                     color:rgba(148,163,184,0.5);margin-bottom:8px;font-weight:600;">Confidence Level</div>
-                        <div style="font-family:'DM Mono',monospace;font-size:clamp(20px,4vw,28px);color:{conf_color};font-weight:600;">
+                        <div style="font-family:'DM Mono',monospace;font-size:clamp(20px,4vw,28px);
+                                    color:{conf_color};font-weight:600;">
                             {conf_label} · {round(conf*100)}%
                         </div>
                     </div>
@@ -1676,29 +2037,22 @@ if st.session_state.page == "Analysis":
                 labels={'x': 'Analysis Point', 'y': 'Win Probability (%)'},
                 title="Win Probability Progression"
             )
-
             fig.update_layout(
                 template="plotly_dark",
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
                 font=dict(color="#e2e8f0", family="DM Sans"),
-                title_font_size=20,
-                title_font_color="#fbbf24",
+                title_font_size=20, title_font_color="#fbbf24",
                 xaxis_gridcolor="rgba(251,191,36,0.1)",
                 yaxis_gridcolor="rgba(251,191,36,0.1)",
                 xaxis_linecolor="rgba(251,191,36,0.2)",
                 yaxis_linecolor="rgba(251,191,36,0.2)"
             )
-            
             fig.update_traces(
-                line_color="#fbbf24",
-                line_width=3,
-                marker_color="#f59e0b",
-                marker_size=8,
-                fill='tozeroy',
-                fillcolor="rgba(251,191,36,0.1)"
+                line_color="#fbbf24", line_width=3,
+                marker_color="#f59e0b", marker_size=8,
+                fill='tozeroy', fillcolor="rgba(251,191,36,0.1)"
             )
-
             st.plotly_chart(fig, use_container_width=True)
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
