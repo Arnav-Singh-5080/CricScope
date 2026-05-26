@@ -24,7 +24,7 @@
 
 <br/>
 
-![Contributors](https://img.shields.io/github/contributors/Arnav-Singh-5080/cricscope?style=for-the-badge)
+![Contributors](https://img.shields.io/github/contributors/Arnav-Singh-5080/CricScope?style=for-the-badge)
 ![Open Issues](https://img.shields.io/github/issues/Arnav-Singh-5080/cricscope?style=for-the-badge)
 ![Last Commit](https://img.shields.io/github/last-commit/Arnav-Singh-5080/cricscope?style=for-the-badge)
 
@@ -69,7 +69,7 @@
 
 </div>
 
-**CricScope** is a luxury-grade IPL match intelligence dashboard that computes real-time win probabilities using machine learning — trained on historical ball-by-ball delivery data spanning 2008–2020.
+**CricScope** is a real-time IPL match analytics dashboard that computes real-time win probabilities using machine learning — trained on historical ball-by-ball delivery data spanning 2008–2020.
 
 Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradients, and a premium serif + mono type system. Every design decision was intentional: this is not a student project — it's a production-grade sports analytics product.
 
@@ -205,23 +205,49 @@ trained on IPL ball-by-ball match data spanning IPL seasons from 2008–2020.
 
 <div align="center">
 
-## Project Structure
+
+## Screenshots
+
+### Dashboard Preview
+
+<img src="assets/dashboard.png" width="90%" alt="Dashboard Preview"/>
+
+<br/><br/>
+
+### Prediction Interface
+
+<img src="assets/prediction-page.png" width="90%" alt="Prediction Interface"/>
+
+<br/><br/>
+
+### Analytics View
+
+<img src="assets/analytics.png" width="90%" alt="Analytics View"/>
+
+<br/><br/>
+
+### Demo GIF
+
+<img src="demo_.gif" width="90%" alt="CricScope Demo"/>
 
 </div>
 
+## Project Structure
+
+
 ```bash
-cricscope/
+CricScope/
 │
 ├── assets/
 │   ├── dashboard.png
 │   ├── prediction-page.png
-│   ├── analytics.png
+│   └── analytics.png
 │   
 ├── app.py
 ├── matches.csv
 ├── deliveries.csv
 ├── requirements.txt
-└── README.md
+├── README.md
 └── demo_.gif
 ```
 
@@ -242,16 +268,16 @@ cricscope/
 - Python 3.9+
 - IPL Dataset
 
-Dataset:
-https://www.kaggle.com/datasets/patrickb1912/ipl-complete-dataset-20082020
+Dataset: [IPL Complete Dataset (2008–2020)](https://www.kaggle.com/datasets/patrickb1912/ipl-complete-dataset-20082020)
 
 ---
 
 ## 1 — Clone Repository
 
 ```bash
-git clone https://github.com/Arnav-Singh-5080/cricscope.git
-cd cricscope
+git clone https://github.com/Arnav-Singh-5080/CricScope.git
+
+cd CricScope
 ```
 
 ---
@@ -281,7 +307,7 @@ pip install -r requirements.txt
 ## 4 — Add Dataset
 
 ```text
-cricscope/
+CricScope/
 ├── app.py
 ├── matches.csv
 └── deliveries.csv
@@ -294,6 +320,11 @@ cricscope/
 ```bash
 streamlit run app.py
 ```
+
+Expected:
+- app launches successfully on localhost:8501
+- dashboard loads without missing dataset errors
+- prediction interface renders correctly
 
 Visit:
 
@@ -375,10 +406,10 @@ This repository welcomes:
 # 1. Fork the repository
 
 # 2. Clone your fork
-git clone https://github.com/<your-username>/cricscope.git
+git clone https://github.com/<your-username>/CricScope.git
 
 # 3. Move into project
-cd cricscope
+cd CricScope
 
 # 4. Create feature branch
 git checkout -b feature/your-feature-name
