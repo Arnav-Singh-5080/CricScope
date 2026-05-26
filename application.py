@@ -32,7 +32,6 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
 
-/* ---- RESET & BASE ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, [class*="css"], .stApp {
@@ -256,25 +255,6 @@ section[data-testid="stSidebar"] > div {
     color: rgba(200,185,140,0.4);
 }
 
-.section-header {
-    padding: 40px 60px 0;
-}
-
-.section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
-    font-weight: 500;
-    color: #f0e8cc;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.section-desc {
-    font-size: 13px;
-    color: rgba(200,185,140,0.4);
-    letter-spacing: 0.3px;
-}
-
 .input-card {
     background: rgba(255,255,255,0.025);
     border: 1px solid rgba(255,255,255,0.07);
@@ -322,17 +302,6 @@ section[data-testid="stSidebar"] > div {
 
 .stSlider [data-testid="stSlider"] > div > div {
     background: linear-gradient(90deg, #d4af37, #f0d060) !important;
-}
-
-.team-vs-wrapper {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 24px;
-    padding: 36px 28px;
-    text-align: center;
-    backdrop-filter: blur(20px);
-    position: relative;
-    overflow: hidden;
 }
 
 .stButton.analyze-btn > button {
@@ -411,11 +380,6 @@ section[data-testid="stSidebar"] > div {
     text-transform: uppercase;
     color: rgba(200,185,140,0.35);
     margin-bottom: 28px;
-}
-
-.prob-bar-wrapper {
-    position: relative;
-    margin: 20px 0 14px;
 }
 
 .prob-bar-track {
@@ -577,7 +541,7 @@ team_data = {
 }
 
 # -----------------------------------
-# MODEL
+# MODEL + SHAP CACHE
 # -----------------------------------
 @st.cache_resource
 def train_model():
@@ -609,7 +573,9 @@ def train_model():
 
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
-    final_df = df[['batting_team', 'bowling_team', 'city','runs_left', 'balls_left', 'wickets','target', 'crr', 'rrr', 'result']]
+    final_df = df[['batting_team', 'bowling_team', 'city',
+                   'runs_left', 'balls_left', 'wickets',
+                   'target', 'crr', 'rrr', 'result']]
     final_df.dropna(inplace=True)
 
     X = final_df.drop('result', axis=1)
@@ -628,7 +594,18 @@ def train_model():
     pipe.fit(X, y)
     return pipe, X
 
+@st.cache_resource
+def get_shap_explainer(_pipe, _training_data):
+    """Cache the SHAP explainer so it's not rebuilt on every prediction."""
+    preprocessor = _pipe.named_steps['preprocessor']
+    model = _pipe.named_steps['model']
+    background = preprocessor.transform(
+        _training_data.sample(100, random_state=42)
+    )
+    return shap.LinearExplainer(model, background)
+
 pipe, training_data = train_model()
+explainer = get_shap_explainer(pipe, training_data)
 
 # -----------------------------------
 # SIDEBAR
@@ -680,21 +657,21 @@ with st.sidebar:
                 <p style="margin:0 0 2px 0;padding:8px 8px;">
                     <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">✉</span>
                     <a href="mailto:itsarnav.singh80@gmail.com"
-                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
                         itsarnav.singh80@gmail.com
                     </a>
                 </p>
                 <p style="margin:0 0 2px 0;padding:8px 8px;">
                     <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">in</span>
                     <a href="https://www.linkedin.com/in/arnav-singh-a87847351" target="_blank"
-                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
                         linkedin.com/in/arnav-singh
                     </a>
                 </p>
                 <p style="margin:0;padding:8px 8px;">
                     <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">&#9670;</span>
                     <a href="https://github.com/Arnav-Singh-5080" target="_blank"
-                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                       style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
                         Arnav-Singh-5080
                     </a>
                 </p>
@@ -777,7 +754,7 @@ if st.session_state.page == "Dashboard":
                                 box-shadow:0 0 20px {tdata['color']}50;
                                 display:flex;align-items:center;justify-content:center;">
                         <img src="{tdata['logo']}"
-                            style="width:100%;height:100%;object-fit:cover;
+                             style="width:100%;height:100%;object-fit:cover;
                                     mix-blend-mode:screen;border-radius:50%;" />
                     </div>
                     <div style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600;
@@ -877,7 +854,7 @@ if st.session_state.page == "Analysis":
                             box-shadow:0 0 28px {t1['color']}60;
                             display:flex;align-items:center;justify-content:center;">
                     <img src="{t1['logo']}"
-                        style="width:100%;height:100%;object-fit:cover;
+                         style="width:100%;height:100%;object-fit:cover;
                                 mix-blend-mode:screen;" />
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
@@ -909,7 +886,7 @@ if st.session_state.page == "Analysis":
                             box-shadow:0 0 28px {t2['color']}60;
                             display:flex;align-items:center;justify-content:center;">
                     <img src="{t2['logo']}"
-                        style="width:100%;height:100%;object-fit:cover;
+                         style="width:100%;height:100%;object-fit:cover;
                                 mix-blend-mode:screen;" />
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
@@ -1024,11 +1001,15 @@ if st.session_state.page == "Analysis":
                     <div class="metrics-row">
                         <div class="metric-chip">
                             <div class="metric-chip-value">{round(crr, 2)}</div>
-                            <div class="metric-chip-label">CRR</div>
+                            <div class="metric-chip-label">CRR
+                                <span title="Current Run Rate: runs scored per over so far">ⓘ</span>
+                            </div>
                         </div>
                         <div class="metric-chip">
                             <div class="metric-chip-value">{round(rrr, 2)}</div>
-                            <div class="metric-chip-label">RRR</div>
+                            <div class="metric-chip-label">RRR
+                                <span title="Required Run Rate: runs needed per over to win">ⓘ</span>
+                            </div>
                         </div>
                         <div class="metric-chip">
                             <div class="metric-chip-value">{10 - wickets}</div>
@@ -1067,37 +1048,6 @@ if st.session_state.page == "Analysis":
         """, unsafe_allow_html=True)
 
         # ---- SHAP EXPLAINABILITY ----
-        preprocessor = pipe.named_steps['preprocessor']
-        model = pipe.named_steps['model']
-
-        input_transformed = preprocessor.transform(input_df)
-        background = preprocessor.transform(training_data.sample(100, random_state=42))
-        explainer = shap.LinearExplainer(model, background)
-        shap_values = explainer.shap_values(input_transformed)
-
-        feature_names = (
-            preprocessor.named_transformers_['cat']
-            .get_feature_names_out(
-                ['batting_team', 'bowling_team', 'city']
-            ).tolist()
-            + ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr']
-        )
-
-        shap_df = pd.DataFrame({
-            'Feature': feature_names,
-            'SHAP Value': shap_values[0]
-        })
-
-        numeric_features = ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr']
-        shap_df = shap_df[shap_df['Feature'].isin(numeric_features)]
-        shap_df = shap_df.reindex(
-            shap_df['SHAP Value'].abs().sort_values(ascending=False).index
-        )
-        shap_df['Impact'] = shap_df['SHAP Value'].apply(
-            lambda x: '✅ Positive' if x > 0 else '❌ Negative'
-        )
-        shap_df['SHAP Value'] = shap_df['SHAP Value'].round(4)
-
         st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
         st.markdown("""
             <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
@@ -1106,41 +1056,96 @@ if st.session_state.page == "Analysis":
             </div>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"""
-            <div style="background:rgba(255,255,255,0.02);
-                        border:1px solid rgba(212,175,55,0.15);
-                        border-radius:20px;padding:28px 32px;">
-                <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                            color:#f0e8cc;margin-bottom:20px;">
-                    Key Factors Driving {batting_team}'s Win Probability
-                </div>
-        """, unsafe_allow_html=True)
+        try:
+            preprocessor = pipe.named_steps['preprocessor']
+            input_transformed = preprocessor.transform(input_df)
+            shap_values = explainer.shap_values(input_transformed)
 
-        for _, row in shap_df.iterrows():
-            bar_width = min(abs(row['SHAP Value']) * 500, 100)
-            bar_color = '#d4af37' if row['SHAP Value'] > 0 else 'rgba(200,100,100,0.7)'
+            feature_names = (
+                preprocessor.named_transformers_['cat']
+                .get_feature_names_out(
+                    ['batting_team', 'bowling_team', 'city']
+                ).tolist()
+                + ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr']
+            )
+
+            shap_df = pd.DataFrame({
+                'Feature': feature_names,
+                'SHAP Value': shap_values[0]
+            })
+
+            numeric_features = ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr']
+            shap_df = shap_df[shap_df['Feature'].isin(numeric_features)]
+            shap_df = shap_df.reindex(
+                shap_df['SHAP Value'].abs().sort_values(ascending=False).index
+            )
+            shap_df['Impact'] = shap_df['SHAP Value'].apply(
+                lambda x: '✅ Positive' if x > 0 else '❌ Negative'
+            )
+            shap_df['SHAP Value'] = shap_df['SHAP Value'].round(4)
+
+            feature_tooltips = {
+                'runs_left': 'Runs still needed to win',
+                'balls_left': 'Balls remaining in the innings',
+                'wickets': 'Wickets in hand (10 - fallen)',
+                'target': 'Target score set by opposition',
+                'crr': 'Current Run Rate: runs per over so far',
+                'rrr': 'Required Run Rate: runs per over needed'
+            }
+
             st.markdown(f"""
-                <div style="margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;
-                                margin-bottom:6px;">
-                        <span style="font-size:13px;color:#e2dfd8;letter-spacing:0.5px;">
-                            {row['Impact']} &nbsp; {row['Feature']}
-                        </span>
-                        <span style="font-family:'DM Mono',monospace;
-                                    font-size:12px;color:rgba(200,185,140,0.6);">
-                            {row['SHAP Value']:+.4f}
-                        </span>
+                <div style="background:rgba(255,255,255,0.02);
+                            border:1px solid rgba(212,175,55,0.15);
+                            border-radius:20px;padding:28px 32px;">
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                                color:#f0e8cc;margin-bottom:8px;">
+                        Key Factors Driving {batting_team}'s Win Probability
                     </div>
-                    <div style="height:6px;background:rgba(255,255,255,0.05);
-                                border-radius:100px;overflow:hidden;">
-                        <div style="height:100%;width:{bar_width}%;
-                                    background:{bar_color};
-                                    border-radius:100px;
-                                    box-shadow:0 0 8px {bar_color};"></div>
+                    <div style="font-size:11px;color:rgba(200,185,140,0.4);
+                                margin-bottom:24px;letter-spacing:0.3px;">
+                        Gold bars push probability higher · Red bars pull probability lower
                     </div>
-                </div>
             """, unsafe_allow_html=True)
 
-        st.markdown('</div>', unsafe_allow_html=True)
+            for _, row in shap_df.iterrows():
+                bar_width = min(abs(row['SHAP Value']) * 500, 100)
+                bar_color = '#d4af37' if row['SHAP Value'] > 0 else 'rgba(200,100,100,0.7)'
+                tooltip = feature_tooltips.get(row['Feature'], '')
+                st.markdown(f"""
+                    <div style="margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;
+                                    margin-bottom:6px;">
+                            <span style="font-size:13px;color:#e2dfd8;letter-spacing:0.5px;"
+                                  title="{tooltip}">
+                                {row['Impact']} &nbsp; {row['Feature']}
+                                <span style="font-size:10px;color:rgba(200,185,140,0.35);
+                                             margin-left:6px;">{tooltip}</span>
+                            </span>
+                            <span style="font-family:'DM Mono',monospace;
+                                        font-size:12px;color:rgba(200,185,140,0.6);">
+                                {row['SHAP Value']:+.4f}
+                            </span>
+                        </div>
+                        <div style="height:6px;background:rgba(255,255,255,0.05);
+                                    border-radius:100px;overflow:hidden;">
+                            <div style="height:100%;width:{bar_width}%;
+                                        background:{bar_color};
+                                        border-radius:100px;
+                                        box-shadow:0 0 8px {bar_color};"></div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        except Exception:
+            st.markdown("""
+                <div style="background:rgba(255,255,255,0.02);
+                            border:1px solid rgba(212,175,55,0.1);
+                            border-radius:16px;padding:20px 28px;
+                            color:rgba(200,185,140,0.4);font-size:13px;">
+                    Explainability analysis unavailable for this match state.
+                </div>
+            """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
