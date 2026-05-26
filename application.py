@@ -1171,17 +1171,25 @@ if st.session_state.page == "Analysis":
             'rrr': [rrr]
         })
 
-        with st.spinner(""):
-            time.sleep(0.4)
-            # Edge-case handling for final ball/completed innings boundaries
-            if runs_left <= 0:
-                win = 1.0
-                lose = 0.0
-            elif balls_left <= 0:
-                win = 0.0
-                lose = 1.0
-            else:
-                proba = pipe.predict_proba(input_df)[0]
+        if runs_left <= 0:
+            win = 1.0
+            lose = 0.0
+        elif balls_left <= 0:
+            win = 0.0
+            lose = 1.0
+        else:
+            if pipe is None:
+                st.error("Model not loaded. Please restart the app.")
+                st.stop()
+            with st.spinner(""):
+                try:
+                    proba = pipe.predict_proba(input_df)[0]
+                except Exception as e:
+                    st.error(f"Prediction unavailable — model encountered an error: {e}")
+                    st.stop()
+                if np.isnan(proba).any():
+                    st.error("Model returned invalid probabilities. The training pipeline may have produced corrupted coefficients.")
+                    st.stop()
                 win = proba[1]
                 lose = proba[0]
 
