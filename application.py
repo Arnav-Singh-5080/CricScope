@@ -94,12 +94,12 @@ section[data-testid="stSidebar"] > div {
 }
 
 .sidebar-section-label {
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(180,160,100,0.35);
-    padding: 12px 28px 6px;
-    font-weight: 500;
+    color: rgba(212,175,55,0.75);
+    padding: 12px 28px 8px;
+    font-weight: 600;
 }
 
 /* ---- NAV BUTTONS ---- */
@@ -109,10 +109,10 @@ section[data-testid="stSidebar"] > div {
     background: transparent;
     border: none;
     border-radius: 0;
-    color: rgba(220,210,180,0.65);
+    color: rgba(240,235,220,0.85);
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 400;
+    font-size: 14px;
+    font-weight: 500;
     letter-spacing: 0.5px;
     padding: 11px 28px;
     height: auto;
@@ -707,6 +707,9 @@ with st.sidebar:
         st.session_state.page = "Dashboard"
 
     if st.button("◉  Match Analysis", key="nav_analysis"):
+        st.session_state.page = "Analysis"
+
+    if st.button("⚙  Get Analysis", key="nav_get_analysis"):
         st.session_state.page = "Analysis"
 
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:16px 0;"></div>', unsafe_allow_html=True)
