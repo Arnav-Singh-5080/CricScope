@@ -786,6 +786,25 @@ def train_model(model_name='logistic'):
 
 pipe = train_model()
 
+# Extract the list of training cities from the fitted OneHotEncoder as a module-level constant
+try:
+    # The 'cat' transformer preprocessor is a OneHotEncoder.
+    # The column index for 'city' is 2 in the ['batting_team', 'bowling_team', 'city'] columns list.
+    MATCH_CITIES = sorted(list(pipe.named_steps['preprocessor'].named_transformers_['cat'].categories_[2]))
+except Exception as e:
+    # Safe fallback if pipeline structure varies or fails to load categories
+    MATCH_CITIES = [
+        "Abu Dhabi", "Bengaluru", "Centurion", "Chennai", "Delhi", 
+        "Durban", "Hyderabad", "Jaipur", "Kolkata", "Mohali", 
+        "Mumbai", "Pune", "Rajkot", "Sharjah", "Visakhapatnam"
+    ]
+
+# Determine default selection index (prefer "Mumbai" as the default to match previous hardcoded behavior)
+try:
+    DEFAULT_CITY_INDEX = MATCH_CITIES.index("Mumbai")
+except ValueError:
+    DEFAULT_CITY_INDEX = 0
+
 # -----------------------------------
 # SIDEBAR
 # -----------------------------------
@@ -996,12 +1015,12 @@ if st.session_state.page == "Analysis":
         batting_team = st.selectbox("Batting Team", teams, key="bat")
         bowling_team = st.selectbox("Bowling Team", [t for t in teams if t != batting_team], key="bowl")
         
-        match_cities = sorted([
-            "Mumbai", "Kolkata", "Delhi", "Bengaluru", "Chennai",
-            "Hyderabad", "Jaipur", "Mohali", "Pune", "Rajkot", 
-            "Abu Dhabi", "Sharjah", "Durban", "Centurion", "Visakhapatnam"
-        ])
-        selected_city = st.selectbox("Match Venue (City)", match_cities, key="city_select")
+        selected_city = st.selectbox(
+            "Match Venue (City)",
+            options=MATCH_CITIES,
+            index=DEFAULT_CITY_INDEX,
+            key="city_select"
+        )
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
