@@ -866,11 +866,32 @@ def train_model():
         ('preprocessor', preprocessor),
         ('model', LogisticRegression(max_iter=1000))
     ])
+    
+
+    scores = cross_val_score(
+        pipe,
+        X_train,
+        y_train,
+        cv=5
+    )
+
+    pipe.fit(X_train, y_train)
+    predictions = pipe.predict(X_test)
+
+    logging.info(f"Cross Validation Scores: {scores}")
+    logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
+    logging.info(
+        f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}"
+    )
+
+    print(
+        f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}"
+    )
+
+    joblib.dump(pipe, model_path)
 
     pipe.fit(X, y)
     return pipe
-
-pipe = train_model()
 
 # -----------------------------------
 # SIDEBAR
@@ -882,6 +903,28 @@ with st.sidebar:
             <span class="sidebar-tagline">Match Intelligence Platform</span>
         </div>
     """, unsafe_allow_html=True)
+
+    st.markdown('<div class="sidebar-section-label">Model Engine</div>', unsafe_allow_html=True)
+    
+    # Single source of truth for classifier models
+    MODEL_ENGINES = {
+        "Logistic Regression": "logistic",
+        "Random Forest": "random_forest",
+        "XGBoost": "xgboost"
+    }
+
+    model_choice = st.selectbox(
+        "Classifier Model",
+        options=list(MODEL_ENGINES.keys()),
+        key="model_select",
+        label_visibility="collapsed"
+    )
+
+    selected_model_key = MODEL_ENGINES[model_choice]
+    
+    # Wrap model loading/training in st.spinner to prevent UI freeze and keep the user informed
+    with st.spinner(f"Loading/Training {model_choice}..."):
+        pipe = train_model(selected_model_key)
 
     st.markdown('<div class="sidebar-section-label">Navigation</div>', unsafe_allow_html=True)
 
