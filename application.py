@@ -767,17 +767,17 @@ def train_model(model_name='logistic'):
         cv=5
     )
 
+    pipe.fit(X_train, y_train)
+    predictions = pipe.predict(X_test)
+
     logging.info(f"Cross Validation Scores: {scores}")
     logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
     logging.info(
-    f"Test Accuracy: {accuracy_score(y_test,predictions):.4f}"
+        f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}"
     )
-    pipe.fit(X_train, y_train)
-
-    predictions = pipe.predict(X_test)
 
     print(
-        f"Test Accuracy: {accuracy_score(y_test,predictions):.4f}"
+        f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}"
     )
 
     joblib.dump(pipe, model_path)
@@ -796,20 +796,26 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="sidebar-section-label">Model Engine</div>', unsafe_allow_html=True)
-    model_choice = st.selectbox(
-        "Classifier Model",
-        ["Logistic Regression", "Random Forest", "XGBoost"],
-        key="model_select",
-        label_visibility="collapsed"
-    )
-
-    model_map = {
+    
+    # Single source of truth for classifier models
+    MODEL_ENGINES = {
         "Logistic Regression": "logistic",
         "Random Forest": "random_forest",
         "XGBoost": "xgboost"
     }
-    selected_model_key = model_map[model_choice]
-    pipe = train_model(selected_model_key)
+
+    model_choice = st.selectbox(
+        "Classifier Model",
+        options=list(MODEL_ENGINES.keys()),
+        key="model_select",
+        label_visibility="collapsed"
+    )
+
+    selected_model_key = MODEL_ENGINES[model_choice]
+    
+    # Wrap model loading/training in st.spinner to prevent UI freeze and keep the user informed
+    with st.spinner(f"Loading/Training {model_choice}..."):
+        pipe = train_model(selected_model_key)
 
     st.markdown('<div class="sidebar-section-label">Navigation</div>', unsafe_allow_html=True)
 
