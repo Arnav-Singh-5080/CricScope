@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+import joblib
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -688,8 +689,13 @@ def train_model():
     pipe.fit(X, y)
     return pipe
 
-pipe = train_model()
 
+
+# Load pretrained ML pipeline for faster startup performance
+try:
+    pipe = joblib.load("pipe.pkl")
+except Exception:
+    pipe = train_model()
 # -----------------------------------
 # SIDEBAR
 # -----------------------------------
