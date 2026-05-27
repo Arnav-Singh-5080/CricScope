@@ -1,3 +1,47 @@
+# CricScope - Production Gitignore Configuration
+
+# Virtual Environments
 venv/
+.venv/
+env/
+ENV/
+
+# Python Bytecode & Compilation
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+.virtual_documents/
+
+# Streamlit Temporary Files & Local Configurations
+.streamlit/config.toml
+.streamlit/secrets.toml
+cricscope_predictions_*.csv
+*predictions.csv
+
+# Machine Learning Models & Cached Pipelines
+# Avoid committing heavy, binary serialized pipelines and models
+*_model.pkl
+pipe.pkl
+
+# Environment Secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# OS & System Artifacts
+.DS_Store
+Thumbs.db
+
+# IDE & Workspace Configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
