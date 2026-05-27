@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-
+import plotly.graph_objects as go
 #  page config 
 st.set_page_config(
     page_title="CricScope · Stats",
@@ -251,7 +251,27 @@ with col1:
 with col2:
     remaining = [t for t in all_teams if t != team_a]
     team_b = st.selectbox("Team B", remaining, index=remaining.index("Chennai Super Kings") if "Chennai Super Kings" in remaining else 0, key="h2h_b")
+    
+#Example value
+team_a = "Chennai Super KIngs"
+team_b = "Mumbai Indians"
 
+team_a_wins = 11
+team_b_wins = 17
+
+#Pie Chart
+fig = go.Figure(data=[go.Pie(
+    labels=[f"{team_a}Wins",f"{team_b}Wins"],
+    values=[11,17],
+    hole=0.5
+)])
+
+fig.update_layout(
+    paper_bgcolor="#0E1117",
+    font_color="white",
+    margin=dict(l=20,r=20,t=20,b=20))
+
+st.plotly_chart(fig, use_container_width=True)
 # filter h2h matches
 h2h = matches[
     ((matches["team1"] == team_a) & (matches["team2"] == team_b)) |

@@ -1,4 +1,26 @@
 import streamlit as st
+st.markdown("""
+<style>
+
+/* Sidebar full height */
+section[data-testid="stSidebar"] {
+    height: 100vh;
+    background-color: #0f172a;
+}
+
+/* Main dashboard background */
+.main {
+    background-color: #020617;
+    color: white;
+}
+
+/* Remove default padding */
+.block-container {
+    padding-top: 2rem;
+}
+
+</style>
+""", unsafe_allow_html=True)
 import pandas as pd
 import numpy as np
 import time
@@ -10,6 +32,12 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+
+logging.basicConfig(level=logging.INFO)
 
 # ======================================================================================
 # GLOBAL PLATFORM CONFIGURATION & SYSTEM PARAMETERS
