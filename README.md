@@ -81,7 +81,7 @@ Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradie
 
 <br/>
 
-## 📚 Documentation
+## ⎔ Documentation
 
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
@@ -237,7 +237,7 @@ cricscope/
 │   ├── prediction-page.png
 │   ├── analytics.png
 │   
-├── app.py
+├── application.py
 ├── matches.csv
 ├── deliveries.csv
 ├── requirements.txt
@@ -302,7 +302,7 @@ pip install -r requirements.txt
 
 ```text
 cricscope/
-├── app.py
+├── application.py
 ├── matches.csv
 └── deliveries.csv
 ```
@@ -312,7 +312,7 @@ cricscope/
 ## 5 — Run Application
 
 ```bash
-streamlit run app.py
+streamlit run application.py
 ```
 
 Visit:
@@ -427,13 +427,13 @@ git push origin feature/your-feature-name
 - Respect UI consistency
 
 ---
-## 🔐 Security Policy
+## ✦ Security Policy
 
 Please review the [Security Policy](SECURITY.md) for vulnerability reporting guidelines and supported versions.
 
 ---
 
-## 🤝 Code of Conduct
+## ✦ Code of Conduct
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing to the project.
 
@@ -492,7 +492,7 @@ Project Admin — GSSoC '26 & NSoC 2026
 
 ## Support the Project
 
-If this project helped you, consider giving it a ⭐ on GitHub.
+If this project helped you, consider giving it a ★ on GitHub.
 
 It helps more contributors discover the project and motivates future development.
 
