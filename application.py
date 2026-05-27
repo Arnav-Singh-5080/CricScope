@@ -8,6 +8,29 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
+def get_venue_insights(df, selected_venue):
+    """
+    Calculates historical insights for a specific venue.
+    """
+    # Filter data for the selected venue using the 'city' column
+    venue_data = df[df['city'] == selected_venue]
+    
+    if venue_data.empty:
+        return None, None, None
+    
+    total_matches = len(venue_data)
+    
+    # Calculate Batting First Wins (Usually win_by_runs > 0 means batting first won)
+    bat_first_wins = len(venue_data[venue_data['win_by_runs'] > 0])
+    
+    # Calculate Batting Second (Chasing) Wins
+    bat_second_wins = len(venue_data[venue_data['win_by_wickets'] > 0])
+    
+    # Calculate percentages
+    bat_first_pct = round((bat_first_wins / total_matches) * 100, 1) if total_matches > 0 else 0
+    bat_second_pct = round((bat_second_wins / total_matches) * 100, 1) if total_matches > 0 else 0
+    
+    return total_matches, bat_first_pct, bat_second_pct
 # -----------------------------------
 # CONFIG
 # -----------------------------------
@@ -686,9 +709,11 @@ def train_model():
     ])
 
     pipe.fit(X, y)
-    return pipe
+    
+    # We return both the pipe and the raw matches dataframe so we can use it for insights
+    return pipe, matches
 
-pipe = train_model()
+pipe, matches_df = train_model()
 
 # -----------------------------------
 # SIDEBAR
@@ -912,6 +937,32 @@ if st.session_state.page == "Analysis":
         with col_wk:
             wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
         st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True) # Adds a little breathing room
+
+    # 1. Get the list of venues
+    # Using 'city' since that's what their dataset uses
+    venues_list = sorted(matches_df['city'].dropna().unique().tolist())
+
+    # 2. Render the Venue Selection
+    selected_venue = st.selectbox('📍 Select Match Venue for Insights', venues_list)
+
+    # 3. Fetch insights and render the UI
+    # Pass matches_df directly without renaming to avoid duplicate columns
+    total_matches, bat_first_pct, bat_second_pct = get_venue_insights(matches_df, selected_venue)
+
+    if total_matches is not None and total_matches > 0:
+        with st.expander(f"🏟️ Historical Insights for {selected_venue}", expanded=False):
+            st.write(f"**Total Matches Played Here:** {total_matches}")
+            
+            col_v1, col_v2 = st.columns(2)
+            col_v1.metric(label="Batting First Win %", value=f"{bat_first_pct}%")
+            col_v2.metric(label="Chasing Win %", value=f"{bat_second_pct}%")
+            
+            st.progress(int(bat_first_pct))
+            st.caption("Visual: Proportion of matches won by the team batting first.")
+    elif total_matches == 0:
+        st.info(f"Not enough historical data available for {selected_venue}.")
 
     st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
 
