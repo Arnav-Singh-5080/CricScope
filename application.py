@@ -1164,6 +1164,28 @@ with st.sidebar:
             <span class="sidebar-tagline">Match Intelligence Platform</span>
         </div>
     """, unsafe_allow_html=True)
+    # -------------------------------------------------------------
+    # 1. RESET FILTERS BUTTON CODE (Directly Paste Here)
+    # -------------------------------------------------------------
+    # Yeh button pure sidebar ke dropdowns ki memory clear kar dega
+   # -------------------------------------------------------------
+    # FIXED RESET FILTERS BUTTON CODE
+    # -------------------------------------------------------------
+    if st.button("🔄 Reset All Filters", use_container_width=True):
+        # 1. Jo page abhi open hai (e.g., 'Analysis', 'Performance'), use variable me save kar lo
+        current_page = st.session_state.get("page", "Dashboard")
+        
+        # 2. Saari filter selections ko clear karo
+        st.session_state.clear()
+        
+        # 3. Clear karne ke baad, active page ko wapas memory me dal do taaki page change na ho
+        st.session_state["page"] = current_page
+        
+        # 4. Instant refresh
+        st.rerun()
+
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+    # -------------------------------------------------------------
     
 
     st.markdown('<div class="sidebar-section-label">Navigation</div>', unsafe_allow_html=True)
