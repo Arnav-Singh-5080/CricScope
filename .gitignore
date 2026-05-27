@@ -1,3 +1,57 @@
+# ==========================================
+# CricScope Git Ignore Settings
+# ==========================================
+
+# Virtual Environments
+.venv/
 venv/
+env/
+ENV/
+bin/
+include/
+lib/
+share/
+pyvenv.cfg
+
+# Python Build & Cache Files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.db
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Jupyter Notebook Artifacts
+.ipynb_checkpoints/
+.virtual_documents/
+
+# Streamlit Local Configurations
+.streamlit/config.toml
+.streamlit/secrets.toml
+
+# IDE Settings (VS Code, PyCharm, etc.)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Operating System Metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Machine Learning & Pickles
+# (Exclude production pipelines)
+*.pkl
+!pipe.pkl
