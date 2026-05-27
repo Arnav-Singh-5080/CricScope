@@ -11,6 +11,8 @@ import streamlit as st
 import pandas as pd
 # pyrefly: ignore [missing-import]
 import numpy as np
+import os
+import hashlib
 import requests
 import time
 
@@ -35,6 +37,8 @@ REFRESH_INTERVAL_MS = 30_000  # 30 seconds
 
 if "live_auto_refresh" not in st.session_state:
     st.session_state.live_auto_refresh = False
+if "live_retrain_counter" not in st.session_state:
+    st.session_state.live_retrain_counter = 0
 
 # Inject a self-refreshing script when auto-refresh is toggled on
 if st.session_state.live_auto_refresh:
@@ -389,10 +393,19 @@ def resolve_team_name(raw_name: str) -> str:
 
 
 # ───────────────────────────────────────────
+#  FILE HASH HELPERS
+# ───────────────────────────────────────────
+def _get_file_hash(path):
+    if os.path.exists(path):
+        return hashlib.md5(open(path, "rb").read()).hexdigest()
+    return ""
+
+
+# ───────────────────────────────────────────
 #  MODEL (same as application.py)
 # ───────────────────────────────────────────
 @st.cache_resource
-def train_model():
+def train_model(matches_hash="", deliveries_hash="", retrain_counter=0):
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
 
@@ -443,7 +456,9 @@ def train_model():
     return pipe
 
 
-pipe = train_model()
+_live_matches_hash = _get_file_hash("matches.csv")
+_live_deliveries_hash = _get_file_hash("deliveries.csv")
+pipe = train_model(_live_matches_hash, _live_deliveries_hash, st.session_state.live_retrain_counter)
 
 # ───────────────────────────────────────────
 #  LIVE DATA FETCHER
@@ -668,6 +683,42 @@ with ctrl_col3:
                 </span>
             </div>
         """, unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ───────────────────────────────────────────
+#  MODEL INFO ROW
+# ───────────────────────────────────────────
+st.markdown('<div style="padding: 0 60px 12px;">', unsafe_allow_html=True)
+info_col1, info_col2, _ = st.columns([1, 1, 4])
+
+with info_col1:
+    vintage_start, vintage_end = None, None
+    try:
+        _vm = pd.read_csv("matches.csv")
+        if "season" in _vm.columns:
+            _vy = _vm["season"].dropna().unique()
+            if len(_vy) > 0:
+                _vy_sorted = sorted([int(y) for y in _vy])
+                vintage_start, vintage_end = _vy_sorted[0], _vy_sorted[-1]
+    except Exception:
+        pass
+    if vintage_start and vintage_end:
+        vintage_label = f"{vintage_start}–{vintage_end}" if vintage_start != vintage_end else str(vintage_start)
+    else:
+        vintage_label = "unknown"
+    st.markdown(f"""
+        <div style="font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+                    color:rgba(180,160,100,0.35);">
+            Data Vintage  <span style="color:#e2dfd8; font-weight:500; letter-spacing:0;">{vintage_label}</span>
+        </div>
+    """, unsafe_allow_html=True)
+
+with info_col2:
+    if st.button("⟳  Retrain Model", key="live_retrain_btn", use_container_width=True):
+        st.session_state.live_retrain_counter += 1
+        st.cache_resource.clear()
+        st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
 

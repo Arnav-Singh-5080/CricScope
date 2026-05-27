@@ -1,32 +1,11 @@
 import streamlit as st
-st.markdown("""
-<style>
-
-/* Sidebar full height */
-section[data-testid="stSidebar"] {
-    height: 100vh;
-    background-color: #0f172a;
-}
-
-/* Main dashboard background */
-.main {
-    background-color: #020617;
-    color: white;
-}
-
-/* Remove default padding */
-.block-container {
-    padding-top: 2rem;
-}
-
-</style>
-""", unsafe_allow_html=True)
 import pandas as pd
 import numpy as np
 import time
 import os
 import joblib
 import logging
+import hashlib
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -53,6 +32,8 @@ if "last_prediction" not in st.session_state:
     st.session_state.last_prediction = None
 if "selected_model" not in st.session_state:
     st.session_state.selected_model = "logistic"
+if "retrain_counter" not in st.session_state:
+    st.session_state.retrain_counter = 0
 
 # -----------------------------------
 # LUXURY CSS
@@ -919,6 +900,34 @@ team_data = {
 }
 
 # -----------------------------------
+# FILE HASH & DATA VINTAGE HELPERS
+# -----------------------------------
+CSV_FILES = ["matches.csv", "deliveries.csv"]
+
+
+def _get_file_hash(path):
+    if os.path.exists(path):
+        return hashlib.md5(open(path, "rb").read()).hexdigest()
+    return ""
+
+
+def _get_data_vintage():
+    """Return (start_year, end_year) from matches.csv season column."""
+    try:
+        matches = pd.read_csv("matches.csv")
+        if "season" in matches.columns:
+            years = matches["season"].dropna().unique()
+            if len(years) > 0:
+                years = sorted([int(y) for y in years])
+                return years[0], years[-1]
+        mtime = os.path.getmtime("matches.csv")
+        year = time.strftime("%Y", time.gmtime(mtime))
+        return int(year), int(year)
+    except Exception:
+        return None, None
+
+
+# -----------------------------------
 # MODEL
 # -----------------------------------
 def get_model(model_name='logistic'):
@@ -931,10 +940,10 @@ def get_model(model_name='logistic'):
     return LogisticRegression(max_iter=1000)
 
 @st.cache_resource
-def train_model(model_name='logistic'):
+def train_model(model_name='logistic', matches_hash="", deliveries_hash="", retrain_counter=0):
     model_path = f"{model_name}_model.pkl"
 
-    if os.path.exists(model_path):
+    if os.path.exists(model_path) and retrain_counter == 0:
         try:
             return joblib.load(model_path)
         except Exception as e:
@@ -1012,8 +1021,8 @@ def train_model(model_name='logistic'):
     return pipe
 
 @st.cache_resource
-def evaluate_model(model_name='logistic'):
-    pipe = train_model(model_name)
+def evaluate_model(model_name='logistic', matches_hash="", deliveries_hash="", retrain_counter=0):
+    pipe = train_model(model_name, matches_hash, deliveries_hash, retrain_counter)
 
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
@@ -1083,7 +1092,9 @@ def evaluate_model(model_name='logistic'):
     }
 
 selected_model_key = st.session_state.get('selected_model', 'logistic')
-pipe = train_model(selected_model_key)
+_matches_hash = _get_file_hash("matches.csv")
+_deliveries_hash = _get_file_hash("deliveries.csv")
+pipe = train_model(selected_model_key, _matches_hash, _deliveries_hash, st.session_state.retrain_counter)
 
 def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, target, score, overs, wickets):
     total_balls = int(overs * 6)
@@ -1193,6 +1204,29 @@ with st.sidebar:
         key="selected_model_widget"
     )
     st.session_state.selected_model = model_options[selected_model_name]
+
+    # -----------------------------------
+    # DATA VINTAGE & RETRAIN
+    # -----------------------------------
+    vintage_start, vintage_end = _get_data_vintage()
+    if vintage_start and vintage_end:
+        vintage_label = f"{vintage_start}–{vintage_end}" if vintage_start != vintage_end else str(vintage_start)
+    else:
+        vintage_label = "unknown"
+
+    st.markdown(f"""
+        <div style="padding: 8px 0 4px;">
+            <div style="font-size:10px; letter-spacing:2px; text-transform:uppercase;
+                        color:rgba(180,160,100,0.35); margin-bottom:4px;">Data Vintage</div>
+            <div style="font-size:13px; color:#e2dfd8; font-weight:500;">{vintage_label}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("⟳  Retrain Model", key="retrain_btn", use_container_width=True):
+        st.session_state.retrain_counter += 1
+        # Clear cached resources so train_model re-runs on next access
+        st.cache_resource.clear()
+        st.rerun()
 
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:20px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
@@ -1341,7 +1375,7 @@ elif st.session_state.page == "Performance":
     st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
 
     with st.spinner("Analyzing active model parameters..."):
-        metrics = evaluate_model(st.session_state.selected_model)
+        metrics = evaluate_model(st.session_state.selected_model, _matches_hash, _deliveries_hash, st.session_state.retrain_counter)
 
     # Convert model key to readable label
     model_name_map = {
