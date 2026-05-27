@@ -203,116 +203,31 @@ trained on IPL ball-by-ball match data spanning IPL seasons from 2008–2020.
 
 <br/>
 
-
-
-
-<div align="center">
-
-## Features
-
-</div>
-
-<table>
-<tr>
-<td width="50%" valign="top">
-<div align="center">
-
-##  UI Preview
-
-Experience the premium CricScope dashboard interface.
-
-</div>
-
-<p align="center">
-  <img src="assets/dashboard.png" width="900"/>
-</p>
-
-<p align="center">
-  <img src="assets/prediction.png" width="900"/>
-</p>
-
-<p align="center">
-  <img src="assets/analytics.png" width="900"/>
-</p>
-
-
-
-<div align="center">
-
-##  Live Demo Preview
-
-</div>
-
-<p align="center">
-  <img src="demo_.gif" width="900"/>
-</p>
-
-### Prediction Engine
-
-- Real-time win probability predictions
-- Walk-forward backtesting model evaluation (train on historical, test on recent seasons)
-- Calibration plotting and Brier score model drift tracking
-- Computes CRR, RRR, wickets, balls remaining
-- Confidence scoring system
-- Dynamic match-state analytics
-- Live prediction updates
-- SHAP-based explainable AI dashboard
-- Match momentum analysis
-- Prediction confidence meter
-- Interactive win probability progression
-
-</td>
-
-<td width="50%" valign="top">
-
-### Design System
-
-- Glassmorphism cards
-- Gold luxury gradients
-- Responsive dark UI
-- Premium typography stack
-- Modern dashboard aesthetics
-
-</td>
-</tr>
-
-<tr>
-<td width="50%" valign="top">
-
-### IPL Support
-
-- All major IPL teams supported
-- Team glow effects
-- Dynamic team identity styling
-- Clean score visualization
-
-</td>
-
-<td width="50%" valign="top">
-
-### User Experience
-
-- Interactive sidebar navigation
-- Analytics dashboard
-- Responsive layouts
-- Smooth UI interactions
-- Professional presentation
-
-</td>
-</tr>
-</table>
-
-<br/>
-
----
-
-<br/>
-
 <div align="center">
 
 ## Project Structure
 
 </div>
+
+
+## Screenshots
+
+### Dashboard
+
+![Dashboard](assets/dashboard.png)
+
+### Win Probability Prediction
+
+![Win Probability Prediction](assets/win-probability-prediction.png)
+
+### Analytics
+
+![Analytics](assets/analytics.png)
+
+
+## Demo
+
+![Demo](assets/cricscope.gif)
 
 ```bash
 cricscope/
@@ -574,19 +489,6 @@ Project Admin — GSSoC '26 & NSoC 2026
 
 
 <div align="center">
-## Screenshots
-
-### Dashboard Overview
-![Dashboard](screenshots/dashboard_overview.png)
-
-### Confidence Meter
-![Confidence Meter](screenshots/confidence_meter.png)
-
-### Momentum Analysis
-![Momentum](screenshots/momentum_analysis.png)
-
-### Explainable AI Dashboard
-![XAI](screenshots/xai_dashboard.png)
 
 ## Support the Project
 
