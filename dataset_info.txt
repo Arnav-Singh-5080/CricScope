@@ -1,21 +1,101 @@
-📊 IPL Dataset Information
+# CricScope Dataset Schema & Pipeline Documentation
 
-Source:
-https://www.kaggle.com/datasets/ramjidoolla/ipl-data-set
+This document provides a detailed breakdown of the schemas for `matches.csv` and `deliveries.csv`, alongside the feature engineering formulas used by the machine learning prediction model.
 
-Description:
-This dataset contains ball-by-ball and match-level data for multiple seasons of the Indian Premier League (IPL).
+---
 
-Files Included:
-1. matches.csv — Contains match-level details such as teams, venue, toss results, and match winner.
-2. deliveries.csv — Contains ball-by-ball delivery details for each match, including batsman, bowler, runs, and dismissals.
+## 1. matches.csv Schema (Match-Level Data)
 
-Usage:
-Both files are used to build the IPL Win Probability Prediction model. 
-The datasets are merged using the "match_id" column to create a unified dataframe.
+Contains metadata and final state information for every IPL match from 2008 to 2020.
 
-License:
-The dataset is publicly available on Kaggle for educational and research purposes.
+| Column | Data Type | Description |
+|:---|:---|:---|
+| `id` | Integer | Unique identifier for each match (acts as Primary Key). |
+| `Season` | String / Int | IPL season/year in which the match was played. |
+| `city` | String | Name of the city hosting the match. |
+| `date` | String | Match play date (formatted as YYYY-MM-DD). |
+| `team1` | String | Name of the first team (often home team). |
+| `team2` | String | Name of the second team (often away team). |
+| `toss_winner` | String | Name of the team that won the coin toss. |
+| `toss_decision` | String | Decision made by toss winner (`bat` or `field`). |
+| `result` | String | Match outcome style (`normal`, `tie`, `no result`). |
+| `dl_applied` | Integer | Binary indicator (1 if Duckworth-Lewis was applied, 0 otherwise). |
+| `winner` | String | Name of the winning team. |
+| `win_by_runs` | Integer | Margin of victory in runs (if winning batting first). |
+| `win_by_wickets` | Integer | Margin of victory in wickets (if winning batting second). |
+| `player_of_match` | String | Name of the Player of the Match award recipient. |
+| `venue` | String | Name of the stadium hosting the match. |
+| `umpire1` | String | Name of the first on-field umpire. |
+| `umpire2` | String | Name of the second on-field umpire. |
+| `umpire3` | String | Name of the TV/third umpire. |
 
-Author:
-Original dataset uploaded by Kaggle user — Ramji Doolla
+---
+
+## 2. deliveries.csv Schema (Ball-by-Ball Data)
+
+Contains detailed delivery-level statistics for every ball bowled across all matches.
+
+| Column | Data Type | Description |
+|:---|:---|:---|
+| `match_id` | Integer | Foreign key mapping to `matches.id`. |
+| `inning` | Integer | Inning number (1 or 2). |
+| `batting_team` | String | Name of the team currently batting. |
+| `bowling_team` | String | Name of the team currently bowling. |
+| `over` | Integer | Over number (1 to 20). |
+| `ball` | Integer | Ball number within the over (typically 1 to 6). |
+| `batsman` | String | Name of the batsman facing the delivery. |
+| `non_striker` | String | Name of the batsman at the non-striker's end. |
+| `bowler` | String | Name of the bowler delivering the ball. |
+| `is_super_over` | Integer | Binary indicator (1 if delivery is in a super over, 0 otherwise). |
+| `wide_runs` | Integer | Extra runs conceded via wide deliveries. |
+| `bye_runs` | Integer | Extra runs conceded via byes. |
+| `legbye_runs` | Integer | Extra runs conceded via leg byes. |
+| `noball_runs` | Integer | Extra runs conceded via no-balls. |
+| `penalty_runs` | Integer | Extra runs awarded due to penalties. |
+| `batsman_runs` | Integer | Runs scored off the bat by the batsman. |
+| `extra_runs` | Integer | Sum of all extras on the delivery. |
+| `total_runs` | Integer | Total runs scored on the delivery (`batsman_runs + extra_runs`). |
+| `player_dismissed` | String | Name of the player dismissed on this ball (NaN if no dismissal). |
+| `dismissal_kind` | String | Mode of dismissal (e.g. `caught`, `bowled`, `run out`, etc.). |
+| `fielder` | String | Name of the fielder involved in the dismissal (if applicable). |
+
+---
+
+## 3. Data Pipeline & Merging
+
+To construct the predictive features for CricScope:
+1.  Filter `deliveries.csv` for **Inning 2** (the run chase), since win probability is computed dynamically during the chase.
+2.  Perform a cumulative sum (`cumsum`) on `total_runs` per match to calculate the current batting score:
+    $$\text{current\_score} = \sum \text{total\_runs}$$
+3.  Merge with `matches.csv` on `match_id = id` to extract `target` information (total runs scored by Team 1 in Inning 1 plus 1):
+    $$\text{target} = \text{Inning 1 Total Runs} + 1$$
+
+---
+
+## 4. Mathematical Feature Engineering Formulas
+
+CricScope maps the merged data into six core mathematical features which are fed into the scikit-learn pipeline:
+
+### 1. Runs Left ($R_{\text{left}}$)
+$$\text{runs\_left} = \text{target} - \text{current\_score}$$
+
+### 2. Balls Left ($B_{\text{left}}$)
+Based on a standard 20-over (120-ball) innings:
+$$\text{balls\_left} = \max(120 - [(\text{over} - 1) \times 6 + \text{ball}], 0)$$
+
+### 3. Wickets Left ($W_{\text{left}}$)
+Starts at 10 and decreases with every non-NaN `player_dismissed`:
+$$\text{wickets\_left} = 10 - \sum \text{dismissals}$$
+
+### 4. Current Run Rate (CRR)
+The scoring speed during the chase:
+$$\text{CRR} = \frac{\text{current\_score}}{\text{overs\_bowled}}$$
+Where:
+$$\text{overs\_bowled} = (\text{over} - 1) + \frac{\text{ball}}{6}$$
+
+### 5. Required Run Rate (RRR)
+The run rate needed to win:
+$$\text{RRR} = \begin{cases} 
+\frac{\text{runs\_left} \times 6}{\text{balls\_left}} & \text{if } B_{\text{left}} > 0 \\
+0.0 & \text{otherwise}
+\end{cases}$$
