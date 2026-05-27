@@ -1,50 +1,56 @@
-# 🔐 Security Policy
+# ✦ Security Policy
 
-## Supported Versions
+This policy outlines how security vulnerabilities should be reported and handled for the CricScope project.
 
-The `main` branch is actively maintained with security updates and bug fixes.
+## ✦ Supported Versions
 
-If you are using an older version or a personal fork, we strongly recommend syncing regularly with the latest upstream repository updates.
+Only the latest release of the `main` branch is actively supported with security updates and bug fixes. 
 
----
-
-# 🚨 Reporting a Vulnerability
-
-We take security issues seriously and appreciate responsible disclosure from the community.
-
-Please do NOT report security vulnerabilities publicly through GitHub Issues.
+| Version | Supported | Security Patches |
+|:---:|:---:|:---:|
+| 2.x (main) | Yes | Active |
+| 1.x | No | None |
+| < 1.0 | No | None |
 
 ---
 
-# 📩 How to Report
+# ✦ Reporting a Vulnerability
 
-If you discover a vulnerability:
+We take the security of CricScope seriously and deeply appreciate responsible disclosure. 
 
-1. Report the issue privately to the project maintainer
-2. Include detailed reproduction steps
-3. Explain the potential impact
-4. Include screenshots or proof-of-concept if applicable
+**IMPORTANT: Do NOT report security vulnerabilities publicly through GitHub Issues or pull requests.**
 
 ---
 
-# ⏱ Response Timeline
+# ✦ How to Report
 
-- Initial acknowledgment within 48 hours
-- Verification and investigation process
-- Security fix implementation
-- Responsible disclosure coordination
-- Resolution notification after patch deployment
+To report a vulnerability, please send a private email to the project maintainers. In your report, please provide the following details to help us analyze and fix the issue quickly:
 
----
-
-# 🤝 Responsible Disclosure
-
-Please avoid publicly sharing vulnerabilities until a fix has been released.
-
-Responsible disclosure helps keep the project and community secure.
+1. **Title/Summary**: A short summary of the vulnerability.
+2. **Reproduction Steps**: A detailed description of the steps needed to reproduce the issue.
+3. **Potential Impact**: Describe the risk and potential threat if exploited (e.g. data leak, code injection).
+4. **Environment Details**: OS, Python version, library versions where the bug was observed.
+5. **Proof-of-Concept**: Code snippets, payloads, or screenshots demonstrating the vulnerability.
 
 ---
 
-# ❤️ Thank You
+# ✦ Response Timeline
 
-Thank you for helping improve the security and reliability of CricScope.
+| Phase | SLA Goal | Expected Action |
+|:---|:---:|:---|
+| **Acknowledgment** | Within 48 hours | Maintainers confirm receipt of the report. |
+| **Verification** | Within 5 business days | Maintainers complete investigation and verify impact. |
+| **Patch Release** | Within 14 business days | Release patch to `main` branch and verify fix. |
+| **Disclosure** | Post-Patch | Coordinate responsible public disclosure if required. |
+
+---
+
+# ✦ Responsible Disclosure
+
+Please avoid publicly sharing or discussing vulnerabilities until a security patch has been officially released to the `main` branch. Adhering to responsible disclosure keeps the project, developers, and downstream environments secure.
+
+---
+
+# ✦ Thank You
+
+Thank you for helping improve the security, reliability, and community health of CricScope.
