@@ -23,7 +23,6 @@ section[data-testid="stSidebar"] {
 """, unsafe_allow_html=True)
 import pandas as pd
 import numpy as np
-import time
 import os
 import joblib
 import logging
@@ -1083,7 +1082,7 @@ def evaluate_model(model_name='logistic'):
     }
 
 selected_model_key = st.session_state.get('selected_model', 'logistic')
-pipe = train_model(selected_model_key)
+pipe = joblib.load("pipe.pkl")
 
 def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, target, score, overs, wickets):
     total_balls = int(overs * 6)
