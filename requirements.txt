@@ -1,7 +1,7 @@
 streamlit
 scikit-learn
 numpy
-pandas
+pandas>=2.0,<3.0
 matplotlib
 joblib
 seaborn

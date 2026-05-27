@@ -949,7 +949,7 @@ def train_model(model_name='logistic'):
     total_df.rename(columns={'total_runs': 'target'}, inplace=True)
 
     df = df.merge(total_df, on='match_id')
-    df = df[df['inning'] == 2]
+    df = df[df['inning'] == 2].copy()
 
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
@@ -965,13 +965,16 @@ def train_model(model_name='logistic'):
     df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
     df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
 
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    df = df.replace([np.inf, -np.inf], np.nan)
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
     final_df = df[['batting_team', 'bowling_team', 'city',
                    'runs_left', 'balls_left', 'wickets',
                    'target', 'crr', 'rrr', 'result']]
     final_df.dropna(inplace=True)
+
+    assert not final_df.isin([np.inf, -np.inf]).any().any(), \
+        "inf values remain in training data after replace"
 
     X = final_df.drop('result', axis=1)
     y = final_df['result']
@@ -1024,7 +1027,7 @@ def evaluate_model(model_name='logistic'):
     total_df.rename(columns={'total_runs': 'target'}, inplace=True)
 
     df = df.merge(total_df, on='match_id')
-    df = df[df['inning'] == 2]
+    df = df[df['inning'] == 2].copy()
 
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
@@ -1040,13 +1043,16 @@ def evaluate_model(model_name='logistic'):
     df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
     df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
 
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    df = df.replace([np.inf, -np.inf], np.nan)
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
     final_df = df[['batting_team', 'bowling_team', 'city',
                    'runs_left', 'balls_left', 'wickets',
                    'target', 'crr', 'rrr', 'result']]
     final_df.dropna(inplace=True)
+
+    assert not final_df.isin([np.inf, -np.inf]).any().any(), \
+        "inf values remain in evaluation data after replace"
 
     X = final_df.drop('result', axis=1)
     y = final_df['result']
@@ -1666,6 +1672,9 @@ if st.session_state.page == "Analysis":
                 pass # Bypasses ML model prediction cleanly
             else:
                 proba = pipe.predict_proba(input_df)[0]
+                if np.isnan(proba).any():
+                    st.error("Model returned invalid probabilities. The training data contains corrupted values. Please restart the application.")
+                    st.stop()
                 win = proba[1]
                 lose = proba[0]
 
