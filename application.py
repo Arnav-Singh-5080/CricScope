@@ -27,7 +27,7 @@ import time
 import os
 import joblib
 import logging
-
+import plotly.express as px
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
@@ -942,7 +942,17 @@ def train_model(model_name='logistic'):
 
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
+    def get_phase(over):
+        if over <= 6:
+            return "Powerplay"
+        elif over <= 15:
+            return "Middle Overs"
+        else:
+            return "Death Overs"
 
+    deliveries["phase"] = deliveries["over"].apply(get_phase)
+     
+    deliveries["phase"] = deliveries["over"].apply(get_phase)
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
 
     total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
@@ -1519,6 +1529,7 @@ if st.session_state.page == "Analysis":
             'Sharjah', 'Visakhapatnam'
         ]
         selected_city = st.selectbox("Select Host City", cities, index=cities.index('Mumbai'), key="city")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
@@ -1875,9 +1886,270 @@ if st.session_state.page == "Analysis":
             mime="text/csv",
             use_container_width=True
         )
+        # -----------------------------------
+# PHASE ANALYTICS HEATMAP
+# -----------------------------------
 
-    st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
-    
+st.markdown("""
+<div style="
+    margin-top:40px;
+    font-size:10px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:rgba(212,175,55,0.4);
+    margin-bottom:20px;
+    font-weight:500;">
+    Phase Analytics
+</div>
+""", unsafe_allow_html=True)
+
+deliveries = pd.read_csv("deliveries.csv")
+
+def get_phase(over):
+    if over <= 6:
+        return "Powerplay"
+    elif over <= 15:
+        return "Middle Overs"
+    else:
+        return "Death Overs"
+
+deliveries["phase"] = deliveries["over"].apply(get_phase)
+
+phase_stats = deliveries.groupby(
+    ["batting_team", "phase"]
+)["total_runs"].sum().reset_index()
+
+heatmap_data = phase_stats.pivot(
+    index="batting_team",
+    columns="phase",
+    values="total_runs"
+)
+
+fig = px.imshow(
+    heatmap_data,
+    text_auto=True,
+    aspect="auto",
+    color_continuous_scale="YlOrBr",
+    title="Over-Phase Run Heatmap"
+)
+
+fig.update_layout(
+    height=700,
+    width=1200,
+    font=dict(size=14),
+    title_font=dict(size=24),
+    margin=dict(l=50, r=50, t=80, b=50)
+)
+
+st.plotly_chart(fig, use_container_width=True)
+# -----------------------------------
+# TOP PERFORMER SPOTLIGHT
+# -----------------------------------
+
+st.markdown("""
+<div style="
+    margin-top:50px;
+    font-size:10px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:rgba(212,175,55,0.4);
+    margin-bottom:20px;
+    font-weight:500;">
+    Top Performer Spotlight
+</div>
+""", unsafe_allow_html=True)
+
+selected_team = st.selectbox(
+    "Select Team for Spotlight",
+    sorted(deliveries["batting_team"].unique())
+)
+
+# -----------------------------
+# TOP BATTERS
+# -----------------------------
+
+team_batting = deliveries[
+    deliveries["batting_team"] == selected_team
+]
+
+top_batters = team_batting.groupby("batsman").agg({
+    "batsman_runs": "sum",
+    "ball": "count"
+}).reset_index()
+
+top_batters["strike_rate"] = (
+    top_batters["batsman_runs"]
+    / top_batters["ball"]
+) * 100
+
+top_batters = top_batters.sort_values(
+    by="batsman_runs",
+    ascending=False
+).head(3)
+
+st.subheader("🏏 Top Batters")
+
+cols = st.columns(3)
+
+for idx, row in enumerate(top_batters.itertuples()):
+    with cols[idx]:
+        st.metric(
+            label=row.batsman,
+            value=f"{row.batsman_runs} Runs",
+            delta=f"SR {row.strike_rate:.1f}"
+        )
+
+# -----------------------------
+# TOP BOWLERS
+# -----------------------------
+
+team_bowling = deliveries[
+    deliveries["bowling_team"] == selected_team
+]
+
+top_bowlers = team_bowling.groupby("bowler").agg({
+    "player_dismissed": "count",
+    "total_runs": "sum",
+    "ball": "count"
+}).reset_index()
+
+top_bowlers.rename(
+    columns={"player_dismissed": "wickets"},
+    inplace=True
+)
+
+top_bowlers["economy"] = (
+    top_bowlers["total_runs"]
+    / (top_bowlers["ball"] / 6)
+)
+
+top_bowlers = top_bowlers.sort_values(
+    by="wickets",
+    ascending=False
+).head(3)
+
+st.subheader("🎯 Top Bowlers")
+
+cols = st.columns(3)
+
+for idx, row in enumerate(top_bowlers.itertuples()):
+    with cols[idx]:
+        st.metric(
+            label=row.bowler,
+            value=f"{row.wickets} Wickets",
+            delta=f"Econ {row.economy:.2f}"
+        )
+
+# -----------------------------------
+# BATTER VS BOWLER MICRO MATCHUP
+# -----------------------------------
+
+st.markdown("""
+<div style="
+    margin-top:50px;
+    font-size:10px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:rgba(212,175,55,0.4);
+    margin-bottom:20px;
+    font-weight:500;">
+    Batter vs Bowler Matchup
+</div>
+""", unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    selected_batter = st.selectbox(
+        "Select Batter",
+        sorted(deliveries["batsman"].dropna().unique())
+    )
+
+with col2:
+    selected_bowler = st.selectbox(
+        "Select Bowler",
+        sorted(deliveries["bowler"].dropna().unique())
+    )
+
+matchup_df = deliveries[
+    (deliveries["batsman"] == selected_batter)
+    &
+    (deliveries["bowler"] == selected_bowler)
+]
+
+runs_scored = matchup_df["batsman_runs"].sum()
+
+balls_faced = len(matchup_df)
+
+dismissals = matchup_df[
+    matchup_df["player_dismissed"] == selected_batter
+].shape[0]
+
+boundaries = matchup_df[
+    matchup_df["batsman_runs"].isin([4, 6])
+].shape[0]
+
+dot_balls = matchup_df[
+    matchup_df["total_runs"] == 0
+].shape[0]
+
+strike_rate = (
+    (runs_scored / balls_faced) * 100
+    if balls_faced > 0 else 0
+)
+if matchup_df.empty:
+    st.warning("No historical matchup data available.")
+else:
+    # -----------------------------
+    # MATCHUP METRICS
+    # -----------------------------
+
+    m1, m2, m3, m4, m5 = st.columns(5)
+
+    with m1:
+        st.metric("Runs", runs_scored)
+
+    with m2:
+        st.metric("Balls", balls_faced)
+
+    with m3:
+        st.metric("Dismissals", dismissals)
+
+    with m4:
+        st.metric("Boundaries", boundaries)
+
+    with m5:
+        st.metric("Strike Rate", f"{strike_rate:.1f}")
+
+    # -----------------------------
+    # MINI BAR CHART
+    # -----------------------------
+
+    chart_data = pd.DataFrame({
+        "Metric": [
+            "Runs",
+            "Boundaries",
+            "Dot Balls"
+        ],
+        "Value": [
+            runs_scored,
+        boundaries,
+        dot_balls
+    ]
+})
+
+    fig2 = px.bar(
+        chart_data,
+        x="Metric",
+        y="Value",
+        color="Metric",
+        title=f"{selected_batter} vs {selected_bowler}"
+        )
+
+    st.plotly_chart(fig2, use_container_width=True)
+
+st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
+
 # -----------------------------------
 # TEAM ANALYSIS PAGE
 # -----------------------------------
