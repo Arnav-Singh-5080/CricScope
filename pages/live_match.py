@@ -24,7 +24,7 @@ from sklearn.pipeline import Pipeline
 # ───────────────────────────────────────────
 st.set_page_config(
     page_title="CricScope · Live",
-    page_icon="🔴",
+    page_icon="⎔",
     layout="wide",
 )
 
@@ -452,7 +452,7 @@ CRICKET_API_BASE = "https://api.cricapi.com/v1"
 
 # Free-tier API key — users should replace with their own from cricapi.com
 try:
-    API_KEY = st.secrets.get("CRICAPI_KEY", "")
+    API_KEY = st.secrets.get("CRICAPI_KEY", "") if hasattr(st, "secrets") else ""
 except Exception:
     API_KEY = ""
 
@@ -621,7 +621,7 @@ elif "cricapi_key" in st.session_state and st.session_state.cricapi_key:
 else:
     st.markdown("""
         <div class="info-box">
-            <div class="icon">🔑</div>
+            <div class="icon">✦</div>
             <div class="text">
                 To fetch live match data, you need a free API key from
                 <strong>cricapi.com</strong>.<br>
@@ -684,7 +684,7 @@ if not user_api_key:
 
     st.markdown("""
         <div class="info-box" style="margin-bottom:24px;">
-            <div class="icon">📡</div>
+            <div class="icon">✦</div>
             <div class="text">
                 No API key provided — running in <strong>demo mode</strong>.<br>
                 Enter match details manually below to simulate live prediction,
@@ -727,7 +727,7 @@ if not user_api_key:
                                      step=0.1, format="%.1f", key="demo_overs")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("🔮 Predict Win Probability", key="demo_predict", use_container_width=True):
+    if st.button("✦ Predict Win Probability", key="demo_predict", use_container_width=True):
         demo_runs, demo_wickets = parse_score_string(demo_score_str)
         if demo_runs is not None and demo_wickets is not None:
             result = compute_prediction(
@@ -847,7 +847,7 @@ else:
     if not matches_data:
         st.markdown("""
             <div class="info-box">
-                <div class="icon">📭</div>
+                <div class="icon">✦</div>
                 <div class="text">
                     No live matches found right now, or the API key is invalid.<br>
                     Make sure you have a valid <strong>CricAPI</strong> key.
@@ -865,7 +865,7 @@ else:
         if not live_matches:
             st.markdown("""
                 <div class="info-box">
-                    <div class="icon">⏳</div>
+                    <div class="icon">✦</div>
                     <div class="text">
                         Matches found but no live scoring data available yet.<br>
                         Scores will appear here once innings are in progress.
@@ -932,7 +932,7 @@ else:
                         </div>
                     </div>
                     <div style="font-size:11px;color:rgba(200,185,140,0.3);margin-top:12px;
-                                letter-spacing:0.5px;">🏟 {venue}</div>
+                                letter-spacing:0.5px;">✦ {venue}</div>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -1110,7 +1110,7 @@ else:
             elif len(scores) == 1:
                 st.markdown("""
                     <div class="info-box" style="margin-top:16px;">
-                        <div class="icon">⏳</div>
+                        <div class="icon">✦</div>
                         <div class="text">
                             First innings in progress. Win prediction will be available
                             once the second innings begins and a target is set.
