@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import requests
 import time
+from utils import resolve_team_name, resolve_city_name, calculate_prediction_inputs
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -329,36 +330,7 @@ footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
-# ───────────────────────────────────────────
-#  TEAM MAPPING  (API names → model names)
-# ───────────────────────────────────────────
-TEAM_NAME_MAP = {
-    # CricAPI / common names → names used in training CSVs
-    "Chennai Super Kings":       "Chennai Super Kings",
-    "CSK":                       "Chennai Super Kings",
-    "Delhi Capitals":            "Delhi Capitals",
-    "DC":                        "Delhi Capitals",
-    "Delhi Daredevils":          "Delhi Capitals",
-    "Punjab Kings":              "Punjab Kings",
-    "PBKS":                      "Punjab Kings",
-    "Kings XI Punjab":           "Punjab Kings",
-    "Kolkata Knight Riders":     "Kolkata Knight Riders",
-    "KKR":                       "Kolkata Knight Riders",
-    "Mumbai Indians":            "Mumbai Indians",
-    "MI":                        "Mumbai Indians",
-    "Rajasthan Royals":          "Rajasthan Royals",
-    "RR":                        "Rajasthan Royals",
-    "Royal Challengers Bangalore": "Royal Challengers Bangalore",
-    "Royal Challengers Bengaluru": "Royal Challengers Bangalore",
-    "RCB":                       "Royal Challengers Bangalore",
-    "Sunrisers Hyderabad":       "Sunrisers Hyderabad",
-    "SRH":                       "Sunrisers Hyderabad",
-    "Gujarat Titans":            "Gujarat Titans",
-    "GT":                        "Gujarat Titans",
-    "Lucknow Super Giants":      "Lucknow Super Giants",
-    "LSG":                       "Lucknow Super Giants",
-}
-
+# TEAM_NAME_MAP and resolve_team_name are imported from utils
 TEAM_DISPLAY = {
     "Chennai Super Kings":       {"abbr": "CSK",  "color": "#facc15"},
     "Delhi Capitals":            {"abbr": "DC",   "color": "#3b82f6"},
@@ -371,21 +343,6 @@ TEAM_DISPLAY = {
     "Gujarat Titans":            {"abbr": "GT",   "color": "#22d3ee"},
     "Lucknow Super Giants":      {"abbr": "LSG",  "color": "#06b6d4"},
 }
-
-
-def resolve_team_name(raw_name: str) -> str:
-    """Map an API team name to the canonical model training name."""
-    if not raw_name:
-        return raw_name
-    # Direct lookup
-    if raw_name in TEAM_NAME_MAP:
-        return TEAM_NAME_MAP[raw_name]
-    # Case-insensitive partial match
-    raw_lower = raw_name.lower()
-    for key, val in TEAM_NAME_MAP.items():
-        if key.lower() in raw_lower or raw_lower in key.lower():
-            return val
-    return raw_name
 
 
 # ───────────────────────────────────────────
@@ -406,16 +363,17 @@ def train_model():
 
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
-    df['balls_left'] = 120 - (df['over'] * 6 + df['ball'])
+    
+    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
+    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
 
     df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
     df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
     df['wickets'] = 10 - df['wickets']
 
-    df['over'] = df['over'].replace(0, 0.1)
-
-    df['crr'] = df['current_score'] / (df['over'] + df['ball'] / 6)
-    df['rrr'] = (df['runs_left'] * 6) / df['balls_left']
+    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
+    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
+    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
 
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
@@ -539,26 +497,15 @@ def compute_prediction(batting_team, bowling_team, venue, target,
         bat_name = resolve_team_name(batting_team)
         bowl_name = resolve_team_name(bowling_team)
 
-        # Convert overs to balls
-        completed_overs = int(overs_bowled)
-        balls_in_current_over = int(round((overs_bowled - completed_overs) * 10))
-        total_balls_bowled = (completed_overs * 6) + balls_in_current_over
+        # Resolve city name robustly
+        city = resolve_city_name(venue)
 
-        if total_balls_bowled <= 0 or target <= 0:
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(target, current_score, overs_bowled)
+
+        if (120 - balls_left) <= 0 or target <= 0:
             return None
 
-        runs_left = target - current_score
-        balls_left = 120 - total_balls_bowled
-
-        if balls_left <= 0:
-            balls_left = 1  # avoid division by zero at end of innings
-
         wickets_in_hand = 10 - wickets_fallen
-        crr = current_score / (total_balls_bowled / 6) if total_balls_bowled > 0 else 0
-        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
-
-        # Use a generic city if venue is unknown
-        city = venue if venue else "Mumbai"
 
         input_df = pd.DataFrame({
             'batting_team': [bat_name],
@@ -982,8 +929,8 @@ else:
 
                 bowling_2nd = team1_name if batting_2nd == team2_name else team2_name
 
-                # Extract city from venue
-                city = venue.split(",")[-1].strip() if venue else "Mumbai"
+                # Extract city from venue robustly
+                city = resolve_city_name(venue)
 
                 result = compute_prediction(
                     batting_2nd, bowling_2nd, city,
