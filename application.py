@@ -1,12 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time
 
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
+import joblib
 
 # -----------------------------------
 # CONFIG
@@ -812,65 +808,7 @@ team_data = {
 # -----------------------------------
 # MODEL
 # -----------------------------------
-@st.cache_resource
-def train_model():
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
-
-    df = deliveries.merge(matches, left_on='match_id', right_on='id')
-
-    total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
-    total_df.rename(columns={'total_runs': 'target'}, inplace=True)
-
-    df = df.merge(total_df, on='match_id')
-    df = df[df['inning'] == 2]
-
-    df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
-    df['runs_left'] = df['target'] - df['current_score']
-    # Correct balls_left calculation using legal deliveries bowled:
-    # balls_bowled = ((over - 1) * 6) + ball
-    # and ensuring it is never negative.
-    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
-    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
-
-    df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
-    df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
-    df['wickets'] = 10 - df['wickets']
-
-    # Correct current run rate (crr) using correct overs bowled denominator:
-    # (over - 1) + (ball / 6)
-    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
-    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
-
-    # Correct required run rate (rrr) avoiding division by zero when balls_left is 0
-    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
-
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-    df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
-
-    final_df = df[['batting_team', 'bowling_team', 'city',
-                   'runs_left', 'balls_left', 'wickets',
-                   'target', 'crr', 'rrr', 'result']]
-    final_df.dropna(inplace=True)
-
-    X = final_df.drop('result', axis=1)
-    y = final_df['result']
-
-    preprocessor = ColumnTransformer([
-        ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
-        ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
-    ])
-
-    pipe = Pipeline([
-        ('preprocessor', preprocessor),
-        ('model', LogisticRegression(max_iter=1000))
-    ])
-
-    pipe.fit(X, y)
-    return pipe
-
-pipe = train_model()
+pipe = joblib.load("pipe.pkl")
 
 # -----------------------------------
 # SIDEBAR
@@ -1172,7 +1110,6 @@ if st.session_state.page == "Analysis":
         })
 
         with st.spinner(""):
-            time.sleep(0.4)
             # Edge-case handling for final ball/completed innings boundaries
             if runs_left <= 0:
                 win = 1.0
