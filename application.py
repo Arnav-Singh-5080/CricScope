@@ -37,6 +37,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 
+from momentum import classify_momentum_regime
+
 logging.basicConfig(level=logging.INFO)
 
 # -----------------------------------
@@ -1684,6 +1686,10 @@ if st.session_state.page == "Analysis":
                 win = proba[1]
                 lose = proba[0]
 
+        momentum_label, momentum_explanation = classify_momentum_regime(
+            win, lose, crr, rrr, 10 - wickets, balls_left
+        )
+
         st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
         st.markdown("""
             <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
@@ -1793,6 +1799,21 @@ if st.session_state.page == "Analysis":
                     <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
                                 font-weight:500;color:#f0e8cc;">
                         {verdict} favoured to win
+                    </div>
+                    <div style="font-size:11px;color:rgba(215,205,170,0.85);margin-top:10px;line-height:1.45;">
+                        <strong>{momentum_label}</strong> — {momentum_explanation}
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+                                color:rgba(212,175,55,0.35);margin-bottom:6px;">Confidence</div>
+                    <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
+                        {conf_label} · {round(conf*100)}%
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
                     </div>
                 </div>
                 <div style="text-align:right;">
