@@ -1,4 +1,6 @@
 import streamlit as st
+st.set_page_config(page_title="CricScope", layout="wide", initial_sidebar_state="expanded")
+
 st.markdown("""
 <style>
 
@@ -42,7 +44,8 @@ logging.basicConfig(level=logging.INFO)
 # -----------------------------------
 # CONFIG
 # -----------------------------------
-st.set_page_config(page_title="CricScope", layout="wide", initial_sidebar_state="expanded")
+# Page config is now set at the very beginning of the script
+
 
 # -----------------------------------
 # SESSION STATE
@@ -927,7 +930,7 @@ def get_model(model_name='logistic'):
     elif model_name == 'random_forest':
         return RandomForestClassifier(n_estimators=100, random_state=42)
     elif model_name == 'xgboost':
-        return XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False, eval_metric='logloss')
+        return XGBClassifier(n_estimators=100, random_state=42, eval_metric='logloss')
     return LogisticRegression(max_iter=1000)
 
 @st.cache_resource
@@ -1479,7 +1482,7 @@ elif st.session_state.page == "Performance":
 # -----------------------------------
 # ANALYSIS PAGE
 # -----------------------------------
-if st.session_state.page == "Analysis":
+elif st.session_state.page == "Analysis":
 
     st.markdown("""
         <div class="hero-wrapper" style="padding-bottom:32px;">
@@ -1804,61 +1807,6 @@ if st.session_state.page == "Analysis":
                 </div>
             </div>
         """, unsafe_allow_html=True)
-        # ---- CSV EXPORT ----
-        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
-
-        # Generate ball-by-ball predictions from current state to end of innings
-        rows = []
-        for ov in range(overs, 20):
-            for bl in range(1, 7):
-                total_balls_done = ov * 6 + bl
-                if total_balls_done <= overs * 6:
-                    continue  # skip already-played balls
-                if total_balls_done > 120:
-                    break
-
-                b_left = 120 - total_balls_done
-                c_score = score  # score stays same (projection from current state)
-                r_left = target - c_score
-                c_crr = c_score / (total_balls_done / 6) if total_balls_done > 0 else 0
-                c_rrr = (r_left * 6) / b_left if b_left > 0 else 0
-
-                proj_df = pd.DataFrame({
-                    'batting_team': [batting_team],
-                    'bowling_team': [bowling_team],
-                    'city': ['Mumbai'],
-                    'runs_left': [r_left],
-                    'balls_left': [b_left],
-                    'wickets': [10 - wickets],
-                    'target': [target],
-                    'crr': [c_crr],
-                    'rrr': [c_rrr]
-                })
-
-                try:
-                    proj_proba = pipe.predict_proba(proj_df)[0]
-                    bat_prob = round(proj_proba[1] * 100, 2)
-                    bowl_prob = round(proj_proba[0] * 100, 2)
-                except Exception:
-                    bat_prob, bowl_prob = 50.0, 50.0
-                rows.append({
-                    "over": ov + 1,
-                    "ball": bl,
-                    "batting_team_prob": bat_prob,
-                    "bowling_team_prob": bowl_prob
-                })
-
-        export_df = pd.DataFrame(rows)
-
-        if not export_df.empty:
-            st.download_button(
-                label="⬇️ Download Ball-by-Ball Predictions (CSV)",
-                data=export_df.to_csv(index=False),
-                file_name=f"{batting_team}_vs_{bowling_team}_predictions.csv",
-                mime="text/csv"
-            )
-
-        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
         
         # Generate ball-by-ball predictions for export
         with st.spinner("Generating export data..."):
@@ -1871,7 +1819,7 @@ if st.session_state.page == "Analysis":
         st.download_button(
             label="📊 Download Ball-by-Ball Prediction Data (CSV)",
             data=csv_data,
-            file_name=f"cricscope_predictions_{batting_team.lower().replace(' ', '_')}.csv",
+            file_name=f"cricscope_predictions_{batting_team.lower().replace(' ', '_')}_vs_{bowling_team.lower().replace(' ', '_')}.csv",
             mime="text/csv",
             use_container_width=True
         )
@@ -1881,7 +1829,7 @@ if st.session_state.page == "Analysis":
 # -----------------------------------
 # TEAM ANALYSIS PAGE
 # -----------------------------------
-if st.session_state.page == "Team Analysis":
+elif st.session_state.page == "Team Analysis":
     
     if "selected_team" not in st.session_state:
         st.warning("Please select a team from Dashboard.")
@@ -1914,123 +1862,126 @@ if st.session_state.page == "Team Analysis":
 
     st.title("🏏 Team Analysis")
 
-    if team:
+    if team and team in team_data:
         st.markdown(
-    f"""
-    <h2 style="
-        color:{team_data[team]['color']};
-        text-align:center;
-        margin-bottom:20px;
-    ">
-        {team}
-    </h2>
-    """,
-    unsafe_allow_html=True
-)
-         # Team Logo
-        if team in team_data:
-                c1, c2, c3 = st.columns([1,2,1])
-
-    with c2:
-        st.image(team_data[team]["logo"], width=180)
+            f"""
+            <h2 style="
+                color:{team_data[team]['color']};
+                text-align:center;
+                margin-bottom:20px;
+            ">
+                {team}
+            </h2>
+            """,
+            unsafe_allow_html=True
+        )
         
-        st.markdown("---")
+        # Team Logo and Content
+        c1, c2, c3 = st.columns([1,2,1])
+        with c2:
+            st.image(team_data[team]["logo"], width=180)
+            
+            st.markdown("---")
 
-        col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4 = st.columns(4)
 
-        with col1:
-            st.metric("Matches", matches_played)
+            with col1:
+                st.metric("Matches", matches_played)
 
-        with col2:
-            st.metric("Wins", wins)
+            with col2:
+                st.metric("Wins", wins)
 
-        with col3:
-            st.metric("Losses", losses)
+            with col3:
+                st.metric("Losses", losses)
 
-        with col4:
-            st.metric("Win Rate", f"{win_rate}%")
-        
-    # Performance Overview
-        st.subheader("📊 Performance Overview")
-        
-        winning_matches = team_matches[
-        team_matches["winner"] == team
-]
-        best_venue = winning_matches["venue"].mode()[0]
+            with col4:
+                st.metric("Win Rate", f"{win_rate}%")
+            
+            # Performance Overview
+            st.subheader("📊 Performance Overview")
+            
+            winning_matches = team_matches[
+                team_matches["winner"] == team
+            ]
+            best_venue = winning_matches["venue"].mode()[0]
 
-        seasons_played = team_matches["Season"].nunique()
-        
-        pom_count = winning_matches["player_of_match"].value_counts()
-        top_player = pom_count.index[0]
-        top_player_awards = pom_count.iloc[0]
+            seasons_played = team_matches["Season"].nunique()
+            
+            pom_count = winning_matches["player_of_match"].value_counts()
+            top_player = pom_count.index[0]
+            top_player_awards = pom_count.iloc[0]
 
-        col1, col2, col3 = st.columns(3)
+            col1, col2, col3 = st.columns(3)
 
-        with col1:
+            with col1:
                 st.metric("🏟 Best Venue", best_venue)
 
-        with col2:
+            with col2:
                 st.metric("Seasons Played", seasons_played)
 
-        with col3:
-              st.metric(
-        "🏆 Top Performer",
-        top_player,
-        f"{top_player_awards} Awards"
-)
+            with col3:
+                st.metric(
+                    "🏆 Top Performer",
+                    top_player,
+                    f"{top_player_awards} Awards"
+                )
 
-        st.markdown("---")
+            st.markdown("---")
 
-     # Team Strength Analysis
-        st.subheader("📈 Team Statistics")
-        
-        deliveries_df = pd.read_csv("deliveries.csv")
-
-        team_batting = deliveries_df[
-        deliveries_df["batting_team"] == team
-]
-        total_runs = team_batting["total_runs"].sum()
-
-        team_bowling = deliveries_df[
-        deliveries_df["bowling_team"] == team
-]   
-        total_wickets = team_bowling[
-        team_bowling["player_dismissed"].notna()
-].shape[0]
-        
-        fielding_events = team_bowling[
-        team_bowling["dismissal_kind"].isin(
-        ["caught", "run out", "stumped"]
-    )
-]
-
-        fielding_count = len(fielding_events)
+            # Team Strength Analysis
+            st.subheader("📈 Team Statistics")
             
-        batting_strength = min(round(total_runs / 40000 * 100), 100)
+            deliveries_df = pd.read_csv("deliveries.csv")
 
-        bowling_strength = min(round(total_wickets / 1200 * 100), 100)
+            team_batting = deliveries_df[
+                deliveries_df["batting_team"] == team
+            ]
+            total_runs = team_batting["total_runs"].sum()
 
-        fielding_strength = min(round(fielding_count / 800 * 100), 100)
-       
-        # Batting
-        st.markdown(
-            f"🏏 **Total Runs** : {total_runs:,} ({batting_strength}%)"
-        )
-        st.progress(batting_strength / 100)
+            team_bowling = deliveries_df[
+                deliveries_df["bowling_team"] == team
+            ]   
+            total_wickets = team_bowling[
+                team_bowling["player_dismissed"].notna()
+            ].shape[0]
+            
+            fielding_events = team_bowling[
+                team_bowling["dismissal_kind"].isin(
+                    ["caught", "run out", "stumped"]
+                )
+            ]
 
-        # Bowling
-        st.markdown(
-            f"🎯 **Wickets Taken** : {total_wickets} ({bowling_strength}%)"
-        )
-        st.progress(bowling_strength / 100)
+            fielding_count = len(fielding_events)
+                
+            batting_strength = min(round(total_runs / 40000 * 100), 100)
 
-        # Fielding
-        st.markdown(
-            f"🧤 **Fielding Dismissals** : {fielding_count} ({fielding_strength}%)"
-        )
-        st.progress(fielding_strength / 100)
-        
-    
+            bowling_strength = min(round(total_wickets / 1200 * 100), 100)
+
+            fielding_strength = min(round(fielding_count / 800 * 100), 100)
+           
+            # Batting
+            st.markdown(
+                f"🏏 **Total Runs** : {total_runs:,} ({batting_strength}%)"
+            )
+            st.progress(batting_strength / 100)
+
+            # Bowling
+            st.markdown(
+                f"🎯 **Wickets Taken** : {total_wickets} ({bowling_strength}%)"
+            )
+            st.progress(bowling_strength / 100)
+
+            # Fielding
+            st.markdown(
+                f"🧤 **Fielding Dismissals** : {fielding_count} ({fielding_strength}%)"
+            )
+            st.progress(fielding_strength / 100)
+            
+            if st.button("⬅ Back to Dashboard"):
+                st.session_state.page = "Dashboard"
+                st.rerun()
+    else:
+        st.warning("Selected team not found in database or team_data directory.")
         if st.button("⬅ Back to Dashboard"):
             st.session_state.page = "Dashboard"
             st.rerun()
