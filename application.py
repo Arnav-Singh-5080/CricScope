@@ -1660,7 +1660,7 @@ if st.session_state.page == "Analysis":
                 win = 0.0
                 lose = 1.0
 
-        with st.spinner(""):
+        with st.spinner("⚡ Computing Match Intelligence & Win Probabilities..."):
             time.sleep(0.4)
             if is_match_decided:
                 pass # Bypasses ML model prediction cleanly
@@ -1968,3 +1968,4 @@ if st.session_state.page == "Team Analysis":
             st.rerun()
             
 st.markdown("</div>", unsafe_allow_html=True)
+
