@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 #  page config 
 st.set_page_config(
     page_title="CricScope · Stats",
-    page_icon="📊",
+    page_icon="⎔",
     layout="wide",
 )
 
@@ -242,7 +242,7 @@ st.markdown("""
             color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
     Head-to-Head Record
 </div>
-<div class="section-title">⚔️ Team Matchup</div>
+<div class="section-title">✦ Team Matchup</div>
 """, unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
@@ -251,27 +251,7 @@ with col1:
 with col2:
     remaining = [t for t in all_teams if t != team_a]
     team_b = st.selectbox("Team B", remaining, index=remaining.index("Chennai Super Kings") if "Chennai Super Kings" in remaining else 0, key="h2h_b")
-    
-#Example value
-team_a = "Chennai Super KIngs"
-team_b = "Mumbai Indians"
 
-team_a_wins = 11
-team_b_wins = 17
-
-#Pie Chart
-fig = go.Figure(data=[go.Pie(
-    labels=[f"{team_a}Wins",f"{team_b}Wins"],
-    values=[11,17],
-    hole=0.5
-)])
-
-fig.update_layout(
-    paper_bgcolor="#0E1117",
-    font_color="white",
-    margin=dict(l=20,r=20,t=20,b=20))
-
-st.plotly_chart(fig, use_container_width=True)
 # filter h2h matches
 h2h = matches[
     ((matches["team1"] == team_a) & (matches["team2"] == team_b)) |
@@ -288,6 +268,31 @@ else:
 
     a_pct = round(a_wins / total * 100, 1) if total else 0
     b_pct = round(b_wins / total * 100, 1) if total else 0
+
+    # Dynamic Pie Chart with luxury gold-dark styling
+    fig = go.Figure(data=[go.Pie(
+        labels=[f"{team_a} Wins", f"{team_b} Wins"],
+        values=[a_wins, b_wins],
+        hole=0.6,
+        marker=dict(
+            colors=["#d4af37", "#1e1b18"],
+            line=dict(color="#080808", width=3)
+        ),
+        textinfo="percent+label",
+        hoverinfo="label+value",
+        textfont=dict(color="#e2dfd8", family="DM Sans")
+    )])
+
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#e2dfd8",
+        showlegend=False,
+        margin=dict(l=10, r=10, t=10, b=10),
+        height=320
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
     ca, cb, cc = st.columns(3)
     with ca:
@@ -340,7 +345,7 @@ st.markdown("""
             color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
     Player Performance by Team
 </div>
-<div class="section-title">🏏 Top Performers</div>
+<div class="section-title">✦ Top Performers</div>
 """, unsafe_allow_html=True)
 
 selected_team = st.selectbox("Select Team", all_teams, key="player_team")
@@ -440,7 +445,7 @@ st.markdown("""
             color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
     Venue Performance
 </div>
-<div class="section-title">🏟️ Ground Analysis</div>
+<div class="section-title">✦ Ground Analysis</div>
 """, unsafe_allow_html=True)
 
 venue_team = st.selectbox("Select Team for Venue Analysis", all_teams, key="venue_team")
