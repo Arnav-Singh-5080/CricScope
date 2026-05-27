@@ -77,60 +77,92 @@ Click the **Fork** button on the top-right corner of the repository page.
 git clone https://github.com/your-username/cricscope.git
 cd cricscope
 
-3️⃣ Create a New Branch
+### 3️⃣ Create a New Branch
+
+```bash
 git checkout -b feature/your-feature-name
-Examples:
+```
 
-docs/readme-improvements
-feature/win-probability-chart
-fix/sidebar-responsive-ui
+Examples of clean branch names:
+*   `docs/readme-improvements`
+*   `feature/win-probability-chart`
+*   `fix/sidebar-responsive-ui`
 
-💻 Installation Guide
-Create Virtual Environment
-Windows
+---
+
+## 💻 Installation Guide
+
+### 1. Create a Virtual Environment
+
+**Windows:**
+```bash
 python -m venv venv
 venv\Scripts\activate
-Linux/macOS
+```
+
+**Linux/macOS:**
+```bash
 python -m venv venv
 source venv/bin/activate
-Install Dependencies
+```
+
+### 2. Install Dependencies
+
+```bash
 pip install -r requirements.txt
-Run the Application
-streamlit run app.py
+```
 
-The app will start locally at:
+### 3. Run the Application
 
-http://localhost:8501
-🔄 Contribution Workflow
-Fork the repository
-Clone your fork locally
-Create a new branch
-Make your changes
-Test your changes locally
-Commit your changes
-Push your branch
-Create a Pull Request
-✅ Commit Guidelines
+```bash
+streamlit run application.py
+```
+
+The app will start locally at: [http://localhost:8501](http://localhost:8501)
+
+---
+
+## 🔄 Contribution Workflow
+
+1. Fork the repository
+2. Clone your fork locally
+3. Create a new branch
+4. Make your changes
+5. Test your changes locally
+6. Commit your changes
+7. Push your branch
+8. Create a Pull Request
+
+---
+
+## ✅ Commit Guidelines
+
+Commit messages must be concise and descriptive.
 
 Examples:
+*   `git commit -m "docs: improve contributing guidelines"`
+*   `git commit -m "fix: resolve sidebar responsiveness issue"`
+*   `git commit -m "feat: add momentum analytics chart"`
 
-git commit -m "docs: improve contributing guidelines"
-git commit -m "fix: resolve sidebar responsiveness issue"
-git commit -m "feat: add momentum analytics chart"
-📌 Pull Request Guidelines
+---
+
+## 📌 Pull Request Guidelines
 
 Before creating a Pull Request:
+*   Ensure your code follows the project structure
+*   Test changes locally before submission
+*   Keep PRs focused on a single issue
+*   Add screenshots/GIFs for UI changes
+*   Write clear PR descriptions
 
-Ensure your code follows the project structure
-Test changes locally before submission
-Keep PRs focused on a single issue
-Add screenshots/GIFs for UI changes
-Write clear PR descriptions
-⚠️ Important Rules
-Do not create PRs without issue assignment
-Do not work on more than 2 issues simultaneously
-Avoid unnecessary large-scale formatting changes
-Respect the existing design system and project structure
+---
+
+## ⚠️ Important Rules
+
+*   Do not create PRs without issue assignment
+*   Do not work on more than 2 issues simultaneously
+*   Avoid unnecessary large-scale formatting changes
+*   Respect the existing design system and project structure
 🌟 Project Ideas
 Area	Task	Difficulty
 UI	Improve mobile responsiveness	Easy
