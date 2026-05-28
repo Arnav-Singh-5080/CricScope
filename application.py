@@ -1,26 +1,4 @@
 import streamlit as st
-st.markdown("""
-<style>
-
-/* Sidebar full height */
-section[data-testid="stSidebar"] {
-    height: 100vh;
-    background-color: #0f172a;
-}
-
-/* Main dashboard background */
-.main {
-    background-color: #020617;
-    color: white;
-}
-
-/* Remove default padding */
-.block-container {
-    padding-top: 2rem;
-}
-
-</style>
-""", unsafe_allow_html=True)
 import pandas as pd
 import numpy as np
 import time
@@ -44,7 +22,28 @@ logging.basicConfig(level=logging.INFO)
 # CONFIG
 # -----------------------------------
 st.set_page_config(page_title="CricScope", layout="wide", initial_sidebar_state="expanded")
+st.markdown("""
+<style>
 
+/* Sidebar full height */
+section[data-testid="stSidebar"] {
+    height: 100vh;
+    background-color: #0f172a;
+}
+
+/* Main dashboard background */
+.main {
+    background-color: #020617;
+    color: white;
+}
+
+/* Remove default padding */
+.block-container {
+    padding-top: 2rem;
+}
+
+</style>
+""", unsafe_allow_html=True)
 # -----------------------------------
 # SESSION STATE
 # -----------------------------------
@@ -1014,7 +1013,11 @@ def train_model(model_name='logistic'):
 
 @st.cache_resource
 def evaluate_model(model_name='logistic'):
-    pipe = train_model(model_name)
+    model_path = f"{model_name}_model.pkl"
+    if os.path.exists(model_path):
+        pipe = joblib.load(model_path)
+    else:
+        pipe = train_model(model_name)
 
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
@@ -1084,7 +1087,22 @@ def evaluate_model(model_name='logistic'):
     }
 
 selected_model_key = st.session_state.get('selected_model', 'logistic')
-pipe = train_model(selected_model_key)
+
+# Load serialized ML model directly for faster startup performance
+try:
+    model_path = f"{selected_model_key}_model.pkl"
+    
+    if os.path.exists(model_path):
+        pipe = joblib.load(model_path)
+        logging.info(f"Successfully loaded serialized model: {model_path}")
+    else:
+        logging.warning(f"Serialized model not found: {model_path}. Retraining model...")
+        pipe = train_model(selected_model_key)
+
+except Exception as e:
+    logging.error(f"Failed to load serialized model: {e}")
+    logging.info("Falling back to runtime model training...")
+    pipe = train_model(selected_model_key)
 
 def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, target, score, overs, wickets):
     total_balls = int(overs * 6)
