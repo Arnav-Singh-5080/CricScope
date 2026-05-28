@@ -36,7 +36,9 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
+
 from venue_intelligence import render_venue_intelligence
+from match_simulation import render_match_simulation
 
 logging.basicConfig(level=logging.INFO)
 
@@ -1172,6 +1174,9 @@ with st.sidebar:
     if st.button("◉  Match Analysis", key="nav_analysis"):
         st.session_state.page = "Analysis"
 
+    if st.button("◈  Match Simulation", key="nav_simulation"):
+        st.session_state.page = "Match Simulation"
+
     if st.button("⚖  Model Performance", key="nav_performance"):
         st.session_state.page = "Performance"
 
@@ -1701,6 +1706,9 @@ if st.session_state.page == "Analysis":
             else:
                 st.warning(verdict_msg)
             st.markdown('<div style="height:12px;"></div>', unsafe_allow_html=True)
+
+        elif st.session_state.page == "Match Simulation":
+            render_match_simulation()
 
         res_col1, res_col2 = st.columns([1.1, 1.1], gap="medium")
 
