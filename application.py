@@ -1876,6 +1876,79 @@ if st.session_state.page == "Analysis":
             use_container_width=True
         )
 
+        render_venue_intelligence(batting_team, bowling_team, selected_city, target)
+        # ---- CSV EXPORT ----
+        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+
+        # Generate ball-by-ball predictions from current state to end of innings
+        rows = []
+        for ov in range(overs, 20):
+            for bl in range(1, 7):
+                total_balls_done = ov * 6 + bl
+                if total_balls_done <= overs * 6:
+                    continue  # skip already-played balls
+                if total_balls_done > 120:
+                    break
+
+                b_left = 120 - total_balls_done
+                c_score = score  # score stays same (projection from current state)
+                r_left = target - c_score
+                c_crr = c_score / (total_balls_done / 6) if total_balls_done > 0 else 0
+                c_rrr = (r_left * 6) / b_left if b_left > 0 else 0
+
+                proj_df = pd.DataFrame({
+                    'batting_team': [batting_team],
+                    'bowling_team': [bowling_team],
+                    'city': ['Mumbai'],
+                    'runs_left': [r_left],
+                    'balls_left': [b_left],
+                    'wickets': [10 - wickets],
+                    'target': [target],
+                    'crr': [c_crr],
+                    'rrr': [c_rrr]
+                })
+
+                try:
+                    proj_proba = pipe.predict_proba(proj_df)[0]
+                    bat_prob = round(proj_proba[1] * 100, 2)
+                    bowl_prob = round(proj_proba[0] * 100, 2)
+                except Exception:
+                    bat_prob, bowl_prob = 50.0, 50.0
+                rows.append({
+                    "over": ov + 1,
+                    "ball": bl,
+                    "batting_team_prob": bat_prob,
+                    "bowling_team_prob": bowl_prob
+                })
+
+        export_df = pd.DataFrame(rows)
+
+        if not export_df.empty:
+            st.download_button(
+                label="⬇️ Download Ball-by-Ball Predictions (CSV)",
+                data=export_df.to_csv(index=False),
+                file_name=f"{batting_team}_vs_{bowling_team}_predictions.csv",
+                mime="text/csv"
+            )
+
+        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+        
+        # Generate ball-by-ball predictions for export
+        with st.spinner("Generating export data..."):
+            export_df = generate_ball_by_ball_df(
+                pipe, batting_team, bowling_team, selected_city,
+                target, score, overs, wickets
+            )
+            csv_data = export_df.to_csv(index=False)
+        
+        st.download_button(
+            label="📊 Download Ball-by-Ball Prediction Data (CSV)",
+            data=csv_data,
+            file_name=f"cricscope_predictions_{batting_team.lower().replace(' ', '_')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
     
 # -----------------------------------
