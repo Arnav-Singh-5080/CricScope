@@ -35,7 +35,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
+# from xgboost import XGBClassifier  # Temporarily commented due to libomp dependency
+from player_spotlight import render_player_spotlight
 
 logging.basicConfig(level=logging.INFO)
 
@@ -926,8 +927,8 @@ def get_model(model_name='logistic'):
         return LogisticRegression(max_iter=1000)
     elif model_name == 'random_forest':
         return RandomForestClassifier(n_estimators=100, random_state=42)
-    elif model_name == 'xgboost':
-        return XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False, eval_metric='logloss')
+    # elif model_name == 'xgboost':
+    #     return XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False, eval_metric='logloss')
     return LogisticRegression(max_iter=1000)
 
 @st.cache_resource
@@ -1520,6 +1521,8 @@ if st.session_state.page == "Analysis":
         ]
         selected_city = st.selectbox("Select Host City", cities, index=cities.index('Mumbai'), key="city")
         st.markdown('</div>', unsafe_allow_html=True)
+
+    render_player_spotlight(batting_team, bowling_team)
 
     with col2:
         st.markdown('<div class="input-card">', unsafe_allow_html=True)
