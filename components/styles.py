@@ -1,6 +1,7 @@
 import streamlit as st
 
-# BASE_CSS contains styles shared across all pages of CricScope
+# BASE_CSS contains core resets, base styles, typography, common widget overrides,
+# and shared components (like glass cards, prediction cards, section headers)
 BASE_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
 
@@ -25,7 +26,7 @@ html, body, [class*="css"], .stApp {
 footer { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
 
-/* ---- SIDEBAR ---- */
+/* ---- SIDEBAR BASE ---- */
 section[data-testid="stSidebar"] {
     background: #0c0c0c;
     border-right: 1px solid rgba(212,175,55,0.12);
@@ -48,6 +49,11 @@ section[data-testid="stSidebar"] > div {
     max-width: 100% !important;
 }
 
+/* ---- MAIN CONTENT PADDING ---- */
+.main-pad {
+    padding: 0 60px 60px;
+}
+
 /* ---- GLASS CARD ---- */
 .glass-card {
     background: rgba(255,255,255,0.025);
@@ -63,8 +69,9 @@ section[data-testid="stSidebar"] > div {
     border-color: rgba(212,175,55,0.15);
 }
 
-/* ---- HERO SECTION BASE ---- */
+/* ---- HERO SECTION BASE & DEFAULTS ---- */
 .hero-wrapper {
+    padding: 64px 60px 40px;
     border-bottom: 1px solid rgba(212,175,55,0.08);
     position: relative;
     overflow: hidden;
@@ -89,6 +96,7 @@ section[data-testid="stSidebar"] > div {
 
 .hero-title {
     font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(52px, 7vw, 88px);
     font-weight: 600;
     line-height: 0.95;
     letter-spacing: -1px;
@@ -96,6 +104,7 @@ section[data-testid="stSidebar"] > div {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    margin-bottom: 18px;
 }
 
 .hero-subtitle {
@@ -105,6 +114,26 @@ section[data-testid="stSidebar"] > div {
     letter-spacing: 0.3px;
     max-width: 560px;
     line-height: 1.6;
+}
+
+/* ---- SECTION HEADER ---- */
+.section-header {
+    padding: 40px 60px 0;
+}
+
+.section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 500;
+    color: #f0e8cc;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.section-desc {
+    font-size: 13px;
+    color: rgba(200,185,140,0.4);
+    letter-spacing: 0.3px;
 }
 
 /* ---- STREAMLIT INPUT OVERRIDES ---- */
@@ -123,6 +152,30 @@ section[data-testid="stSidebar"] > div {
     text-transform: uppercase !important;
     color: rgba(200,185,140,0.5) !important;
     font-weight: 500 !important;
+}
+
+.stSlider > div {
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 10px !important;
+    color: #e2dfd8 !important;
+}
+
+.stSlider label, .stTextInput label {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 10px !important;
+    letter-spacing: 1.8px !important;
+    text-transform: uppercase !important;
+    color: rgba(200,185,140,0.5) !important;
+    font-weight: 500 !important;
+}
+
+.stSlider [data-testid="stSlider"] > div {
+    background: rgba(212,175,55,0.15) !important;
+}
+
+.stSlider [data-testid="stSlider"] > div > div {
+    background: linear-gradient(90deg, #d4af37, #f0d060) !important;
 }
 
 /* ---- STRAY STREAMLIT COMPONENTS ---- */
@@ -157,6 +210,143 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
     font-size: 28px !important;
 }
 
+/* ---- PREDICTION CARD ---- */
+.prediction-card {
+    background: rgba(212,175,55,0.04);
+    border: 1px solid rgba(212,175,55,0.18);
+    border-radius: 24px;
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.prediction-card::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+}
+
+.prediction-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,175,55,0.06) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.prediction-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(212,175,55,0.4);
+    margin-bottom: 24px;
+    font-weight: 500;
+}
+
+.win-probability {
+    font-family: 'DM Mono', monospace;
+    font-size: 72px;
+    font-weight: 500;
+    background: linear-gradient(135deg, #f0d060, #d4af37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.win-prob-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(200,185,140,0.35);
+    margin-bottom: 28px;
+}
+
+.prob-bar-wrapper {
+    position: relative;
+    margin: 20px 0 14px;
+}
+
+.prob-bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.prob-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #b8962e, #d4af37, #f0d060);
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 12px rgba(212,175,55,0.4);
+}
+
+.prob-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 11px;
+    color: rgba(200,185,140,0.4);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+}
+
+.metrics-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.metric-chip {
+    flex: 1;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: center;
+}
+
+.metric-chip-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    color: #d4c080;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.metric-chip-label {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(180,165,115,0.35);
+}
+
+/* ---- INFO BOX ---- */
+.info-box {
+    background: rgba(212,175,55,0.03);
+    border: 1px solid rgba(212,175,55,0.1);
+    border-radius: 16px;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.info-box .icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.info-box .text {
+    font-size: 13px;
+    color: rgba(200,185,140,0.6);
+    line-height: 1.5;
+}
+
 /* ---- SEPARATOR ---- */
 hr {
     border: none;
@@ -165,7 +355,8 @@ hr {
 }
 """
 
-# DASHBOARD_CSS contains styles specific to the main page (application.py)
+# DASHBOARD_CSS contains styles specific to the main page (application.py) sidebar,
+# dashboard layout grid, and the evaluation confusion matrix
 DASHBOARD_CSS = """
 /* ---- SIDEBAR PREMIUM GLASSMORPHISM ---- */
 section[data-testid="stSidebar"] a,
@@ -254,16 +445,7 @@ section[data-testid="stSidebar"] a:active {
 }
 
 /* ---- HERO OVERRIDES & EXTRA ---- */
-.hero-wrapper {
-    padding: 64px 60px 40px;
-}
-
 .hero-eyebrow {
-    margin-bottom: 18px;
-}
-
-.hero-title {
-    font-size: clamp(52px, 7vw, 88px);
     margin-bottom: 18px;
 }
 
@@ -334,26 +516,6 @@ section[data-testid="stSidebar"] a:active {
     color: rgba(200,185,140,0.4);
 }
 
-/* ---- ANALYSIS SECTION ---- */
-.section-header {
-    padding: 40px 60px 0;
-}
-
-.section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
-    font-weight: 500;
-    color: #f0e8cc;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.section-desc {
-    font-size: 13px;
-    color: rgba(200,185,140,0.4);
-    letter-spacing: 0.3px;
-}
-
 /* ---- INPUT CARD ---- */
 .input-card {
     background: rgba(255,255,255,0.025);
@@ -376,31 +538,6 @@ section[data-testid="stSidebar"] a:active {
     color: rgba(212,175,55,0.5);
     margin-bottom: 12px;
     font-weight: 500;
-}
-
-/* ---- ST INPUT OVERRIDES EXTENSION ---- */
-.stSlider > div {
-    background: rgba(255,255,255,0.03) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 10px !important;
-    color: #e2dfd8 !important;
-}
-
-.stSlider label, .stTextInput label {
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 10px !important;
-    letter-spacing: 1.8px !important;
-    text-transform: uppercase !important;
-    color: rgba(200,185,140,0.5) !important;
-    font-weight: 500 !important;
-}
-
-.stSlider [data-testid="stSlider"] > div {
-    background: rgba(212,175,55,0.15) !important;
-}
-
-.stSlider [data-testid="stSlider"] > div > div {
-    background: linear-gradient(90deg, #d4af37, #f0d060) !important;
 }
 
 /* ---- TEAM VS CARD ---- */
@@ -473,41 +610,6 @@ section[data-testid="stSidebar"] a:active {
     border: none;
 }
 
-/* ---- PREDICTION CARD ---- */
-.prediction-card {
-    background: rgba(212,175,55,0.04);
-    border: 1px solid rgba(212,175,55,0.18);
-    border-radius: 24px;
-    padding: 36px 32px;
-    position: relative;
-    overflow: hidden;
-}
-
-.prediction-card::before {
-    content: '';
-    position: absolute;
-    top: -1px; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #d4af37, transparent);
-}
-
-.prediction-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,175,55,0.06) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.prediction-label {
-    font-size: 9px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(212,175,55,0.4);
-    margin-bottom: 24px;
-    font-weight: 500;
-}
-
 .win-team-name {
     font-family: 'Cormorant Garamond', serif;
     font-size: 38px;
@@ -515,90 +617,6 @@ section[data-testid="stSidebar"] a:active {
     color: #f0e0a0;
     line-height: 1;
     margin-bottom: 8px;
-}
-
-.win-probability {
-    font-family: 'DM Mono', monospace;
-    font-size: 72px;
-    font-weight: 500;
-    background: linear-gradient(135deg, #f0d060, #d4af37);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-    margin-bottom: 4px;
-}
-
-.win-prob-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(200,185,140,0.35);
-    margin-bottom: 28px;
-}
-
-.prob-bar-wrapper {
-    position: relative;
-    margin: 20px 0 14px;
-}
-
-.prob-bar-track {
-    height: 6px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 100px;
-    overflow: hidden;
-}
-
-.prob-bar-fill {
-    height: 100%;
-    border-radius: 100px;
-    background: linear-gradient(90deg, #b8962e, #d4af37, #f0d060);
-    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 0 12px rgba(212,175,55,0.4);
-}
-
-.prob-bar-labels {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-    font-size: 11px;
-    color: rgba(200,185,140,0.4);
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.5px;
-}
-
-.metrics-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 18px;
-}
-
-.metric-chip {
-    flex: 1;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 12px;
-    padding: 12px 14px;
-    text-align: center;
-}
-
-.metric-chip-value {
-    font-family: 'DM Mono', monospace;
-    font-size: 16px;
-    color: #d4c080;
-    font-weight: 500;
-    margin-bottom: 4px;
-}
-
-.metric-chip-label {
-    font-size: 9px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: rgba(180,165,115,0.35);
-}
-
-.main-pad {
-    padding: 0 60px 60px;
 }
 
 /* ---- CONFUSION MATRIX ---- */
@@ -852,36 +870,6 @@ section[data-testid="stSidebar"] a:active {
 
 # STATS_CSS contains styles specific to the Stats page (pages/stats.py)
 STATS_CSS = """
-/* ---- HERO OVERRIDES ---- */
-.hero-wrapper {
-    padding: 64px 60px 40px;
-}
-
-.hero-title {
-    font-size: clamp(52px, 7vw, 88px);
-    margin-bottom: 18px;
-}
-
-/* ---- SECTION HEADER ---- */
-.section-header {
-    padding: 40px 60px 0;
-}
-
-.section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
-    font-weight: 500;
-    color: #f0e8cc;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.section-desc {
-    font-size: 13px;
-    color: rgba(200,185,140,0.4);
-    letter-spacing: 0.3px;
-}
-
 /* ---- STAT BADGE ---- */
 .stat-badge {
     display: inline-block;
@@ -921,20 +909,21 @@ STATS_CSS = """
 }
 """
 
-# LIVE_MATCH_CSS contains styles specific to the Live Match page (pages/live_match.py)
+# LIVE_MATCH_CSS contains styles specific to the Live Match tracker (pages/live_match.py)
 LIVE_MATCH_CSS = """
 /* ---- HERO OVERRIDES ---- */
 .hero-wrapper {
     padding: 48px 60px 32px;
 }
 
-.hero-eyebrow {
-    margin-bottom: 14px;
-}
-
 .hero-title {
     font-size: clamp(36px, 4vw, 56px);
     margin-bottom: 10px;
+}
+
+/* ---- WIN PROBABILITY SIZE OVERRIDE ---- */
+.win-probability {
+    font-size: 64px;
 }
 
 /* ---- LIVE PULSE ---- */
@@ -968,83 +957,6 @@ LIVE_MATCH_CSS = """
     font-weight: 500;
     margin-bottom: 8px;
     width: fit-content;
-}
-
-/* ---- PREDICTION CARD ---- */
-.prediction-card {
-    background: rgba(212,175,55,0.04);
-    border: 1px solid rgba(212,175,55,0.18);
-    border-radius: 24px;
-    padding: 36px 32px;
-    position: relative;
-    overflow: hidden;
-}
-
-.prediction-card::before {
-    content: '';
-    position: absolute;
-    top: -1px; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #d4af37, transparent);
-}
-
-.prediction-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,175,55,0.06) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.win-probability {
-    font-family: 'DM Mono', monospace;
-    font-size: 64px;
-    font-weight: 500;
-    background: linear-gradient(135deg, #f0d060, #d4af37);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-    margin-bottom: 4px;
-}
-
-.prob-bar-track {
-    height: 6px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 100px;
-    overflow: hidden;
-}
-
-.prob-bar-fill {
-    height: 100%;
-    border-radius: 100px;
-    background: linear-gradient(90deg, #b8962e, #d4af37, #f0d060);
-    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 0 12px rgba(212,175,55,0.4);
-}
-
-.metric-chip {
-    flex: 1;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 12px;
-    padding: 12px 14px;
-    text-align: center;
-}
-
-.metric-chip-value {
-    font-family: 'DM Mono', monospace;
-    font-size: 16px;
-    color: #d4c080;
-    font-weight: 500;
-    margin-bottom: 4px;
-}
-
-.metric-chip-label {
-    font-size: 9px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: rgba(180,165,115,0.35);
 }
 
 /* ---- MATCH CARD ---- */
@@ -1093,41 +1005,6 @@ LIVE_MATCH_CSS = """
     color: rgba(212,175,55,0.4);
     margin-bottom: 16px;
     font-weight: 500;
-}
-
-/* ---- STAT PILL ---- */
-.stat-pill {
-    display: inline-block;
-    background: rgba(212,175,55,0.12);
-    border: 1px solid rgba(212,175,55,0.3);
-    border-radius: 20px;
-    padding: 0.25rem 0.9rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.82rem;
-    color: #d4af37;
-    margin: 0.2rem;
-}
-
-/* ---- INFO BOX ---- */
-.info-box {
-    background: rgba(212,175,55,0.03);
-    border: 1px solid rgba(212,175,55,0.1);
-    border-radius: 16px;
-    padding: 20px 28px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.info-box .icon {
-    font-size: 24px;
-    flex-shrink: 0;
-}
-
-.info-box .text {
-    font-size: 13px;
-    color: rgba(200,185,140,0.6);
-    line-height: 1.5;
 }
 """
 
