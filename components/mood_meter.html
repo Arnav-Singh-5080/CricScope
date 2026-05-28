@@ -1,22 +1,307 @@
-<div id="mood-buttons">
-  <button onclick="vote('angry')">😡</button>
-  <button onclick="vote('neutral')">😐</button>
-  <button onclick="vote('fire')">🔥</button>
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    body{
+      background:transparent;
+      color:white;
+      padding:20px;
+    }
+
+    #container{
+      width:100%;
+    }
+
+    #mood-buttons{
+      display:flex;
+      gap:15px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-bottom:25px;
+    }
+
+    .mood-btn{
+      width:120px;
+      height:120px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.15);
+      background:linear-gradient(145deg,#111827,#1f2937);
+      color:white;
+      cursor:pointer;
+      transition:0.3s ease;
+      font-size:34px;
+      font-weight:bold;
+      box-shadow:0 4px 15px rgba(0,0,0,0.25);
+    }
+
+    .mood-btn:hover{
+      transform:translateY(-5px) scale(1.03);
+      border-color:#facc15;
+      box-shadow:0 0 20px rgba(250,204,21,0.35);
+    }
+
+    .mood-btn span{
+      display:block;
+      margin-top:10px;
+      font-size:13px;
+      letter-spacing:1px;
+      color:#d1d5db;
+    }
+
+    #mood-chart{
+      background:rgba(17,24,39,0.85);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:20px;
+      padding:20px;
+      margin-top:20px;
+    }
+
+    .vote-row{
+      margin-bottom:18px;
+    }
+
+    .vote-header{
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:8px;
+      font-size:14px;
+    }
+
+    .progress-bar{
+      width:100%;
+      height:14px;
+      background:#1f2937;
+      border-radius:10px;
+      overflow:hidden;
+    }
+
+    .progress-fill{
+      height:100%;
+      border-radius:10px;
+      transition:width 0.5s ease;
+    }
+
+    .angry{
+      background:#ef4444;
+    }
+
+    .neutral{
+      background:#facc15;
+    }
+
+    .fire{
+      background:#f97316;
+    }
+
+    #total-votes{
+      text-align:center;
+      margin-top:20px;
+      font-size:15px;
+      color:#d1d5db;
+    }
+
+    h2{
+      text-align:center;
+      margin-bottom:20px;
+      color:#facc15;
+      letter-spacing:2px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="container">
+
+  <h2>🔥 Live Mood Meter</h2>
+
+  <div id="mood-buttons">
+
+    <button onclick="vote('angry')" class="mood-btn">
+      😡
+      <span>ANGRY</span>
+    </button>
+
+    <button onclick="vote('neutral')" class="mood-btn">
+      😐
+      <span>NEUTRAL</span>
+    </button>
+
+    <button onclick="vote('fire')" class="mood-btn">
+      🔥
+      <span>EXCITED</span>
+    </button>
+
+  </div>
+
+  <div id="mood-chart"></div>
+
 </div>
-<div id="mood-chart"></div>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
 <script>
-  // Firebase config (your project)
-  firebase.initializeApp({...});
+
+  // =========================
+  // FIREBASE CONFIG
+  // =========================
+
+  const firebaseConfig = {
+
+    apiKey: "YOUR_API_KEY",
+
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+
+    projectId: "YOUR_PROJECT_ID",
+
+    storageBucket: "YOUR_PROJECT.appspot.com",
+
+    messagingSenderId: "XXXX",
+
+    appId: "XXXX"
+
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
   const db = firebase.database();
-  
-  function vote(mood) {
-    db.ref('mood-meter/votes').push({ mood, timestamp: Date.now() });
+
+
+  // =========================
+  // VOTE FUNCTION
+  // =========================
+
+  function vote(mood){
+
+    db.ref("mood-meter/votes").push({
+      mood: mood,
+      timestamp: Date.now()
+    });
+
   }
-  
-  db.ref('mood-meter/votes').on('value', snap => {
-    const counts = { angry:0, neutral:0, fire:0 };
-    snap.forEach(v => counts[v.val().mood]++);
+
+
+  // =========================
+  // UPDATE UI
+  // =========================
+
+  function updateChart(counts){
+
+    const total =
+      counts.angry +
+      counts.neutral +
+      counts.fire;
+
+    const angryPercent =
+      total ? ((counts.angry / total) * 100).toFixed(1) : 0;
+
+    const neutralPercent =
+      total ? ((counts.neutral / total) * 100).toFixed(1) : 0;
+
+    const firePercent =
+      total ? ((counts.fire / total) * 100).toFixed(1) : 0;
+
+
+    document.getElementById("mood-chart").innerHTML = `
+
+      <div class="vote-row">
+
+        <div class="vote-header">
+          <span>😡 Angry</span>
+          <span>${counts.angry} votes (${angryPercent}%)</span>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill angry"
+               style="width:${angryPercent}%">
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="vote-row">
+
+        <div class="vote-header">
+          <span>😐 Neutral</span>
+          <span>${counts.neutral} votes (${neutralPercent}%)</span>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill neutral"
+               style="width:${neutralPercent}%">
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="vote-row">
+
+        <div class="vote-header">
+          <span>🔥 Excited</span>
+          <span>${counts.fire} votes (${firePercent}%)</span>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill fire"
+               style="width:${firePercent}%">
+          </div>
+        </div>
+
+      </div>
+
+      <div id="total-votes">
+        Total Votes: ${total}
+      </div>
+
+    `;
+
+  }
+
+
+  // =========================
+  // REALTIME LISTENER
+  // =========================
+
+  db.ref("mood-meter/votes").on("value", snapshot => {
+
+    const counts = {
+      angry:0,
+      neutral:0,
+      fire:0
+    };
+
+    snapshot.forEach(child => {
+
+      const data = child.val();
+
+      if(data && counts[data.mood] !== undefined){
+        counts[data.mood]++;
+      }
+
+    });
+
     updateChart(counts);
+
   });
+
 </script>
+
+</body>
+</html>
+```
