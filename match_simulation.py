@@ -96,6 +96,7 @@ def build_simulation_timeline(
     from historical deliveries for the selected matchup.
     Falls back to a smooth synthetic curve if no history exists.
     """
+    target = int(target)
     deliveries = load_deliveries()
     matches    = load_matches()
 
@@ -105,10 +106,11 @@ def build_simulation_timeline(
 
     # join to get team names
     if "team1" in matches.columns:
+        id_col = "id" if "id" in matches.columns else matches.columns[0]
         team_matches = matches[
             ((matches["team1"] == batting_team) & (matches["team2"] == bowling_team)) |
             ((matches["team1"] == bowling_team) & (matches["team2"] == batting_team))
-        ]["id"].tolist() if "id" in matches.columns else []
+        ][id_col].tolist()
     else:
         team_matches = []
 
@@ -155,13 +157,14 @@ def build_simulation_timeline(
                 cum_runs    += row["avg_runs"].values[0]
                 cum_wickets += row["avg_wkts"].values[0]
             else:
-                cum_runs    += (target / 20)   # fallback: linear
+                cum_runs    += round(target / 20, 2)   # fallback: linear, float-safe
                 cum_wickets += 0.45
 
-            cum_wickets = min(cum_wickets, 9.0)
+            cum_wickets = min(cum_wickets, 10.0)
+            # End-of-over simulation: count all six balls from the completed over.
             balls_bowled = over * 6
             balls_left   = max(120 - balls_bowled, 1)
-            runs_left    = max(target - int(cum_runs) - 1, 0)
+            runs_left    = max(target - int(cum_runs), 0)
             wickets_left = max(10 - int(cum_wickets), 0)
             crr = cum_runs / over if over > 0 else 0
             rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
@@ -179,10 +182,13 @@ def build_simulation_timeline(
                     "rrr"         : round(rrr, 2),
                 }])
                 prob = float(_model.predict_proba(input_df)[0][1])
-            except Exception:
+            except Exception as e:
+                import logging
+
+                logging.warning(f"Model prediction failed at over {over}: {e}. Using fallback.")
                 # if model fails (column mismatch etc.) use logistic approximation
                 z    = 0.15 * (crr - rrr) + 0.05 * wickets_left - 0.02 * (runs_left / max(balls_left, 1))
-                prob = 1 / (1 + np.exp(-z))
+                prob = float(np.clip(1 / (1 + np.exp(-z)), 0.0, 1.0))
 
             records.append({
                 "over"        : over,
@@ -199,13 +205,14 @@ def build_simulation_timeline(
 
     else:
         # ── synthetic curve: smooth logistic ramp ──
+        rng = np.random.default_rng(seed=42)   # deterministic, reproducible
         for over in range(1, 21):
             frac         = over / 20
-            cum_runs     = int(target * frac * np.random.uniform(0.82, 1.05))
-            cum_wickets  = min(int(over * 0.4), 9)
+            cum_runs     = int(target * frac * rng.uniform(0.82, 1.05))
+            cum_wickets  = min(int(over * 0.4), 10)
             balls_bowled = over * 6
             balls_left   = max(120 - balls_bowled, 1)
-            runs_left    = max(target - cum_runs - 1, 0)
+            runs_left    = max(target - cum_runs, 0)
             wickets_left = max(10 - cum_wickets, 0)
             crr = cum_runs / over if over > 0 else 0
             rrr = (runs_left * 6) / balls_left
@@ -223,9 +230,12 @@ def build_simulation_timeline(
                     "rrr"         : round(rrr, 2),
                 }])
                 prob = float(_model.predict_proba(input_df)[0][1])
-            except Exception:
-                z    = 0.15 * (crr - rrr) + 0.05 * wickets_left
-                prob = 1 / (1 + np.exp(-z))
+            except Exception as e:
+                import logging
+
+                logging.warning(f"Model prediction failed at over {over}: {e}. Using fallback.")
+                z    = 0.15 * (crr - rrr) + 0.05 * wickets_left - 0.02 * (runs_left / max(balls_left, 1))
+                prob = float(np.clip(1 / (1 + np.exp(-z)), 0.0, 1.0))
 
             records.append({
                 "over"        : over,
@@ -239,10 +249,6 @@ def build_simulation_timeline(
                 "win_prob"    : round(prob * 100, 1),
                 "phase"       : _get_phase(over),
             })
-
-    return pd.DataFrame(records)
-
-
 # ─────────────────────────────────────────────
 #  WHAT-IF: recompute single probability
 # ─────────────────────────────────────────────
@@ -255,7 +261,7 @@ def what_if_prob(model, batting_team, bowling_team, city, target,
     new_wickets  = min(current_wickets + extra_wickets, 10)
     balls_bowled = new_over * 6
     balls_left   = max(120 - balls_bowled, 1)
-    runs_left    = max(target - new_score - 1, 0)
+    runs_left    = max(target - new_score, 0)
     wickets_left = max(10 - new_wickets, 0)
     crr = new_score / new_over if new_over > 0 else 0
     rrr = (runs_left * 6) / balls_left
@@ -273,9 +279,12 @@ def what_if_prob(model, batting_team, bowling_team, city, target,
             "rrr"         : round(rrr, 2),
         }])
         return round(float(model.predict_proba(input_df)[0][1]) * 100, 1)
-    except Exception:
-        z = 0.15 * (crr - rrr) + 0.05 * wickets_left
-        return round((1 / (1 + np.exp(-z))) * 100, 1)
+    except Exception as e:
+        import logging
+
+        logging.warning(f"Model prediction failed in what-if calculator: {e}. Using fallback.")
+        z = 0.15 * (crr - rrr) + 0.05 * wickets_left - 0.02 * (runs_left / max(balls_left, 1))
+        return round(float(np.clip(1 / (1 + np.exp(-z)), 0.0, 1.0)) * 100, 1)
 
 
 # ─────────────────────────────────────────────
@@ -407,18 +416,22 @@ def render_momentum_cards(shifts: list[dict], batting_team: str):
 
     cols = st.columns(3)
     for col, shift in zip(cols, shifts):
-        border = GOLD if "surge" in shift["direction"] else RED
+        border      = GOLD if "surge" in shift["direction"] else RED
+        s_over      = int(shift["over"])
+        s_direction = str(shift["direction"])
+        s_swing     = float(shift["swing"])
+        s_prob      = float(shift["prob_after"])
         col.markdown(f"""
         <div style="background:linear-gradient(135deg,rgba(212,175,55,0.06),rgba(15,15,20,0.95));
                     border:1px solid {border};border-radius:10px;padding:16px;text-align:center;">
             <div style="font-size:24px;font-weight:700;color:{border};
-                        font-family:'DM Mono',monospace;">Over {shift['over']}</div>
-            <div style="font-size:13px;color:#e8d5a3;margin:6px 0;">{shift['direction']}</div>
+                        font-family:'DM Mono',monospace;">Over {s_over}</div>
+            <div style="font-size:13px;color:#e8d5a3;margin:6px 0;">{s_direction}</div>
             <div style="font-size:20px;color:{border};font-family:'DM Mono',monospace;font-weight:700;">
-                {shift['swing']}% swing
+                {s_swing}% swing
             </div>
             <div style="font-size:11px;color:#a08c50;margin-top:4px;">
-                {batting_team} at {shift['prob_after']}% after this over
+                {batting_team} at {s_prob}% after this over
             </div>
         </div>""", unsafe_allow_html=True)
 
