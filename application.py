@@ -1900,43 +1900,46 @@ if st.session_state.page == "Analysis":
                 frac = ov / overs if overs > 0 else 0
                 sim_score = int(score * frac)
                 sim_wickets_fallen = int(wickets * frac)
+                sim_balls_done = ov * 6
+                sim_balls_left = max(120 - sim_balls_done, 1)
+                sim_runs_left = max(target - sim_score, 0)
+                sim_crr = sim_score / ov if ov > 0 else 0
+                sim_rrr = (sim_runs_left * 6) / sim_balls_left if sim_balls_left > 0 else 0
+
+                sim_df = pd.DataFrame([{
+                    'batting_team': batting_team,
+                    'bowling_team': bowling_team,
+                    'city': selected_city,
+                    'runs_left': sim_runs_left,
+                    'balls_left': sim_balls_left,
+                    'wickets': 10 - sim_wickets_fallen,
+                    'target': target,
+                    'crr': sim_crr,
+                    'rrr': sim_rrr
+                }])
+
+                try:
+                    prob = pipe.predict_proba(sim_df)[0][1]
+                except Exception:
+                    prob = 0.5
+
+                momentum_rows.append({
+                    'over': ov,
+                    'bat_prob': round(prob * 100, 1),
+                    'bowl_prob': round((1 - prob) * 100, 1)
+                })
+
             else:
-                # Future: project using CURRENT run rate (not required rate)
-                sim_score = min(int(score + current_run_rate * (ov - overs)), target - 1)
-                sim_wickets_fallen = min(wickets + int((ov - overs) * 0.4), 9)
-
-            sim_balls_done = ov * 6
-            sim_balls_left = max(120 - sim_balls_done, 1)
-            sim_runs_left = max(target - sim_score, 0)
-            sim_crr = sim_score / ov if ov > 0 else 0
-            sim_rrr = (sim_runs_left * 6) / sim_balls_left if sim_balls_left > 0 else 0
-
-            sim_df = pd.DataFrame([{
-                'batting_team': batting_team,
-                'bowling_team': bowling_team,
-                'city': selected_city,
-                'runs_left': sim_runs_left,
-                'balls_left': sim_balls_left,
-                'wickets': 10 - sim_wickets_fallen,
-                'target': target,
-                'crr': sim_crr,
-                'rrr': sim_rrr
-            }])
-
-            try:
-                prob = pipe.predict_proba(sim_df)[0][1]
-            except Exception:
-                prob = 0.5
-
-            momentum_rows.append({
-                'over': ov,
-                'bat_prob': round(prob * 100, 1),
-                'bowl_prob': round((1 - prob) * 100, 1)
-            })
+                # Future: flat line from current prediction — we don't know what happens next
+                momentum_rows.append({
+                    'over': ov,
+                    'bat_prob': round(win * 100, 1),
+                    'bowl_prob': round(lose * 100, 1)
+                })
 
         mom_df = pd.DataFrame(momentum_rows)
 
-        # CRITICAL: Pin the current over to EXACTLY match the prediction card numbers
+        # Pin current over to exact prediction card value
         if overs > 0:
             mom_df.loc[mom_df['over'] == overs, 'bat_prob'] = round(win * 100, 1)
             mom_df.loc[mom_df['over'] == overs, 'bowl_prob'] = round(lose * 100, 1)
