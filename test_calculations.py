@@ -1,6 +1,7 @@
 import unittest
 import pandas as pd
 import numpy as np
+from stats_utils import calculate_head_to_head_record
 
 # Helper functions replicating the implementation logic in application.py
 def calculate_balls_left_df(over, ball):
@@ -87,6 +88,41 @@ class TestCricScopeCalculations(unittest.TestCase):
         self.assertEqual(balls_left, 0)
         self.assertEqual(crr, 7.5)
         self.assertEqual(rrr, 0.0)
+
+    def test_head_to_head_record_uses_selected_teams(self):
+        matches = pd.DataFrame({
+            "team1": [
+                "Mumbai Indians",
+                "Chennai Super Kings",
+                "Mumbai Indians",
+                "Royal Challengers Bangalore",
+            ],
+            "team2": [
+                "Chennai Super Kings",
+                "Mumbai Indians",
+                "Royal Challengers Bangalore",
+                "Mumbai Indians",
+            ],
+            "winner": [
+                "Mumbai Indians",
+                "Chennai Super Kings",
+                None,
+                "Royal Challengers Bangalore",
+            ],
+        })
+
+        record = calculate_head_to_head_record(
+            matches,
+            "Mumbai Indians",
+            "Chennai Super Kings",
+        )
+
+        self.assertEqual(record["total"], 2)
+        self.assertEqual(record["team_a_wins"], 1)
+        self.assertEqual(record["team_b_wins"], 1)
+        self.assertEqual(record["no_result"], 0)
+        self.assertEqual(record["team_a_pct"], 50.0)
+        self.assertEqual(record["team_b_pct"], 50.0)
 
 
 if __name__ == '__main__':
