@@ -1,32 +1,22 @@
 import streamlit as st
-st.markdown("""
-<style>
-
-/* Sidebar full height */
-section[data-testid="stSidebar"] {
-    height: 100vh;
-    background-color: #0f172a;
-}
-
-/* Main dashboard background */
-.main {
-    background-color: #020617;
-    color: white;
-}
-
-/* Remove default padding */
-.block-container {
-    padding-top: 2rem;
-}
-
-</style>
-""", unsafe_allow_html=True)
+from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 import numpy as np
 import time
+from datetime import date, datetime, timezone
+import plotly.express as px
 import os
 import joblib
 import logging
+
+from live_cricket_api import (
+    CricketDataError,
+    fetch_live_ipl_matches,
+    fetch_match_state,
+    get_api_key,
+    poll_key_for_match,
+    should_poll,
+)
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -49,6 +39,15 @@ if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 if "last_prediction" not in st.session_state:
     st.session_state.last_prediction = None
+if "prob_history" not in st.session_state:
+    st.session_state.prob_history = []
+if "live_mode" not in st.session_state:
+    st.session_state.live_mode = False
+if "api_calls_today" not in st.session_state:
+    st.session_state.api_calls_today = 0
+    st.session_state.api_calls_date = date.today().isoformat()
+if "live_match_cache" not in st.session_state:
+    st.session_state.live_match_cache = {}
 if "selected_model" not in st.session_state:
     st.session_state.selected_model = "logistic"
 
@@ -1485,8 +1484,18 @@ if st.session_state.page == "Analysis":
     st.markdown("""
         <div class="hero-wrapper" style="padding-bottom:32px;">
             <div class="hero-eyebrow">Win Probability Engine</div>
+<<<<<<< HEAD
+            <div class="hero-title" style="font-size:clamp(36px,8vw,72px);margin-bottom:clamp(12px,2vw,16px);">
+                Match Analysis
+            </div>
+            <div class="hero-subtitle">
+                Use live IPL scores from CricketData.org or enter match state manually —
+                powered by our XGBoost model.
+            </div>
+=======
             <div class="hero-title" style="font-size:clamp(36px,4vw,56px); margin-bottom:10px;">Match Analysis</div>
             <div class="hero-subtitle">Configure the match state below to compute real-time win probabilities.</div>
+>>>>>>> upstream/main
         </div>
     """, unsafe_allow_html=True)
 
@@ -1494,6 +1503,13 @@ if st.session_state.page == "Analysis":
     st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
 
     teams = list(team_data.keys())
+    cities = [
+        "Mumbai", "Bangalore", "Delhi", "Chennai", "Kolkata",
+        "Hyderabad", "Jaipur", "Chandigarh", "Ahmedabad",
+        "Pune", "Lucknow", "Visakhapatnam", "Indore",
+        "Durban", "Johannesburg", "Cape Town", "Centurion",
+        "Dubai", "Abu Dhabi", "Sharjah",
+    ]
 
     # ---- INPUT SECTION ----
     st.markdown("""
@@ -1503,13 +1519,112 @@ if st.session_state.page == "Analysis":
         </div>
     """, unsafe_allow_html=True)
 
+<<<<<<< HEAD
+    st.session_state.live_mode = st.toggle(
+        "Live match (CricketData.org)",
+        value=st.session_state.live_mode,
+        help="Auto-fills score, target, overs, and wickets. Polls about once per over (~6 min) to stay within 100 free API calls/day.",
+    )
+    
+    if st.session_state.live_mode:
+        st_autorefresh(interval=360000, limit=100, key="live_match_refresh")
+
+    api_key = get_api_key()
+    try:
+        api_key = api_key or st.secrets.get("CRICKET_DATA_API_KEY", "")
+    except (AttributeError, FileNotFoundError, KeyError):
+        pass
+
+    if st.session_state.live_mode:
+        if not api_key:
+            st.warning(
+                "Add your free API key: set `CRICKET_DATA_API_KEY` in "
+                "`.streamlit/secrets.toml` or as an environment variable. "
+                "[Get a key](https://cricketdata.org/signup.aspx)"
+            )
+        else:
+            if st.session_state.api_calls_date != date.today().isoformat():
+                st.session_state.api_calls_today = 0
+                st.session_state.api_calls_date = date.today().isoformat()
+
+            refresh_now = st.button("Refresh live scores", type="secondary", use_container_width=True)
+            auto_poll = should_poll(
+                st.session_state.get("last_live_poll"),
+                interval_seconds=360,
+            )
+            do_fetch = refresh_now or auto_poll or not st.session_state.get("live_match_options")
+
+            if do_fetch:
+                try:
+                    with st.spinner("Fetching live IPL matches..."):
+                        summaries, raw_by_id, usage = fetch_live_ipl_matches(api_key)
+                    st.session_state.api_calls_today += 1
+                    st.session_state.last_live_poll = datetime.now(timezone.utc)
+                    st.session_state.live_match_options = summaries
+                    st.session_state.live_match_cache.update(raw_by_id)
+                    if usage.credits_left is not None:
+                        st.session_state.api_calls_today = max(
+                            st.session_state.api_calls_today, 100 - usage.credits_left
+                        )
+                except CricketDataError as exc:
+                    st.error(str(exc))
+                    summaries = st.session_state.get("live_match_options") or []
+            else:
+                summaries = st.session_state.get("live_match_options") or []
+
+            used = st.session_state.api_calls_today
+            st.caption(f"API usage: ~{used}/100 requests today · auto-refresh every ~6 min (per over)")
+
+            if summaries:
+                labels = [f"{s.name} — {s.status}" for s in summaries]
+                idx = st.selectbox(
+                    "Live IPL match",
+                    range(len(labels)),
+                    format_func=lambda i: labels[i],
+                    key="live_match_pick",
+                )
+                picked = summaries[idx]
+                match_row = st.session_state.live_match_cache.get(picked.match_id)
+                if match_row:
+                    try:
+                        state = fetch_match_state(api_key, picked.match_id, match_row)
+                        poll_key = poll_key_for_match(picked.match_id, state.api_overs_raw)
+                        new_over = poll_key != st.session_state.get("last_poll_key")
+                        if refresh_now or new_over or not st.session_state.get("live_filled"):
+                            st.session_state.last_poll_key = poll_key
+                            st.session_state.inp_target = state.target
+                            st.session_state.inp_score = state.current_score
+                            st.session_state.inp_overs = state.overs_completed
+                            st.session_state.inp_wickets = state.wickets_fallen
+                            st.session_state.bat = state.batting_team
+                            st.session_state.bowl = state.bowling_team
+                            if state.city in cities:
+                                st.session_state.city = state.city
+                            st.session_state.live_filled = True
+                            st.success(
+                                f"Live: **{state.batting_team}** {state.current_score}/{state.wickets_fallen} "
+                                f"({state.api_overs_raw} ov) · need {state.runs_left} off {state.balls_left} balls"
+                            )
+                    except CricketDataError as exc:
+                        st.info(str(exc))
+            else:
+                st.info("No live IPL T20 matches right now. Use manual input or try again during a match.")
+
+    col1, col2 = st.columns([1, 1], gap="large")
+=======
     col1, col2 = st.columns([1.2, 1.2], gap="medium")
+>>>>>>> upstream/main
 
     with col1:
         st.markdown('<div class="input-card">', unsafe_allow_html=True)
         st.markdown('<div class="input-label">Teams</div>', unsafe_allow_html=True)
         batting_team = st.selectbox("Batting Team", teams, key="bat")
         bowling_team = st.selectbox("Bowling Team", [t for t in teams if t != batting_team], key="bowl")
+<<<<<<< HEAD
+        st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="input-label">Match Venue</div>', unsafe_allow_html=True)
+        city = st.selectbox("City / Stadium Location", cities, key="city")
+=======
         cities = [
             'Abu Dhabi', 'Ahmedabad', 'Bangalore', 'Bengaluru', 'Bloemfontein', 
             'Cape Town', 'Centurion', 'Chandigarh', 'Chennai', 'Cuttack', 
@@ -1520,18 +1635,51 @@ if st.session_state.page == "Analysis":
             'Sharjah', 'Visakhapatnam'
         ]
         selected_city = st.selectbox("Select Host City", cities, index=cities.index('Mumbai'), key="city")
+>>>>>>> upstream/main
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
         st.markdown('<div class="input-card">', unsafe_allow_html=True)
         st.markdown('<div class="input-label">Match State</div>', unsafe_allow_html=True)
-        target = st.number_input("Target Score", min_value=50, max_value=300, value=180, step=1)
-        score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
+
+        target = st.number_input(
+            "Target Score",
+            min_value=50,
+            max_value=300,
+            value=int(st.session_state.get("inp_target", 180)),
+            step=1,
+            key="inp_target",
+        )
+        max_score = max(target - 1, 0)
+        score = st.number_input(
+            "Current Score",
+            min_value=0,
+            max_value=max_score if max_score > 0 else 0,
+            value=min(int(st.session_state.get("inp_score", 50)), max_score),
+            step=1,
+            key="inp_score",
+        )
         col_ov, col_wk = st.columns(2)
         with col_ov:
+<<<<<<< HEAD
+            overs = st.slider(
+                "Overs Completed",
+                min_value=1,
+                max_value=19,
+                value=int(st.session_state.get("inp_overs", 10)),
+                key="inp_overs",
+            )
+=======
             overs = st.slider("Overs Completed", min_value=0, max_value=20, value=10)
+>>>>>>> upstream/main
         with col_wk:
-            wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
+            wickets = st.number_input(
+                "Wickets Fallen",
+                min_value=0,
+                max_value=9,
+                value=int(st.session_state.get("inp_wickets", 2)),
+                key="inp_wickets",
+            )
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
@@ -1611,11 +1759,84 @@ if st.session_state.page == "Analysis":
 
     # ---- ANALYZE BUTTON ----
     st.markdown('<div class="analyze-btn">', unsafe_allow_html=True)
-    analyze = st.button("Run Analysis", key="analyze_btn", use_container_width=True)
+    analyze_btn = st.button("Run Analysis", key="analyze_btn", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+    analyze = analyze_btn or (st.session_state.live_mode and st.session_state.get("live_filled", False))
 
     # ---- PREDICTION OUTPUT ----
     if analyze:
+<<<<<<< HEAD
+        runs_left = target - score
+        balls_left = 120 - (overs * 6)
+        wickets_left = 10 - wickets  # Our model specifically trained on 'wickets_left'
+    
+        # Calculate balls bowled to ensure exact CRR match with training data
+        balls_bowled = 120 - balls_left
+    
+        # Safe CRR and RRR calculation (prevents division by zero errors on first/last balls)
+        crr = (score * 6) / balls_bowled if balls_bowled > 0 else 0
+        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
+
+        loaded_xgb = xgb.XGBClassifier()
+        loaded_xgb.load_model('xgb_win_prob_model.json')
+        feature_names = list(loaded_xgb.feature_names_in_)
+
+        bat_col = f"bat_{batting_team}"
+        bowl_col = f"bowl_{bowling_team}"
+
+        if bat_col not in feature_names or bowl_col not in feature_names:
+            st.error(
+                f"Team not recognized by the model: **{batting_team}** vs **{bowling_team}**. "
+                "Retrain after adding this franchise to the dataset."
+            )
+            st.stop()
+
+        input_dict = {name: 0.0 for name in feature_names}
+        input_dict.update({
+            'target_score': target,
+            'runs_left': runs_left,
+            'balls_left': balls_left,
+            'crr': crr,
+            'rrr': rrr,
+            'wickets_left': wickets_left,
+        })
+        input_dict[bat_col] = 1
+        input_dict[bowl_col] = 1
+        input_df = pd.DataFrame([input_dict], columns=feature_names)
+        # ---- MATCH-STATE VALIDATION (Issue #31) ----
+        # Guard 1: batting team has already reached or crossed the target
+        if runs_left <= 0:
+            st.success(
+                f"🏆 **Match Over** — **{batting_team}** have already reached the target! "
+                f"No prediction needed."
+            )
+            st.stop()
+
+        # Guard 2: no balls remaining — innings is over, batting team fell short
+        if balls_left <= 0:
+            st.error(
+                f"⏱️ **Match Over** — No balls remaining. **{bowling_team}** win! "
+                f"No prediction needed."
+            )
+            st.stop()
+
+        # Guard 3: RRR physically impossible (> 36 runs/over = 6 runs every ball)
+        if rrr > 36.0:
+            st.error(
+                f"⚠️ **Invalid match state** — Required Run Rate is **{round(rrr, 2)} runs/over**, "
+                f"which is physically impossible in cricket. Please check your inputs."
+            )
+            st.stop()
+
+        # Guard 4: RRR extremely high (> 24 runs/over) — warn but allow prediction
+        if rrr > 24.0:
+            st.warning(
+                f"⚠️ **Extreme match state** — Required Run Rate is **{round(rrr, 2)} runs/over**. "
+                f"This is a very unlikely scenario; the prediction below may be less reliable."
+            )
+
+=======
         runs_left, balls_left, crr, rrr = safe_calculate_rates(score, target, overs)
 
         input_df = pd.DataFrame({
@@ -1666,6 +1887,7 @@ if st.session_state.page == "Analysis":
                 win = 0.0
                 lose = 1.0
 
+>>>>>>> upstream/main
         with st.spinner(""):
             if is_match_decided:
                 pass
@@ -1781,8 +2003,14 @@ if st.session_state.page == "Analysis":
         # ---- SUMMARY ROW ----
         st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
         verdict = batting_team if win > 0.5 else bowling_team
+<<<<<<< HEAD
+        conf = max(win, loss)
+        conf_color = "#10b981" if conf > 0.75 else "#fbbf24" if conf > 0.55 else "#f87171"
+        conf_label = "High Confidence" if conf > 0.75 else "Moderate" if conf > 0.55 else "Close Match"
+=======
         conf = max(win, lose)
         conf_label = "High" if conf > 0.75 else "Moderate" if conf > 0.55 else "Close"
+>>>>>>> upstream/main
 
         st.markdown(f"""
             <div style="background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.1);

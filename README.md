@@ -69,7 +69,7 @@
 
 </div>
 
-**CricScope** is a luxury-grade IPL match intelligence dashboard that computes real-time win probabilities using machine learning — trained on historical ball-by-ball delivery data spanning 2008–2020.
+**CricScope** is a luxury-grade IPL match intelligence dashboard that computes real-time win probabilities using machine learning — trained on historical ball-by-ball delivery data spanning **2008–2025**.
 
 Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradients, and a premium serif + mono type system. Every design decision was intentional: this is not a student project — it's a production-grade sports analytics product.
 
@@ -121,18 +121,12 @@ Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradie
 │                      └─────────────┬───────────────┘                │
 │                                    │                                │
 │                      ┌─────────────▼───────────────┐                │
-│                      │       Sklearn Pipeline        │               │
+│                      │   One-hot teams + numeric     │               │
+│                      │   (target, runs/balls left,   │               │
+│                      │    CRR, RRR, wickets_left)    │               │
 │                      │                               │               │
-│                      │  ColumnTransformer            │               │
-│                      │    OneHotEncoder              │               │
-│                      │      batting_team             │               │
-│                      │      bowling_team             │               │
-│                      │      city                     │               │
-│                      │    passthrough                │               │
-│                      │      numeric features         │               │
-│                      │                               │               │
-│                      │  LogisticRegression           │               │
-│                      │    max_iter = 1000            │               │
+│                      │  XGBoost Classifier           │               │
+│                      │  (xgb_win_prob_model.json)    │               │
 │                      └─────────────┬───────────────┘                │
 │                                    │                                │
 │                      ┌─────────────▼───────────────┐                │
@@ -149,8 +143,9 @@ Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradie
 
 </div>
 
-The prediction engine uses a **Logistic Regression classifier**
-trained on IPL ball-by-ball match data spanning IPL seasons from 2008–2020.
+The prediction engine uses an **XGBoost classifier** (`xgb_win_prob_model.json`)
+trained on IPL ball-by-ball match data spanning IPL seasons from **2008–2025**
+(~92% hold-out accuracy on chase-state samples; see `model_metrics.json`).
 
 ### Dataset Split
 
@@ -191,7 +186,7 @@ trained on IPL ball-by-ball match data spanning IPL seasons from 2008–2020.
 |:------|:-----------|:--------|
 | Frontend | Streamlit + Custom CSS | UI rendering & layout |
 | Styling | Glassmorphism + Premium CSS | Luxury UI/UX |
-| ML Pipeline | scikit-learn | Preprocessing + Logistic Regression |
+| ML Pipeline | XGBoost + scikit-learn | Feature engineering + win-probability model |
 | Data | Pandas + NumPy | Feature engineering |
 | Deployment | Streamlit Cloud | Live hosting |
 
@@ -262,8 +257,17 @@ cricscope/
 - Python 3.9+
 - IPL Dataset
 
-Dataset:
-https://www.kaggle.com/datasets/patrickb1912/ipl-complete-dataset-20082020
+Dataset (2008–2025):
+https://www.kaggle.com/datasets/chaitu20/ipl-dataset2008-2025
+
+To refresh CSVs and retrain locally:
+
+```bash
+python update_ipl_dataset.py --source "IPL.csv"  # your Kaggle export (ball-by-ball file)
+python update_ipl_dataset.py   # or download via Hugging Face mirror
+python train_model.py          # retrains xgb_win_prob_model.json
+python train_model.py --tune   # optional full hyperparameter search
+```
 
 ---
 
@@ -445,7 +449,7 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing to the
 | UI | Animated win probability graph | Medium |
 | UI | Mobile responsiveness | Medium |
 | UI | Team stat pills | Easy |
-| ML | IPL 2021–2024 integration | Easy |
+| ML | IPL 2025 season refresh | Easy |
 | ML | SHAP interaction visualizations | Medium |
 | ML | Cross-validation metrics | Medium |
 | Feature | Match report PDF export | Hard |

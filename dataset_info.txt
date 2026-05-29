@@ -1,7 +1,14 @@
 📊 IPL Dataset Information
 
 Source:
-https://www.kaggle.com/datasets/ramjidoolla/ipl-data-set
+https://www.kaggle.com/datasets/chaitu20/ipl-dataset2008-2025
+(Hugging Face enriched mirror: prasad-gade05/ipl-enriched-2008-2025)
+
+Coverage: IPL seasons 2008 through 2026 (from local IPL.csv export).
+
+To refresh from your Kaggle file in the project root:
+  python update_ipl_dataset.py --source IPL.csv
+  python train_model.py
 
 Description:
 This dataset contains ball-by-ball and match-level data for multiple seasons of the Indian Premier League (IPL).

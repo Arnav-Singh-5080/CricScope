@@ -1,6 +1,11 @@
 venv/
 __pycache__/
 *.pyc
+data/
+IPL.csv
+*.csv.bak
+*.json.bak
+
 # Streamlit secrets
 .streamlit/secrets.toml
 
