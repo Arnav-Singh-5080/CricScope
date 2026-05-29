@@ -550,12 +550,32 @@ def compute_prediction(batting_team, bowling_team, venue, target,
         runs_left = target - current_score
         balls_left = 120 - total_balls_bowled
 
-        if balls_left <= 0:
-            balls_left = 1  # avoid division by zero at end of innings
-
         wickets_in_hand = 10 - wickets_fallen
         crr = current_score / (total_balls_bowled / 6) if total_balls_bowled > 0 else 0
-        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
+
+        # Short-circuit: innings already completed — do NOT call the model
+        if balls_left <= 0 or wickets_fallen >= 10:
+            if current_score >= target:
+                return {
+                    "batting_win": 100,
+                    "bowling_win": 0,
+                    "crr": round(crr, 2),
+                    "rrr": 0.0,
+                    "runs_left": runs_left,
+                    "balls_left": max(0, balls_left),
+                    "wickets_in_hand": wickets_in_hand,
+                }
+            return {
+                "batting_win": 0,
+                "bowling_win": 100,
+                "crr": round(crr, 2),
+                "rrr": 0.0,
+                "runs_left": runs_left,
+                "balls_left": max(0, balls_left),
+                "wickets_in_hand": wickets_in_hand,
+            }
+
+        rrr = (runs_left * 6) / balls_left
 
         # Use a generic city if venue is unknown
         city = venue if venue else "Mumbai"
