@@ -25,6 +25,9 @@ import pandas as pd
 import numpy as np
 import time
 import os
+import glob
+import hashlib
+import inspect
 import joblib
 import logging
 
@@ -919,6 +922,12 @@ team_data = {
 # -----------------------------------
 # MODEL
 # -----------------------------------
+def _get_feature_hash():
+    """Returns an 8-char MD5 hash of the training function source code."""
+    source = inspect.getsource(train_model)
+    return hashlib.md5(source.encode()).hexdigest()[:8]
+
+
 def get_model(model_name='logistic'):
     if model_name == 'logistic':
         return LogisticRegression(max_iter=1000)
