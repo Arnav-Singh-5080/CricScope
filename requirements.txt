@@ -7,3 +7,4 @@ joblib
 seaborn
 plotly
 xgboost
+requests
