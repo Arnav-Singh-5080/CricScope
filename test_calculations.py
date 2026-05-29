@@ -124,6 +124,27 @@ class TestCricScopeCalculations(unittest.TestCase):
         self.assertEqual(record["team_a_pct"], 50.0)
         self.assertEqual(record["team_b_pct"], 50.0)
 
+    def test_head_to_head_record_handles_no_matches(self):
+        matches = pd.DataFrame({
+            "team1": ["Mumbai Indians"],
+            "team2": ["Chennai Super Kings"],
+            "winner": ["Mumbai Indians"],
+        })
+
+        record = calculate_head_to_head_record(
+            matches,
+            "Royal Challengers Bangalore",
+            "Rajasthan Royals",
+        )
+
+        self.assertTrue(record["matches"].empty)
+        self.assertEqual(record["total"], 0)
+        self.assertEqual(record["team_a_wins"], 0)
+        self.assertEqual(record["team_b_wins"], 0)
+        self.assertEqual(record["no_result"], 0)
+        self.assertEqual(record["team_a_pct"], 0.0)
+        self.assertEqual(record["team_b_pct"], 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()
