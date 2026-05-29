@@ -1,191 +1,189 @@
-<h1 align="center">✨ Contributors Guide ✨</h1>
+# ✨ Contributing to CricScope
 
-<h3 align="center">Welcome to the CricScope project! 😍<br>
-We appreciate your interest in contributing.😊<br> </h3>
+Thank you for your interest in contributing to **CricScope**! 🚀
 
-First off, thank you for considering contributing to **CricScope!** We're excited to have you join our community. Every contribution, no matter how small, helps us build the best academic resource platform for students.
+We welcome contributors of all experience levels. Whether you're fixing bugs, improving documentation, enhancing UI/UX, or adding new ML features, your contributions help make CricScope better for everyone.
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
+---
 
-This guide will walk you through the entire contribution process, from setting up your local environment to submitting a polished pull request.
+# 📋 Table of Contents
 
-> **New to Open Source?** No problem! This guide is designed to be beginner-friendly. If you get stuck, don't hesitate to open an issue or ask for help.
+- [Code of Conduct](#-code-of-conduct)
+- [Ways to Contribute](#-ways-to-contribute)
+- [Getting Started](#-getting-started)
+- [Installation Guide](#-installation-guide)
+- [Contribution Workflow](#-contribution-workflow)
+- [Pull Request Guidelines](#-pull-request-guidelines)
+- [Project Ideas](#-project-ideas)
+- [Need Help?](#-need-help)
+- [License](#-license)
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
+---
 
-## 📋 Table of Contents
+# 📜 Code of Conduct
 
-1. [Code of Conduct](#-code-of-conduct)
-2. [License](#-license)
-3. [Ways to Contribute](#-ways-to-contribute)
-4. [How You Can Contribute](#-How-You-Can-Contribute)
-5. [Getting Started](#-Getting-Started)
-6. [Installation](#-installation)
-7. [PR review Process](#-pr-review-process)
-8. [Guidelines](#-Guidelines)
-9. [How To Contribute](#-how-to-contribute)
-10. [Ideas](#-ideas)
-11. [Need More Help](#-need-more-help)
-12. [Attribution](#-attribution)
-13. [Thank you for your contribution](#thank-you-for-your-contribution)
+By participating in this project, you agree to maintain a respectful, inclusive, and collaborative environment for everyone.
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
+Please read the `CODE_OF_CONDUCT.md` file before contributing.
 
-## 📜 Code of Conduct
+---
 
-We expect all contributors to follow our [`Code of Conduct`](https://github.com/Arnav-Singh-5080/CricScope/blob/main/docs/CODEOFCONDUCT.md).
+# 🤝 Ways to Contribute
 
-By participating in this project, you agree to maintain a **respectful and inclusive environment** for everyone.
+You can contribute to CricScope in multiple ways:
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
-
-## 📜 License
-
-By contributing to this project, you agree that your contributions will be licensed under the [`MIT License`](https://github.com/Arnav-Singh-5080/CricScope/blob/main/ai-credit-intelligence-engine/LICENSE).
-
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
-
-## 🤝 Ways to Contribute
-
-You can contribute in several ways:
-- **🐞 Report Bugs:** Submit issues for reproducible bugs.
-- **💡 Suggest Features:** Propose new ideas or improvements.
-- **📖 Improve Documentation:** Enhance clarity, grammar, or structure.
-- **⚡ Add Code:** Fix bugs, build new features, or optimize existing ones.
-- **🧪 Test:** Help us find issues by testing code in different environments.
-
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
-
-## 🌟 How You Can Contribute
-
-### 🎨 UI Components
-- Add new buttons, cards, navbars, forms, loaders
-- Improve existing components
-- Make components responsive
-
-### ⚙️ Features
-- Add new pages
-- Improve copy-to-clipboard functionality
-- Add dark mode 🌙
-- Improve sidebar navigation
-
-### 🐛 Bug Fixes
+## 🐞 Bug Fixes
 - Fix UI issues
-- Resolve broken layouts
+- Resolve layout inconsistencies
 - Improve responsiveness
+- Fix application errors
 
-### 📄 Documentation
-- Improve README
-- Add examples
-- Fix typos
+## 🎨 UI/UX Improvements
+- Improve dashboard components
+- Enhance responsiveness
+- Improve animations and transitions
+- Refine design consistency
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
+## ⚙️ Features
+- Add analytics features
+- Improve prediction systems
+- Add charts and visualizations
+- Enhance explainable AI modules
 
-## 🚀 Getting Started
+## 📖 Documentation
+- Improve README clarity
+- Add usage examples
+- Improve markdown formatting
+- Add screenshots or GIF demonstrations
 
-### 1️⃣ Fork the Repository
+## 🧪 Testing & Optimization
+- Test features across devices
+- Optimize application performance
+- Improve model efficiency
 
-Click on the Fork button.
+---
 
-### 2️⃣ Clone Your Fork
+# 🚀 Getting Started
 
-git clone https://github.com/your-username/uiverse.git
+## 1️⃣ Fork the Repository
 
-### 3️⃣ Create a Branch
+Click the **Fork** button on the top-right corner of the repository page.
 
-git checkout -b feature/your-feature-name
+---
 
-### 4️⃣ Make Changes
-
-Follow structure, keep code clean, add comments if needed.
-
-### 5️⃣ Commit Changes
-
-git commit -m "Added: new feature"
-
-### 6️⃣ Push Changes
-
-git push origin feature/your-feature-name
-
-### 7️⃣ Create Pull Request
-
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
-
-## Installation
+## 2️⃣ Clone Your Fork
 
 ```bash
-git clone https://github.com/your-username/ai-credit-intelligence-engine
-cd ai-credit-intelligence-engine
+git clone https://github.com/your-username/cricscope.git
+cd cricscope
+
+3️⃣ Create a New Branch
+git checkout -b feature/your-feature-name
+Examples:
+
+docs/readme-improvements
+feature/win-probability-chart
+fix/sidebar-responsive-ui
+
+💻 Installation Guide
+Create Virtual Environment
+Windows
+python -m venv venv
+venv\Scripts\activate
+Linux/macOS
+python -m venv venv
+source venv/bin/activate
+Install Dependencies
 pip install -r requirements.txt
-streamlit run application.py
-```
+Run the Application
+streamlit run app.py
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
+The app will start locally at:
 
-## ✅ PR Review Process
+http://localhost:8501
+🔄 Contribution Workflow
+Fork the repository
+Clone your fork locally
+Create a new branch
+Make your changes
+Test your changes locally
+Commit your changes
+Push your branch
+Create a Pull Request
+✅ Commit Guidelines
 
-We aim to keep things smooth and transparent:
+Examples:
 
-* Once your PR is submitted, a maintainer will review it.
-* You may be asked to:
-  * Fix styling issues.
-  * Add missing documentation/tests.
-  * Break large PRs into smaller pieces.
-* After approval:
-  * Your PR will be merged with a squash merge to keep history clean.
-  * You’ll receive feedback, even if the PR isn’t merged immediately.
-* ⌛ Reviews may take **24–72 hours** depending on activity. Thanks for your patience!
+git commit -m "docs: improve contributing guidelines"
+git commit -m "fix: resolve sidebar responsiveness issue"
+git commit -m "feat: add momentum analytics chart"
+📌 Pull Request Guidelines
 
- > For Any Query, Send DM on LinkedIn [Arnav Singh](https://www.linkedin.com/in/arnav-singh-a87847351).
+Before creating a Pull Request:
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
+Ensure your code follows the project structure
+Test changes locally before submission
+Keep PRs focused on a single issue
+Add screenshots/GIFs for UI changes
+Write clear PR descriptions
+⚠️ Important Rules
+Do not create PRs without issue assignment
+Do not work on more than 2 issues simultaneously
+Avoid unnecessary large-scale formatting changes
+Respect the existing design system and project structure
+🌟 Project Ideas
+Area	Task	Difficulty
+UI	Improve mobile responsiveness	Easy
+UI	Add animated charts	Medium
+ML	Improve model explainability	Medium
+Feature	Add match report export	Hard
+Docs	Improve screenshots and guides	Easy
+🆘 Need Help?
 
-## Ideas
+Helpful resources:
 
-- Improve UI
-- Add explainability
-- Optimize model
-- Add charts
+Git & GitHub Basics
+How to Fork a Repository
+How to Clone a Repository
+How to Create a Pull Request
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
+You can also reach out to the project maintainers for guidance.
 
-## How To Contribute
+📜 License
 
-- Drop a Star ⭐ in this repo
-- Take a look at the existing [Issues](https://github.com/Arnav-Singh-5080/CricScope/issues). 
-- Fork the Repo & create a branch for any issue that you are working on and commit your work.
-- At first raise an issue in which you want to work
-- Then after assigning only then work on that issue & make a PR 
-- Create a [**Pull Request**](https://github.com/Arnav-Singh-5080/CricScope/pulls), which will be promptly reviewed and given suggestions for improvements by the community.
-- **REMINDER: Don't raise more than 2 `Issue` at a time**
-- **IMPORTANT: Don't make any type of `Pull Request` until & unless you get assigned to an `Issue`**
-- Add screenshots or screen captures to your `Pull Request` to help us understand the effects of the changes that are included in your commits.
+By contributing to this project, you agree that your contributions will be licensed under the MIT License.
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
+❤️ Thank You
 
-<h2 align="center">Need More Help? 🤔</h1>
+Thank you for contributing to CricScope!
 
-<p align="center"> You can refer to the following articles on basics of Git and Github and also contact the Project Mentors, in case you are stuck: <br>
-  <a href="https://help.github.com/en/desktop/contributing-to-projects/creating-an-issue-or-pull-request">How to create a Issue</a> <br>
-  <a href="https://help.github.com/en/github/getting-started-with-github/fork-a-repo">Forking a Repo</a> <br>
-  <a href="https://docs.github.com/en/get-started/quickstart/fork-a-repo#cloning-your-forked-repository">Cloning a Repo</a> <br>
-  <a href="https://opensource.com/article/19/7/create-pull-request-github">How to create a Pull Request</a> <br>
-  <a href="https://docs.github.com/get-started">Getting started with Git and GitHub</a> <br>
-</p>
+Your support and contributions help improve the project for the open-source community. 🚀
 
-<h3 align="center">Show some &nbsp;❤️&nbsp; by &nbsp;🌟&nbsp; this repository!</h3>
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
 
-## 🏅 Attribution
 
-This **CONTRIBUTING.md** follows open-source best practices and general GitHub contribution guidelines.
 
-![Line](https://user-images.githubusercontent.com/85225156/171937799-8fc9e255-9889-4642-9c92-6df85fb86e82.gif)
 
-## 👍 Thank You for Your Contribution!!
 
-<h3 align="center">
-Thank you for contributing to CricScope 🌟<br>
-We can’t wait to see what you build! 🚀
-</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -81,6 +81,19 @@ Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradie
 
 <br/>
 
+## 📚 Documentation
+
+- [Contributing Guidelines](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [License](LICENSE)
+
+<br/>
+
+---
+
+<br/>
+
 <div align="center">
 
 ## Architecture
@@ -187,109 +200,29 @@ trained on IPL ball-by-ball match data spanning IPL seasons from **2008–2025**
 
 <div align="center">
 
-## Features
-
-</div>
-
-<table>
-<tr>
-<td width="50%" valign="top">
-<div align="center">
-
-##  UI Preview
-
-Experience the premium CricScope dashboard interface.
-
-</div>
-
-<p align="center">
-  <img src="assets/dashboard.png" width="900"/>
-</p>
-
-<p align="center">
-  <img src="assets/prediction.png" width="900"/>
-</p>
-
-<p align="center">
-  <img src="assets/analytics.png" width="900"/>
-</p>
-
-
-
-<div align="center">
-
-##  Live Demo Preview
-
-</div>
-
-<p align="center">
-  <img src="demo_.gif" width="900"/>
-</p>
-
-### Prediction Engine
-
-- Real-time win probability predictions
-- Computes CRR, RRR, wickets, balls remaining
-- Confidence scoring system
-- Dynamic match-state analytics
-- Live prediction updates
-- SHAP-based explainable AI dashboard
-- Match momentum analysis
-- Prediction confidence meter
-- Interactive win probability progression
-
-</td>
-
-<td width="50%" valign="top">
-
-### Design System
-
-- Glassmorphism cards
-- Gold luxury gradients
-- Responsive dark UI
-- Premium typography stack
-- Modern dashboard aesthetics
-
-</td>
-</tr>
-
-<tr>
-<td width="50%" valign="top">
-
-### IPL Support
-
-- All major IPL teams supported
-- Team glow effects
-- Dynamic team identity styling
-- Clean score visualization
-
-</td>
-
-<td width="50%" valign="top">
-
-### User Experience
-
-- Interactive sidebar navigation
-- Analytics dashboard
-- Responsive layouts
-- Smooth UI interactions
-- Professional presentation
-
-</td>
-</tr>
-</table>
-
-<br/>
-
----
-
-<br/>
-
-<div align="center">
-
 ## Project Structure
 
 </div>
+
+
+## Screenshots
+
+### Dashboard
+
+![Dashboard](assets/dashboard.png)
+
+### Win Probability Prediction
+
+![Win Probability Prediction](assets/win-probability-prediction.png)
+
+### Analytics
+
+![Analytics](assets/analytics.png)
+
+
+## Demo
+
+![Demo](assets/cricscope.gif)
 
 ```bash
 cricscope/
@@ -498,6 +431,16 @@ git push origin feature/your-feature-name
 - Respect UI consistency
 
 ---
+## 🔐 Security Policy
+
+Please review the [Security Policy](SECURITY.md) for vulnerability reporting guidelines and supported versions.
+
+---
+
+## 🤝 Code of Conduct
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing to the project.
+
 
 ### Good First Issues
 
@@ -547,20 +490,9 @@ Project Admin — GSSoC '26 & NSoC 2026
 
 <br/>
 
+
+
 <div align="center">
-## Screenshots
-
-### Dashboard Overview
-![Dashboard](screenshots/dashboard_overview.png)
-
-### Confidence Meter
-![Confidence Meter](screenshots/confidence_meter.png)
-
-### Momentum Analysis
-![Momentum](screenshots/momentum_analysis.png)
-
-### Explainable AI Dashboard
-![XAI](screenshots/xai_dashboard.png)
 
 ## Support the Project
 
@@ -569,6 +501,7 @@ If this project helped you, consider giving it a ⭐ on GitHub.
 It helps more contributors discover the project and motivates future development.
 
 <br/><br/>
+
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=d4af37&height=100&section=footer&animation=fadeIn" width="100%"/>
 

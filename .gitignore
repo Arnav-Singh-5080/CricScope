@@ -5,4 +5,9 @@ data/
 IPL.csv
 *.csv.bak
 *.json.bak
+
+# Streamlit secrets
 .streamlit/secrets.toml
+
+# Or if you want to hide the entire .streamlit folder
+.streamlit/

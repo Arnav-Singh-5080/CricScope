@@ -1,35 +1,50 @@
-# Security Policy
+# 🔐 Security Policy
 
 ## Supported Versions
 
-This project actively maintains the `main` branch with security updates and fixes.
+The `main` branch is actively maintained with security updates and bug fixes.
 
-If you are using a forked version or an older copy of the repository, we recommend regularly syncing with the latest `main` branch to stay updated with security patches.
-
----
-
-## Reporting a Vulnerability
-
-We take security seriously and appreciate responsible disclosure of any vulnerabilities found in this project.
-
-Please avoid reporting security issues through public GitHub issues.
-
-Instead, report them privately using the contact method below:
-
-### How to Report
-
-1. Privately report the issue with clear details.
-2. Include steps to reproduce the problem, possible impact, and any suggestions (if available).
-3. We will acknowledge your report within 48 hours.
-4. After verification, we will work on a fix and coordinate responsible disclosure.
-5. You will be informed once the issue is resolved.
+If you are using an older version or a personal fork, we strongly recommend syncing regularly with the latest upstream repository updates.
 
 ---
 
-## Contact
+# 🚨 Reporting a Vulnerability
 
-For security-related concerns, please reach out via private communication to the project maintainer.
+We take security issues seriously and appreciate responsible disclosure from the community.
+
+Please do NOT report security vulnerabilities publicly through GitHub Issues.
 
 ---
 
-Thank you for helping keep this project secure and reliable.
+# 📩 How to Report
+
+If you discover a vulnerability:
+
+1. Report the issue privately to the project maintainer
+2. Include detailed reproduction steps
+3. Explain the potential impact
+4. Include screenshots or proof-of-concept if applicable
+
+---
+
+# ⏱ Response Timeline
+
+- Initial acknowledgment within 48 hours
+- Verification and investigation process
+- Security fix implementation
+- Responsible disclosure coordination
+- Resolution notification after patch deployment
+
+---
+
+# 🤝 Responsible Disclosure
+
+Please avoid publicly sharing vulnerabilities until a fix has been released.
+
+Responsible disclosure helps keep the project and community secure.
+
+---
+
+# ❤️ Thank You
+
+Thank you for helping improve the security and reliability of CricScope.
