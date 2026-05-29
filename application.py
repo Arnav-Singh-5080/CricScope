@@ -27,6 +27,7 @@ import time
 import os
 import joblib
 import logging
+import textwrap
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -1426,14 +1427,14 @@ elif st.session_state.page == "Performance":
         """, unsafe_allow_html=True)
         
     with col_cm:
-        st.markdown(f"""
+        st.markdown(textwrap.dedent(f"""
             <div class="matrix-wrapper">
                 <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
                 <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
                     A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
                 </div>
                 <div class="matrix-grid">
-                    <div class="matrix-header">Actual \\ Pred</div>
+                    <div class="matrix-header">Actual \\\\ Pred</div>
                     <div class="matrix-header">Bowl Win (0)</div>
                     <div class="matrix-header">Bat Win (1)</div>
                     
@@ -1458,7 +1459,7 @@ elif st.session_state.page == "Performance":
                     </div>
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
 
     # Fold scores display
     st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
