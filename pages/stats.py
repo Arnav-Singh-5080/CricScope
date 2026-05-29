@@ -8,204 +8,13 @@ st.set_page_config(
     layout="wide",
 )
 
-# shared CSS (matches application.py dark-gold aesthetic) 
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
-
-/* ---- RESET & BASE ---- */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body, [class*="css"], .stApp {
-    font-family: 'DM Sans', sans-serif;
-    color: #e2dfd8;
-}
-
-[data-testid="stAppViewContainer"] {
-    background: #080808;
-    background-image:
-        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212,175,55,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,90,30,0.05) 0%, transparent 50%);
-    min-height: 100vh;
-}
-
-/* Hide only Streamlit branding */
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
-[data-testid="stDecoration"] { display: none; }
-
-/* ---- SIDEBAR ---- */
-section[data-testid="stSidebar"] {
-    background: #0c0c0c;
-    border-right: 1px solid rgba(212,175,55,0.12);
-    width: 300px !important;
-    min-width: 300px !important;
-}
-
-section[data-testid="stSidebar"] > div {
-    padding: 0;
-}
-
-/* ---- MAIN CONTENT AREA ---- */
-.block-container {
-    padding: 0 !important;
-    max-width: 100% !important;
-}
-
-/* ---- HERO SECTION ---- */
-.hero-wrapper {
-    padding: 64px 60px 40px;
-    border-bottom: 1px solid rgba(212,175,55,0.08);
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-wrapper::before {
-    content: '';
-    position: absolute;
-    top: -60px; left: -60px; right: -60px;
-    height: 200px;
-    background: radial-gradient(ellipse, rgba(212,175,55,0.06) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.hero-eyebrow {
-    font-size: 10px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: rgba(212,175,55,0.5);
-    margin-bottom: 18px;
-    font-weight: 400;
-}
-
-.hero-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(52px, 7vw, 88px);
-    font-weight: 600;
-    line-height: 0.95;
-    letter-spacing: -1px;
-    background: linear-gradient(160deg, #ffffff 0%, #f8f0d0 30%, #d4af37 70%, #a07820 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 18px;
-}
-
-.hero-subtitle {
-    font-size: 15px;
-    color: rgba(220,210,185,0.55);
-    font-weight: 300;
-    letter-spacing: 0.3px;
-    max-width: 560px;
-    line-height: 1.6;
-}
-
-/* ---- SECTION HEADER ---- */
-.section-header {
-    padding: 40px 60px 0;
-}
-
-.section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
-    font-weight: 500;
-    color: #f0e8cc;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.section-desc {
-    font-size: 13px;
-    color: rgba(200,185,140,0.4);
-    letter-spacing: 0.3px;
-}
-
-/* ---- GLASS CARD (stats page cards) ---- */
-.glass-card {
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 20px;
-    padding: 28px 32px;
-    margin-bottom: 1.2rem;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    transition: border-color 0.3s ease;
-}
-
-.glass-card:hover {
-    border-color: rgba(212,175,55,0.15);
-}
-
-/* ---- STAT BADGE (inline pill for stats page) ---- */
-.stat-badge {
-    display: inline-block;
-    background: rgba(212,175,55,0.08);
-    border: 1px solid rgba(212,175,55,0.2);
-    border-radius: 100px;
-    padding: 3px 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: rgba(212,175,55,0.8);
-    letter-spacing: 0.5px;
-    margin: 0.2rem;
-}
-
-/* ---- WIN BAR ---- */
-.win-bar-wrap {
-    background: rgba(255,255,255,0.05);
-    border-radius: 100px;
-    height: 6px;
-    width: 100%;
-    margin: 4px 0 12px 0;
-    overflow: hidden;
-}
-
-.win-bar-fill {
-    height: 6px;
-    border-radius: 100px;
-    background: linear-gradient(90deg, #b8962e, #d4af37, #f0d060);
-    box-shadow: 0 0 8px rgba(212,175,55,0.3);
-}
-
-/* ---- STREAMLIT INPUT OVERRIDES ---- */
-.stSelectbox > div > div,
-.stNumberInput > div > div > input {
-    background: rgba(255,255,255,0.03) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 10px !important;
-    color: #e2dfd8 !important;
-}
-
-.stSelectbox label, .stNumberInput label {
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 10px !important;
-    letter-spacing: 1.8px !important;
-    text-transform: uppercase !important;
-    color: rgba(200,185,140,0.5) !important;
-    font-weight: 500 !important;
-}
-
-/* ---- DATAFRAME ---- */
-.stDataFrame {
-    border: 1px solid rgba(212,175,55,0.12) !important;
-    border-radius: 14px !important;
-    overflow: hidden;
-}
-
-/* ---- SEPARATOR ---- */
-hr {
-    border: none;
-    border-top: 1px solid rgba(212,175,55,0.08);
-    margin: 0;
-}
-
-/* ---- SCROLLBAR ---- */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #0c0c0c; }
-::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); border-radius: 4px; }
-</style>
-""", unsafe_allow_html=True)
-
+# shared CSS
+import os
+import html
+style_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'style.css')
+with open(style_path, 'r') as f:
+    css = f.read()
+st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
 
 #  data loading 
 @st.cache_data
@@ -294,7 +103,7 @@ else:
         st.markdown(f"""
         <div class="glass-card" style="text-align:center;">
             <div style="font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:500; color:#e8d89a; line-height:1; margin-bottom:8px;">{a_wins}</div>
-            <div style="color:rgba(200,185,140,0.45); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">{team_a} Wins</div>
+            <div style="color:rgba(200,185,140,0.45); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">{html.escape(str(team_a))} Wins</div>
             <div class="win-bar-wrap" style="margin-top:14px;"><div class="win-bar-fill" style="width:{a_pct}%;"></div></div>
             <span class="stat-badge">{a_pct}%</span>
         </div>
@@ -311,7 +120,7 @@ else:
         st.markdown(f"""
         <div class="glass-card" style="text-align:center;">
             <div style="font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:500; color:#e8d89a; line-height:1; margin-bottom:8px;">{b_wins}</div>
-            <div style="color:rgba(200,185,140,0.45); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">{team_b} Wins</div>
+            <div style="color:rgba(200,185,140,0.45); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">{html.escape(str(team_b))} Wins</div>
             <div class="win-bar-wrap" style="margin-top:14px;"><div class="win-bar-fill" style="width:{b_pct}%;"></div></div>
             <span class="stat-badge">{b_pct}%</span>
         </div>
@@ -380,7 +189,7 @@ with col_bat:
     <div class="glass-card" style="padding:20px 24px; margin-bottom:16px;">
         <div style="font-size:10px; letter-spacing:2px; text-transform:uppercase;
                     color:rgba(212,175,55,0.5); font-weight:500;">
-            Top Run Scorers — {selected_team}
+            Top Run Scorers — {html.escape(str(selected_team))}
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -393,7 +202,7 @@ with col_bat:
             <span style="color:{rank_color}; font-family:'DM Mono',monospace; font-size:11px; width:1.4rem;">#{i+1}</span>
             <div style="flex:1;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:13px; color:#e2dfd8;">{row['Player']}</span>
+                    <span style="font-size:13px; color:#e2dfd8;">{html.escape(str(row['Player']))}</span>
                     <span class="stat-badge">{int(row['Runs'])} runs</span>
                 </div>
                 <div class="win-bar-wrap" style="margin:4px 0 0 0;">
@@ -408,7 +217,7 @@ with col_bowl:
     <div class="glass-card" style="padding:20px 24px; margin-bottom:16px;">
         <div style="font-size:10px; letter-spacing:2px; text-transform:uppercase;
                     color:rgba(212,175,55,0.5); font-weight:500;">
-            Top Wicket Takers — {selected_team}
+            Top Wicket Takers — {html.escape(str(selected_team))}
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -421,7 +230,7 @@ with col_bowl:
             <span style="color:{rank_color}; font-family:'DM Mono',monospace; font-size:11px; width:1.4rem;">#{i+1}</span>
             <div style="flex:1;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:13px; color:#e2dfd8;">{row['Player']}</span>
+                    <span style="font-size:13px; color:#e2dfd8;">{html.escape(str(row['Player']))}</span>
                     <span class="stat-badge">{int(row['Wickets'])} wkts</span>
                 </div>
                 <div class="win-bar-wrap" style="margin:4px 0 0 0;">
@@ -466,7 +275,7 @@ venue_stats = venue_stats.sort_values("Played", ascending=False).head(10)
 st.markdown(f"""
 <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
             color:rgba(212,175,55,0.4);margin:24px 0 16px;font-weight:500;">
-    Top venues by matches played — {venue_team}
+    Top venues by matches played — {html.escape(str(venue_team))}
 </div>
 """, unsafe_allow_html=True)
 
@@ -476,7 +285,7 @@ for _, row in venue_stats.iterrows():
     st.markdown(f"""
     <div class="glass-card" style="padding:20px 24px; margin-bottom:10px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="font-size:13px; color:#e2dfd8; letter-spacing:0.3px;">{row['venue']}</span>
+            <span style="font-size:13px; color:#e2dfd8; letter-spacing:0.3px;">{html.escape(str(row['venue']))}</span>
             <div>
                 <span class="stat-badge">P {int(row['Played'])}</span>
                 <span class="stat-badge">W {int(row['Won'])}</span>

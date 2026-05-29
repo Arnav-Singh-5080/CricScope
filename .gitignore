@@ -1,8 +1,37 @@
+# Environments
+.env
+.venv
+env/
 venv/
-__pycache__/
-*.pyc
-# Streamlit secrets
-.streamlit/secrets.toml
+ENV/
+env.bak/
+venv.bak/
 
-# Or if you want to hide the entire .streamlit folder
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.class
+*.pyc
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Data and Models
+*.pkl
+*.csv
+*.db
+!dataset_info.txt
+
+# Streamlit
 .streamlit/
+
+# Jupyter
+.ipynb_checkpoints/
+.virtual_documents/
+
+# Anaconda
+anaconda_projects/
