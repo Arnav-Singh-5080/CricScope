@@ -1,9 +1,5 @@
-streamlit
-scikit-learn
-numpy
-pandas
-matplotlib
-joblib
-seaborn
-plotly
-xgboost
+streamlit==1.38.0
+scikit-learn==1.5.0
+pandas==2.2.2
+numpy==1.26.4
+joblib==1.4.2
