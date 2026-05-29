@@ -10,7 +10,8 @@ venv.bak/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*$py.class
+*.class
+*.pyc
 
 # IDE / Editor
 .idea/
@@ -26,7 +27,7 @@ __pycache__/
 !dataset_info.txt
 
 # Streamlit
-.streamlit/secrets.toml
+.streamlit/
 
 # Jupyter
 .ipynb_checkpoints/

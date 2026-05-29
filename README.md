@@ -209,6 +209,26 @@ trained on IPL ball-by-ball match data spanning IPL seasons from 2008–2020.
 
 </div>
 
+
+## Screenshots
+
+### Dashboard
+
+![Dashboard](assets/dashboard.png)
+
+### Win Probability Prediction
+
+![Win Probability Prediction](assets/win-probability-prediction.png)
+
+### Analytics
+
+![Analytics](assets/analytics.png)
+
+
+## Demo
+
+![Demo](assets/cricscope.gif)
+
 ```bash
 cricscope/
 │

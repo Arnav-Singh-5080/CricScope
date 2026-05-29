@@ -1,17 +1,46 @@
 import streamlit as st
+st.markdown("""
+<style>
+
+/* Sidebar full height */
+section[data-testid="stSidebar"] {
+    height: 100vh;
+    background-color: #0f172a;
+}
+
+/* Main dashboard background */
+.main {
+    background-color: #020617;
+    color: white;
+}
+
+/* Remove default padding */
+.block-container {
+    padding-top: 2rem;
+}
+
+</style>
+""", unsafe_allow_html=True)
 import pandas as pd
 import numpy as np
 import time
+import os
+import joblib
+import logging
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from venue_intelligence import render_venue_intelligence
 
-# -----------------------------------
-# CONFIG
-# -----------------------------------
-st.set_page_config(page_title="CricScope", layout="wide", initial_sidebar_state="expanded")
+logging.basicConfig(level=logging.INFO)
+
+
 
 # -----------------------------------
 # SESSION STATE
@@ -20,6 +49,8 @@ if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 if "last_prediction" not in st.session_state:
     st.session_state.last_prediction = None
+if "selected_model" not in st.session_state:
+    st.session_state.selected_model = "logistic"
 
 # -----------------------------------
 # LUXURY CSS
@@ -31,6 +62,7 @@ style_path = os.path.join(os.path.dirname(__file__), 'assets', 'style.css')
 with open(style_path, 'r') as f:
     css = f.read()
 st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
+
 
 # -----------------------------------
 # TEAM DATA
@@ -73,14 +105,28 @@ team_data = {
 # -----------------------------------
 # MODEL
 # -----------------------------------
+def get_model(model_name='logistic'):
+    if model_name == 'logistic':
+        return LogisticRegression(max_iter=1000)
+    elif model_name == 'random_forest':
+        return RandomForestClassifier(n_estimators=100, random_state=42)
+    elif model_name == 'xgboost':
+        return XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False, eval_metric='logloss')
+    return LogisticRegression(max_iter=1000)
+
 @st.cache_resource
-def load_or_train_model():
-    if os.path.exists('pipe.pkl'):
-        return joblib.load('pipe.pkl')
-    
-    matches = pd.read_csv('matches.csv')
-    deliveries = pd.read_csv('deliveries.csv')
-    
+def train_model(model_name='logistic'):
+    model_path = f"{model_name}_model.pkl"
+
+    if os.path.exists(model_path):
+        try:
+            return joblib.load(model_path)
+        except Exception as e:
+            logging.error(f"Failed to load cached model from {model_path}: {e}")
+
+    matches = pd.read_csv("matches.csv")
+    deliveries = pd.read_csv("deliveries.csv")
+
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
     
     total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
@@ -91,13 +137,7 @@ def load_or_train_model():
     
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
-    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
-    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
-    
-    df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
-    df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
-    df['wickets'] = 10 - df['wickets']
-    
+
     overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
     df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
     df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
@@ -110,7 +150,11 @@ def load_or_train_model():
     
     X = final_df.drop('result', axis=1)
     y = final_df['result']
-    
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
     preprocessor = ColumnTransformer([
         ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
         ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
@@ -118,14 +162,172 @@ def load_or_train_model():
     
     pipe = Pipeline([
         ('preprocessor', preprocessor),
-        ('model', LogisticRegression(max_iter=1000))
+        ('model', get_model(model_name))
     ])
-    
-    pipe.fit(X, y)
-    joblib.dump(pipe, 'pipe.pkl')
+
+    # Fit pipeline before evaluations to avoid UnboundLocalError
+    pipe.fit(X_train, y_train)
+    predictions = pipe.predict(X_test)
+
+    # Logging evaluations safely
+    try:
+        scores = cross_val_score(pipe, X_train, y_train, cv=5)
+        logging.info(f"Model trained: {model_name}")
+        logging.info(f"Cross Validation Scores: {scores}")
+        logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
+        logging.info(f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}")
+    except Exception as eval_error:
+        logging.warning(f"Evaluation failed: {eval_error}")
+
+    try:
+        joblib.dump(pipe, model_path)
+    except Exception as dump_error:
+        logging.error(f"Failed to dump model to {model_path}: {dump_error}")
+
     return pipe
 
-pipe = load_or_train_model()
+@st.cache_resource
+def evaluate_model(model_name='logistic'):
+    pipe = train_model(model_name)
+
+    matches = pd.read_csv("matches.csv")
+    deliveries = pd.read_csv("deliveries.csv")
+
+    df = deliveries.merge(matches, left_on='match_id', right_on='id')
+
+    total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
+    total_df.rename(columns={'total_runs': 'target'}, inplace=True)
+
+    df = df.merge(total_df, on='match_id')
+    df = df[df['inning'] == 2]
+
+    df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
+    df['runs_left'] = df['target'] - df['current_score']
+    
+    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
+    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
+
+    df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
+    df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
+    df['wickets'] = 10 - df['wickets']
+
+    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
+    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
+    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
+
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
+
+    final_df = df[['batting_team', 'bowling_team', 'city',
+                   'runs_left', 'balls_left', 'wickets',
+                   'target', 'crr', 'rrr', 'result']]
+    final_df.dropna(inplace=True)
+
+    X = final_df.drop('result', axis=1)
+    y = final_df['result']
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    predictions = pipe.predict(X_test)
+
+    accuracy = accuracy_score(y_test, predictions)
+    precision = precision_score(y_test, predictions)
+    recall = recall_score(y_test, predictions)
+    f1 = f1_score(y_test, predictions)
+
+    tn, fp, fn, tp = confusion_matrix(y_test, predictions).ravel()
+
+    scores = cross_val_score(pipe, X_train, y_train, cv=5)
+    cv_mean = scores.mean()
+    cv_std = scores.std()
+
+    return {
+        'accuracy': float(accuracy),
+        'precision': float(precision),
+        'recall': float(recall),
+        'f1': float(f1),
+        'tn': int(tn),
+        'fp': int(fp),
+        'fn': int(fn),
+        'tp': int(tp),
+        'cv_mean': float(cv_mean),
+        'cv_std': float(cv_std),
+        'cv_scores': scores.tolist()
+    }
+
+selected_model_key = st.session_state.get('selected_model', 'logistic')
+pipe = train_model(selected_model_key)
+
+def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, target, score, overs, wickets):
+    total_balls = int(overs * 6)
+    if total_balls == 0:
+        data = {
+            'over': [0],
+            'ball': [0],
+            'batting_team_prob': [0.5],
+            'bowling_team_prob': [0.5]
+        }
+        return pd.DataFrame(data)
+
+    records = []
+    for b in range(1, total_balls + 1):
+        curr_over = (b - 1) // 6 + 1
+        curr_ball = (b - 1) % 6 + 1
+        
+        fraction = b / total_balls
+        curr_score = int(score * fraction)
+        curr_wickets = int(wickets * fraction)
+        
+        runs_left = target - curr_score
+        balls_left = max(120 - b, 0)
+        crr = curr_score / (b / 6) if b > 0 else 0.0
+        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
+        
+        input_df = pd.DataFrame({
+            'batting_team': [batting_team],
+            'bowling_team': [bowling_team],
+            'city': [selected_city],
+            'runs_left': [runs_left],
+            'balls_left': [balls_left],
+            'wickets': [10 - curr_wickets],
+            'target': [target],
+            'crr': [crr],
+            'rrr': [rrr]
+        })
+        
+        if runs_left <= 0:
+            win = 1.0
+            lose = 0.0
+        elif balls_left <= 0:
+            win = 0.0
+            lose = 1.0
+        else:
+            try:
+                proba = pipe.predict_proba(input_df)[0]
+                if np.isnan(proba).any():
+                    win, lose = 0.5, 0.5
+                else:
+                    win, lose = proba[1], proba[0]
+            except Exception:
+                win, lose = 0.5, 0.5
+            
+        records.append({
+            'over': curr_over,
+            'ball': curr_ball,
+            'batting_team_prob': round(win, 4),
+            'bowling_team_prob': round(lose, 4)
+        })
+        
+    return pd.DataFrame(records)
+
+def safe_calculate_rates(score, target, overs):
+    runs_left = target - score
+    balls_left = max(120 - (overs * 6), 0)
+    crr = score / overs if overs > 0 else 0.0
+    rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
+    return runs_left, balls_left, crr, rrr
 
 # -----------------------------------
 # SIDEBAR
@@ -137,6 +339,7 @@ with st.sidebar:
             <span class="sidebar-tagline">Match Intelligence Platform</span>
         </div>
     """, unsafe_allow_html=True)
+    
 
     st.markdown('<div class="sidebar-section-label">Navigation</div>', unsafe_allow_html=True)
 
@@ -145,6 +348,29 @@ with st.sidebar:
 
     if st.button("◉  Match Analysis", key="nav_analysis"):
         st.session_state.page = "Analysis"
+
+    if st.button("⚖  Model Performance", key="nav_performance"):
+        st.session_state.page = "Performance"
+
+    if st.button("✦  Chatbot", key="nav_chatbot"):
+        st.session_state.page = "chabot"
+        
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-section-label">Model Configuration</div>', unsafe_allow_html=True)
+
+    model_options = {
+        "Logistic Regression": "logistic",
+        "Random Forest": "random_forest",
+        "XGBoost": "xgboost"
+    }
+
+    selected_model_name = st.selectbox(
+        "Choose Prediction Model",
+        options=list(model_options.keys()),
+        index=list(model_options.values()).index(st.session_state.selected_model),
+        key="selected_model_widget"
+    )
+    st.session_state.selected_model = model_options[selected_model_name]
 
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:20px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
@@ -179,6 +405,8 @@ with st.sidebar:
 # DASHBOARD PAGE
 # -----------------------------------
 if st.session_state.page == "Dashboard":
+    if "selected_team" not in st.session_state:
+       st.session_state.selected_team = None
 
     st.markdown("""
         <div class="hero-wrapper">
@@ -217,7 +445,7 @@ if st.session_state.page == "Dashboard":
     """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div style="padding: 48px 60px;">
+        <div style="padding: 48px 72px;">
             <div style="font-family:'Cormorant Garamond',serif; font-size:13px; letter-spacing:3px;
                         text-transform:uppercase; color:rgba(212,175,55,0.4); margin-bottom:28px;">
                 IPL Teams
@@ -256,9 +484,13 @@ if st.session_state.page == "Dashboard":
                     </div>
                 </div>
             """, unsafe_allow_html=True)
+            if st.button(f"View {tdata['abbr']} Analysis", key=f"team_{i}"):
+                 st.session_state.selected_team = team_name
+                 st.session_state.page = "Team Analysis"
+                 st.rerun()
 
     st.markdown("""
-        <div style="padding:0 60px 32px; text-align:center;">
+        <div style="padding:0 72px 32px; text-align:center;">
             <div style="display:inline-block; background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.15);
                         border-radius:14px; padding:20px 36px;">
                 <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
@@ -269,6 +501,158 @@ if st.session_state.page == "Dashboard":
             </div>
         </div>
     """, unsafe_allow_html=True)
+
+# -----------------------------------
+# MODEL PERFORMANCE PAGE
+# -----------------------------------
+elif st.session_state.page == "Performance":
+
+    st.markdown("""
+        <div class="hero-wrapper" style="padding-bottom:32px;">
+            <div class="hero-eyebrow">Classifier Diagnostic Metrics</div>
+            <div class="hero-title" style="font-size:clamp(36px,4vw,56px); margin-bottom:10px;">Model Report</div>
+            <div class="hero-subtitle">Comprehensive performance metrics, cross-validation scoring, and visual confusion matrix for the active model.</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="main-pad">', unsafe_allow_html=True)
+    st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
+
+    with st.spinner("Analyzing active model parameters..."):
+        metrics = evaluate_model(st.session_state.selected_model)
+
+    # Convert model key to readable label
+    model_name_map = {
+        "logistic": "Logistic Regression",
+        "random_forest": "Random Forest",
+        "xgboost": "XGBoost"
+    }
+    active_model_name = model_name_map.get(st.session_state.selected_model, "Logistic Regression")
+
+    # Metrics Row
+    col_m1, col_m2, col_m3 = st.columns(3, gap="medium")
+    
+    with col_m1:
+        st.markdown(f"""
+            <div class="stat-pill">
+                <div class="stat-value">{metrics['accuracy']:.2%}</div>
+                <div class="stat-label">Test Accuracy</div>
+                <div style="font-size:11px; color:rgba(220,210,185,0.45); margin-top:8px; line-height:1.4;">
+                    Percentage of correct predictions on unseen test split data.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with col_m2:
+        st.markdown(f"""
+            <div class="stat-pill">
+                <div class="stat-value">{metrics['cv_mean']:.2%}</div>
+                <div class="stat-label">5-Fold CV Mean Accuracy</div>
+                <div style="font-size:11px; color:rgba(220,210,185,0.45); margin-top:8px; line-height:1.4;">
+                    Average validation score across 5 stratified folds. (SD: &plusmn;{metrics['cv_std']:.2%})
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with col_m3:
+        st.markdown(f"""
+            <div class="stat-pill">
+                <div class="stat-value">{metrics['f1']:.2%}</div>
+                <div class="stat-label">F1-Score</div>
+                <div style="font-size:11px; color:rgba(220,210,185,0.45); margin-top:8px; line-height:1.4;">
+                    Harmonic mean of precision and recall. Robust measure of model accuracy.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+
+    # Detailed Analysis Columns
+    col_det, col_cm = st.columns([1.1, 1.3], gap="medium")
+    
+    with col_det:
+        st.markdown(f"""
+            <div class="input-card" style="height: 100%;">
+                <div class="input-label" style="font-size:11px;">Evaluation Deep Dive</div>
+                <div style="margin-bottom: 24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#f0e8cc; font-weight:500;">Precision</span>
+                        <span style="font-family:'DM Mono',monospace; font-size:22px; color:#d4af37; font-weight:500;">{metrics['precision']:.2%}</span>
+                    </div>
+                    <p style="font-size:13px; color:rgba(220,210,185,0.5); line-height:1.5; margin:0;">
+                        Out of all matches the model predicted as a win, how many were actual wins? High precision minimizes false positives.
+                    </p>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#f0e8cc; font-weight:500;">Recall (Sensitivity)</span>
+                        <span style="font-family:'DM Mono',monospace; font-size:22px; color:#d4af37; font-weight:500;">{metrics['recall']:.2%}</span>
+                    </div>
+                    <p style="font-size:13px; color:rgba(220,210,185,0.5); line-height:1.5; margin:0;">
+                        Out of all actual wins that occurred in the dataset, how many did the model correctly identify? High recall minimizes false negatives.
+                    </p>
+                </div>
+                <div>
+                    <div style="font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(212,175,55,0.35); margin-bottom:6px;">Model Settings</div>
+                    <div style="font-family:'DM Mono',monospace; font-size:12px; color:rgba(220,210,185,0.6); background:rgba(0,0,0,0.2); padding:10px 14px; border-radius:8px; border:1px solid rgba(212,175,55,0.06); line-height:1.5;">
+                        Active Classifier: {active_model_name}<br>
+                        CV Strategy: 5-Fold Stratified K-Fold
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with col_cm:
+        st.markdown(f"""
+            <div class="matrix-wrapper">
+                <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
+                <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
+                    A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
+                </div>
+                <div class="matrix-grid">
+                    <div class="matrix-header">Actual \\ Pred</div>
+                    <div class="matrix-header">Bowl Win (0)</div>
+                    <div class="matrix-header">Bat Win (1)</div>
+                    
+                    <div class="matrix-label">Bowl Win (0)</div>
+                    <div class="matrix-cell correct">
+                        <div class="matrix-value">{metrics['tn']:,}</div>
+                        <div class="matrix-cell-lbl">True Neg</div>
+                    </div>
+                    <div class="matrix-cell incorrect">
+                        <div class="matrix-value">{metrics['fp']:,}</div>
+                        <div class="matrix-cell-lbl">False Pos</div>
+                    </div>
+                    
+                    <div class="matrix-label">Bat Win (1)</div>
+                    <div class="matrix-cell incorrect">
+                        <div class="matrix-value">{metrics['fn']:,}</div>
+                        <div class="matrix-cell-lbl">False Neg</div>
+                    </div>
+                    <div class="matrix-cell correct">
+                        <div class="matrix-value">{metrics['tp']:,}</div>
+                        <div class="matrix-cell-lbl">True Pos</div>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # Fold scores display
+    st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="input-label" style="font-size:11px; margin-bottom: 12px; padding-left: 4px;">Stratified 5-Fold Scores</div>', unsafe_allow_html=True)
+    
+    cv_cols = st.columns(5)
+    for idx, score in enumerate(metrics['cv_scores']):
+        with cv_cols[idx]:
+            st.markdown(f"""
+                <div style="background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.05);
+                            border-radius:10px; padding:12px; text-align:center;">
+                    <div style="font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(220,210,185,0.35); margin-bottom:4px;">Fold {idx+1}</div>
+                    <div style="font-family:'DM Mono',monospace; font-size:15px; color:#e8d89a; font-weight:500;">{score:.2%}</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # -----------------------------------
 # ANALYSIS PAGE
@@ -296,7 +680,7 @@ if st.session_state.page == "Analysis":
         </div>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1, 1], gap="large")
+    col1, col2 = st.columns([1.2, 1.2], gap="medium")
 
     with col1:
         st.markdown('<div class="input-card">', unsafe_allow_html=True)
@@ -345,7 +729,7 @@ if st.session_state.page == "Analysis":
         </div>
     """, unsafe_allow_html=True)
 
-    vs_col1, vs_col2, vs_col3 = st.columns([2, 1, 2])
+    vs_col1, vs_col2, vs_col3 = st.columns([2.4, 0.8, 2.4], gap="medium")
 
     with vs_col1:
         st.markdown(f"""
@@ -411,13 +795,7 @@ if st.session_state.page == "Analysis":
 
     # ---- PREDICTION OUTPUT ----
     if analyze:
-        runs_left = target - score
-        balls_bowled = (overs * 6) + balls
-        balls_left = max(120 - balls_bowled, 0)
-        
-        overs_bowled = overs + (balls / 6.0)
-        crr = score / overs_bowled if overs_bowled > 0 else 0.0
-        rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
+        runs_left, balls_left, crr, rrr = safe_calculate_rates(score, target, overs)
 
         input_df = pd.DataFrame({
             'batting_team': [batting_team],
@@ -431,17 +809,58 @@ if st.session_state.page == "Analysis":
             'rrr': [rrr]
         })
 
-        with st.spinner(""):
-            
-            # Edge-case handling for final ball/completed innings boundaries
-            if runs_left <= 0:
-                win = 1.0
-                lose = 0.0
-            elif balls_left <= 0:
+        # ---- VALIDATION LAYER (Issue #118) ----
+        is_match_decided = False
+        verdict_msg = ""
+        verdict_type = "info" # "success" for chasing team win, "error" for chasing team loss, "warning" for tie/invalid
+        
+        if score >= target:
+            is_match_decided = True
+            verdict_msg = f"🏆 Match Decided: **{batting_team}** has already reached the target of {target} and won the match!"
+            verdict_type = "success"
+            win = 1.0
+            lose = 0.0
+        elif wickets >= 10:
+            is_match_decided = True
+            if score == target - 1:
+                verdict_msg = f"🤝 Match Decided: **{batting_team}** is all out for {score}. The match is a **TIE**!"
+                verdict_type = "warning"
+                win = 0.5
+                lose = 0.5
+            else:
+                verdict_msg = f"❌ Match Decided: **{batting_team}** is all out for {score} (target {target}). **{bowling_team}** won by {target - 1 - score} runs!"
+                verdict_type = "error"
                 win = 0.0
                 lose = 1.0
+        elif balls_left <= 0:
+            is_match_decided = True
+            if score == target - 1:
+                verdict_msg = f"🤝 Match Decided: Overs completed. The match is a **TIE**!"
+                verdict_type = "warning"
+                win = 0.5
+                lose = 0.5
             else:
-                proba = pipe.predict_proba(input_df)[0]
+                verdict_msg = f"❌ Match Decided: Overs completed. **{batting_team}** failed to reach the target of {target} and lost by {target - 1 - score} runs!"
+                verdict_type = "error"
+                win = 0.0
+                lose = 1.0
+
+        with st.spinner(""):
+            if is_match_decided:
+                pass
+            else:
+                if pipe is None:
+                    st.error("Model not loaded. Please restart the app.")
+                    st.stop()
+                try:
+                    proba = pipe.predict_proba(input_df)[0]
+                except Exception as e:
+                    logging.error(f"Prediction failed: {e}")
+                    st.error("Prediction unavailable — model encountered an error. Adjust inputs and try again.")
+                    st.stop()
+                if np.isnan(proba).any():
+                    st.error("Model returned invalid probabilities. The training pipeline may have produced corrupted coefficients. Restart the app to retrain.")
+                    st.stop()
                 win = proba[1]
                 lose = proba[0]
 
@@ -453,7 +872,16 @@ if st.session_state.page == "Analysis":
             </div>
         """, unsafe_allow_html=True)
 
-        res_col1, res_col2 = st.columns(2, gap="large")
+        if is_match_decided:
+            if verdict_type == "success":
+                st.success(verdict_msg)
+            elif verdict_type == "error":
+                st.error(verdict_msg)
+            else:
+                st.warning(verdict_msg)
+            st.markdown('<div style="height:12px;"></div>', unsafe_allow_html=True)
+
+        res_col1, res_col2 = st.columns([1.1, 1.1], gap="medium")
 
         with res_col1:
             bat_pct = round(win * 100)
@@ -557,4 +985,768 @@ if st.session_state.page == "Analysis":
             </div>
         """, unsafe_allow_html=True)
 
+        render_venue_intelligence(batting_team, bowling_team, selected_city, target)
+        # ---- CSV EXPORT ----
+        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+
+        # Generate ball-by-ball predictions from current state to end of innings
+        rows = []
+        for ov in range(overs, 20):
+            for bl in range(1, 7):
+                total_balls_done = ov * 6 + bl
+                if total_balls_done <= overs * 6:
+                    continue  # skip already-played balls
+                if total_balls_done > 120:
+                    break
+
+                b_left = 120 - total_balls_done
+                c_score = score  # score stays same (projection from current state)
+                r_left = target - c_score
+                c_crr = c_score / (total_balls_done / 6) if total_balls_done > 0 else 0
+                c_rrr = (r_left * 6) / b_left if b_left > 0 else 0
+
+                proj_df = pd.DataFrame({
+                    'batting_team': [batting_team],
+                    'bowling_team': [bowling_team],
+                    'city': ['Mumbai'],
+                    'runs_left': [r_left],
+                    'balls_left': [b_left],
+                    'wickets': [10 - wickets],
+                    'target': [target],
+                    'crr': [c_crr],
+                    'rrr': [c_rrr]
+                })
+
+                try:
+                    proj_proba = pipe.predict_proba(proj_df)[0]
+                    bat_prob = round(proj_proba[1] * 100, 2)
+                    bowl_prob = round(proj_proba[0] * 100, 2)
+                except Exception:
+                    bat_prob, bowl_prob = 50.0, 50.0
+                rows.append({
+                    "over": ov + 1,
+                    "ball": bl,
+                    "batting_team_prob": bat_prob,
+                    "bowling_team_prob": bowl_prob
+                })
+
+        export_df = pd.DataFrame(rows)
+
+        if not export_df.empty:
+            st.download_button(
+                label="⬇️ Download Ball-by-Ball Predictions (CSV)",
+                data=export_df.to_csv(index=False),
+                file_name=f"{batting_team}_vs_{bowling_team}_predictions.csv",
+                mime="text/csv"
+            )
+
+        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+        
+        # Generate ball-by-ball predictions for export
+        with st.spinner("Generating export data..."):
+            export_df = generate_ball_by_ball_df(
+                pipe, batting_team, bowling_team, selected_city,
+                target, score, overs, wickets
+            )
+            csv_data = export_df.to_csv(index=False)
+        
+        st.download_button(
+            label="📊 Download Ball-by-Ball Prediction Data (CSV)",
+            data=csv_data,
+            file_name=f"cricscope_predictions_{batting_team.lower().replace(' ', '_')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
+    
+# -----------------------------------
+# TEAM ANALYSIS PAGE
+# -----------------------------------
+if st.session_state.page == "Team Analysis":
+    
+    if "selected_team" not in st.session_state:
+        st.warning("Please select a team from Dashboard.")
+        st.stop()
+    
+    st.markdown("""
+<div style="padding: 30px 50px;">
+""", unsafe_allow_html=True)
+
+    team = st.session_state.selected_team
+    
+    matches_df = pd.read_csv("matches.csv")
+
+    team_matches = matches_df[
+        (matches_df["team1"] == team) |
+        (matches_df["team2"] == team)
+    ]
+
+    matches_played = len(team_matches)
+
+    wins = len(
+        team_matches[
+            team_matches["winner"] == team
+        ]
+    )
+
+    losses = matches_played - wins
+
+    win_rate = round((wins / matches_played) * 100, 1) if matches_played > 0 else 0
+
+    st.title("🏏 Team Analysis")
+
+    if team:
+        st.markdown(
+    f"""
+    <h2 style="
+        color:{team_data[team]['color']};
+        text-align:center;
+        margin-bottom:20px;
+    ">
+        {team}
+    </h2>
+    """,
+    unsafe_allow_html=True
+)
+         # Team Logo
+        if team in team_data:
+                c1, c2, c3 = st.columns([1,2,1])
+
+    with c2:
+        st.image(team_data[team]["logo"], width=180)
+        
+        st.markdown("---")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric("Matches", matches_played)
+
+        with col2:
+            st.metric("Wins", wins)
+
+        with col3:
+            st.metric("Losses", losses)
+
+        with col4:
+            st.metric("Win Rate", f"{win_rate}%")
+        
+    # Performance Overview
+        st.subheader("📊 Performance Overview")
+        
+        winning_matches = team_matches[
+        team_matches["winner"] == team
+]
+        best_venue = winning_matches["venue"].mode()[0]
+
+        seasons_played = team_matches["Season"].nunique()
+        
+        pom_count = winning_matches["player_of_match"].value_counts()
+        top_player = pom_count.index[0]
+        top_player_awards = pom_count.iloc[0]
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+                st.metric("🏟 Best Venue", best_venue)
+
+        with col2:
+                st.metric("Seasons Played", seasons_played)
+
+        with col3:
+              st.metric(
+        "🏆 Top Performer",
+        top_player,
+        f"{top_player_awards} Awards"
+)
+
+        st.markdown("---")
+
+     # Team Strength Analysis
+        st.subheader("📈 Team Statistics")
+        
+        deliveries_df = pd.read_csv("deliveries.csv")
+
+        team_batting = deliveries_df[
+        deliveries_df["batting_team"] == team
+]
+        total_runs = team_batting["total_runs"].sum()
+
+        team_bowling = deliveries_df[
+        deliveries_df["bowling_team"] == team
+]   
+        total_wickets = team_bowling[
+        team_bowling["player_dismissed"].notna()
+].shape[0]
+        
+        fielding_events = team_bowling[
+        team_bowling["dismissal_kind"].isin(
+        ["caught", "run out", "stumped"]
+    )
+]
+
+        fielding_count = len(fielding_events)
+            
+        batting_strength = min(round(total_runs / 40000 * 100), 100)
+
+        bowling_strength = min(round(total_wickets / 1200 * 100), 100)
+
+        fielding_strength = min(round(fielding_count / 800 * 100), 100)
+       
+        # Batting
+        st.markdown(
+            f"🏏 **Total Runs** : {total_runs:,} ({batting_strength}%)"
+        )
+        st.progress(batting_strength / 100)
+
+        # Bowling
+        st.markdown(
+            f"🎯 **Wickets Taken** : {total_wickets} ({bowling_strength}%)"
+        )
+        st.progress(bowling_strength / 100)
+
+        # Fielding
+        st.markdown(
+            f"🧤 **Fielding Dismissals** : {fielding_count} ({fielding_strength}%)"
+        )
+        st.progress(fielding_strength / 100)
+        
+    
+        if st.button("⬅ Back to Dashboard"):
+            st.session_state.page = "Dashboard"
+            st.rerun()
+if st.session_state.page == "chabot":
+ 
+    # ---- Init session state ----
+    if "chat_messages" not in st.session_state:
+        st.session_state.chat_messages = []
+    if "chat_thinking" not in st.session_state:
+        st.session_state.chat_thinking = False
+ 
+    # ---- Page CSS (scoped additions) ----
+    st.markdown("""
+    <style>
+    /* ---- CHAT LAYOUT SHELL ---- */
+    .chat-page-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 0px);
+        overflow: hidden;
+    }
+ 
+    /* ---- CHAT HERO ---- */
+    .chat-hero {
+        padding: 36px 72px 24px;
+        border-bottom: 1px solid rgba(212,175,55,0.08);
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+ 
+    .chat-hero::before {
+        content: '';
+        position: absolute;
+        top: -40px; left: 0; right: 0;
+        height: 120px;
+        background: radial-gradient(ellipse 70% 100% at 50% 0%,
+            rgba(212,175,55,0.05) 0%, transparent 70%);
+        pointer-events: none;
+    }
+ 
+    .chat-hero-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+ 
+    .chat-hero-left {}
+ 
+    .chat-eyebrow {
+        font-size: 10px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: rgba(212,175,55,0.45);
+        margin-bottom: 8px;
+        font-weight: 400;
+    }
+ 
+    .chat-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 38px;
+        font-weight: 600;
+        line-height: 1;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f0d0 30%, #d4af37 80%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+    }
+ 
+    .chat-subtitle {
+        font-size: 12px;
+        color: rgba(220,210,185,0.4);
+        letter-spacing: 0.3px;
+        font-weight: 300;
+    }
+
+    /* ---- HERO RIGHT (badge + new chat) ---- */
+    .chat-hero-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 12px;
+    }
+ 
+    .chat-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(212,175,55,0.06);
+        border: 1px solid rgba(212,175,55,0.18);
+        border-radius: 100px;
+        padding: 8px 16px;
+        font-size: 11px;
+        color: rgba(212,175,55,0.75);
+        letter-spacing: 1px;
+        white-space: nowrap;
+    }
+ 
+    .chat-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4ade80;
+        box-shadow: 0 0 6px #4ade80;
+        animation: blink 2.2s infinite;
+        flex-shrink: 0;
+    }
+ 
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.3; }
+    }
+ 
+    .chat-caps {
+        display: flex;
+        gap: 8px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+ 
+    .chat-cap-chip {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 100px;
+        padding: 5px 14px;
+        font-size: 10px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: rgba(200,185,140,0.4);
+        font-weight: 500;
+    }
+ 
+    /* ---- New Chat Button ---- */
+    div[data-testid="stButton"]:has(button[kind="secondary"]) button {
+        background: transparent !important;
+        border: 1px solid rgba(212,175,55,0.3) !important;
+        color: rgba(212,175,55,0.75) !important;
+        border-radius: 100px !important;
+        padding: 6px 16px !important;
+        font-size: 11px !important;
+        letter-spacing: 1px !important;
+        font-family: 'DM Sans', sans-serif !important;
+        transition: all 0.2s ease !important;
+        white-space: nowrap !important;
+    }
+
+    div[data-testid="stButton"]:has(button[kind="secondary"]) button:hover {
+        border-color: rgba(212,175,55,0.7) !important;
+        color: #d4af37 !important;
+        box-shadow: 0 0 12px rgba(212,175,55,0.15) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Align the button container to the right */
+    div[data-testid="stButton"]:has(button[kind="secondary"]) {
+        display: flex !important;
+        justify-content: flex-end !important;
+    }
+
+    /* ---- MESSAGES AREA ---- */
+    .chat-messages-outer {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px 72px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(212,175,55,0.2) transparent;
+    }
+ 
+    .chat-messages-outer::-webkit-scrollbar { width: 3px; }
+    .chat-messages-outer::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages-outer::-webkit-scrollbar-thumb {
+        background: rgba(212,175,55,0.2);
+        border-radius: 4px;
+    }
+ 
+    .chat-empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        padding: 60px 0 40px;
+        text-align: center;
+        opacity: 0.7;
+    }
+ 
+    .chat-empty-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+        filter: grayscale(0.3);
+    }
+ 
+    .chat-empty-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 22px;
+        color: rgba(240,232,204,0.5);
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+ 
+    .chat-empty-sub {
+        font-size: 12px;
+        color: rgba(200,185,140,0.28);
+        letter-spacing: 0.3px;
+        max-width: 340px;
+        line-height: 1.6;
+    }
+ 
+    .chat-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 28px;
+    }
+ 
+    .chat-suggestion-btn {
+        background: rgba(212,175,55,0.05);
+        border: 1px solid rgba(212,175,55,0.15);
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-size: 12px;
+        color: rgba(212,175,55,0.65);
+        letter-spacing: 0.3px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: 'DM Sans', sans-serif;
+    }
+ 
+    .chat-suggestion-btn:hover {
+        background: rgba(212,175,55,0.1);
+        border-color: rgba(212,175,55,0.3);
+        color: rgba(212,175,55,0.9);
+        transform: translateY(-1px);
+    }
+ 
+    /* ---- MESSAGE BUBBLES ---- */
+    .msg-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: msg-in 0.28s cubic-bezier(0.34,1.3,0.64,1);
+    }
+ 
+    @keyframes msg-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+ 
+    .msg-row.user { flex-direction: row-reverse; }
+ 
+    .msg-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+    }
+ 
+    .msg-avatar.assistant {
+        background: linear-gradient(135deg, #1a1400, #2a1e00);
+        border: 1px solid rgba(212,175,55,0.3);
+        color: #d4af37;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 16px;
+    }
+ 
+    .msg-avatar.user {
+        background: linear-gradient(135deg, #c9a227, #d4af37);
+        color: #0a0800;
+        font-size: 12px;
+    }
+ 
+    .msg-bubble-wrap {
+        max-width: 72%;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+ 
+    .msg-row.user .msg-bubble-wrap { align-items: flex-end; }
+ 
+    .msg-bubble {
+        padding: 14px 18px;
+        border-radius: 16px;
+        font-size: 14px;
+        line-height: 1.65;
+        letter-spacing: 0.2px;
+        word-break: break-word;
+    }
+ 
+    .msg-bubble.assistant {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-top-left-radius: 4px;
+        color: #e2dfd8;
+    }
+ 
+    .msg-bubble.user {
+        background: rgba(212,175,55,0.08);
+        border: 1px solid rgba(212,175,55,0.2);
+        border-top-right-radius: 4px;
+        color: #f0e8cc;
+    }
+ 
+    .msg-time {
+        font-family: 'DM Mono', monospace;
+        font-size: 9px;
+        color: rgba(200,185,140,0.25);
+        letter-spacing: 0.5px;
+        padding: 0 4px;
+    }
+ 
+    .msg-bubble.thinking {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 16px 20px;
+    }
+ 
+    .thinking-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(212,175,55,0.5);
+        animation: thinking-pulse 1.4s infinite ease-in-out;
+    }
+ 
+    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+ 
+    @keyframes thinking-pulse {
+        0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+        40%            { transform: scale(1.1); opacity: 1; }
+    }
+ 
+    [data-testid="stBottom"] > div {
+        background: rgba(8, 8, 8, 0.97) !important;
+        border-top: 1px solid rgba(212,175,55,0.12) !important;
+        padding: 16px 72px 20px !important;
+        backdrop-filter: blur(16px) !important;
+    }
+ 
+    [data-testid="stChatInput"] {
+        width: 100% !important;
+        max-width: 1450px !important;
+        margin: 0 auto !important;
+        padding-bottom: 18px !important;
+    }
+ 
+    [data-testid="stChatInput"]:focus-within {
+        border-color: rgba(212,175,55,0.45) !important;
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.06) !important;
+    }
+ 
+    [data-testid="stChatInputTextArea"] {
+        background: transparent !important;
+        color: #e2dfd8 !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 14px !important;
+        caret-color: #d4af37 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+ 
+    [data-testid="stChatInputTextArea"]::placeholder {
+        color: rgba(200,185,140,0.3) !important;
+        letter-spacing: 0.3px !important;
+    }
+ 
+    [data-testid="stChatInputSubmitButton"] button {
+        background: linear-gradient(135deg, #c9a227, #d4af37) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        color: #0a0800 !important;
+        transition: all 0.2s ease !important;
+    }
+ 
+    [data-testid="stChatInputSubmitButton"] button:hover {
+        box-shadow: 0 4px 18px rgba(212,175,55,0.4) !important;
+        transform: translateY(-1px) !important;
+        filter: brightness(1.1) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+ 
+    import datetime
+ 
+    def fmt_time():
+        return datetime.datetime.now().strftime("%H:%M")
+ 
+    # ---- HERO ----
+    st.markdown("""
+        <div class="chat-hero">
+            <div class="chat-hero-top">
+                <div class="chat-hero-left">
+                    <div class="chat-eyebrow">AI Cricket Intelligence</div>
+                    <div class="chat-title">Cricket Assistant</div>
+                    <div class="chat-subtitle">
+                        Powered by Groq 
+                    </div>
+                </div>
+                <div class="chat-hero-right">
+                    <div class="chat-status-badge">
+                        <div class="chat-status-dot"></div>
+                        Assistant Online
+                    </div>
+                </div>
+            </div>
+            <div class="chat-caps">
+                <div class="chat-cap-chip">🏏 Live Scores</div>
+                <div class="chat-cap-chip">📊 Player Stats</div>
+                <div class="chat-cap-chip">🏆 IPL Teams</div>
+                <div class="chat-cap-chip">📋 Rules & Terms</div>
+                <div class="chat-cap-chip">🔮 Analysis</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # ---- NEW CHAT BUTTON (below hero, right-aligned) ----
+    if st.session_state.chat_messages:  # only show if there's an active chat
+        if st.button("✦  New Chat", key="new_chat_btn"):
+            keys_to_reset = ["chat_messages", "chat_thinking", "last_audio_hash"]
+            for key in keys_to_reset:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
+ 
+    # ---- MESSAGES CONTAINER ----
+    messages_container = st.container()
+ 
+    with messages_container:
+        if not st.session_state.chat_messages:
+            pass
+        else:
+            for msg in st.session_state.chat_messages:
+                role      = msg["role"]
+                content   = msg["content"]
+                timestamp = msg.get("time", "")
+ 
+                if role == "user":
+                    avatar_html = '<div class="msg-avatar user">You</div>'
+                    bubble_cls  = "user"
+                    row_cls     = "user"
+                else:
+                    avatar_html = '<div class="msg-avatar assistant">◈</div>'
+                    bubble_cls  = "assistant"
+                    row_cls     = "assistant"
+ 
+                st.markdown(f"""
+                    <div class="msg-row {row_cls}">
+                        {avatar_html}
+                        <div class="msg-bubble-wrap">
+                            <div class="msg-bubble {bubble_cls}">{content}</div>
+                            <div class="msg-time">{timestamp}</div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+ 
+            if st.session_state.chat_thinking:
+                st.markdown("""
+                    <div class="msg-row assistant">
+                        <div class="msg-avatar assistant">◈</div>
+                        <div class="msg-bubble-wrap">
+                            <div class="msg-bubble assistant thinking">
+                                <div class="thinking-dot"></div>
+                                <div class="thinking-dot"></div>
+                                <div class="thinking-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+ 
+    from voice_input import voice_input_component
+
+    # ---- INPUT BAR ----
+    if not st.session_state.get("chat_thinking"):
+
+        voice_text = voice_input_component()
+
+        user_input = st.chat_input(
+            placeholder="Ask about cricket, or use the mic above…",
+            key="cricket_chat_input"
+        )
+
+        final_input = (voice_text or user_input or "").strip()
+
+        if final_input:
+            st.session_state.chat_messages.append({
+                "role":    "user",
+                "content": final_input,
+                "time":    fmt_time(),
+            })
+            st.session_state.chat_thinking = True
+            st.rerun()
+
+    # ================================================================
+    # BLOCK 2 — Thinking ON → run agent → store reply → flip OFF
+    # ================================================================
+    if st.session_state.get("chat_thinking") and st.session_state.chat_messages:
+        last_msg = st.session_state.chat_messages[-1]
+
+        if last_msg["role"] == "user":
+            from cricket_agent import run_agent
+            try:
+                response_text = run_agent(
+                    user_message=last_msg["content"],
+                    chat_history=st.session_state.chat_messages[:-1],
+                )
+            except RuntimeError as e:
+                response_text = f"⚠️ Configuration error: {str(e)}"
+            except Exception as e:
+                response_text = f"⚠️ Something went wrong: {str(e)}"
+
+            st.session_state.chat_messages.append({
+                "role":    "assistant",
+                "content": response_text,
+                "time":    fmt_time(),
+            })
+
+        st.session_state.chat_thinking = False
+        st.rerun()
+
+ 
+ 
+            
+st.markdown("</div>", unsafe_allow_html=True)

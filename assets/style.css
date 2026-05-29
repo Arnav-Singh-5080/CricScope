@@ -118,7 +118,7 @@ section[data-testid="stSidebar"] > div {
 
 /* ---- HERO SECTION ---- */
 .hero-wrapper {
-    padding: 64px 60px 40px;
+    padding: 64px 72px 40px;
     border-bottom: 1px solid rgba(212,175,55,0.08);
     position: relative;
     overflow: hidden;
@@ -196,7 +196,7 @@ section[data-testid="stSidebar"] > div {
 .stats-row {
     display: flex;
     gap: 16px;
-    padding: 24px 60px;
+    padding: 24px 72px;
     border-bottom: 1px solid rgba(212,175,55,0.06);
 }
 
@@ -233,7 +233,7 @@ section[data-testid="stSidebar"] > div {
 
 /* ---- ANALYSIS SECTION ---- */
 .section-header {
-    padding: 40px 60px 0;
+    padding: 40px 72px 0;
 }
 
 .section-title {
@@ -540,7 +540,7 @@ hr {
 
 /* ---- CONTENT PADDING ---- */
 .main-pad {
-    padding: 0 60px 60px;
+    padding: 0 72px 60px;
 }
 
 /* ---- SCROLLBAR ---- */
@@ -738,4 +738,80 @@ section[data-testid="stSidebar"] a:active {
 
 .sidebar-version:hover {
     color: rgba(200, 185, 140, 0.3);
+}
+
+/* ---- PERFORMANCE REPORT & CONFUSION MATRIX ---- */
+.matrix-wrapper {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 32px;
+    backdrop-filter: blur(20px);
+}
+.matrix-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+    grid-gap: 16px;
+    margin-top: 16px;
+    align-items: center;
+    text-align: center;
+}
+.matrix-header {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(212,175,55,0.6);
+    font-weight: 500;
+    padding: 10px 0;
+}
+.matrix-label {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(220,210,185,0.4);
+    text-align: left;
+    font-weight: 500;
+}
+.matrix-cell {
+    padding: 24px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.25s ease;
+}
+.matrix-cell.correct {
+    background: rgba(212,175,55,0.06);
+    border: 1px solid rgba(212,175,55,0.25);
+}
+.matrix-cell.correct:hover {
+    background: rgba(212,175,55,0.1);
+    border-color: rgba(212,175,55,0.45);
+    transform: translateY(-2px);
+}
+.matrix-cell.incorrect {
+    background: rgba(214,40,40,0.03);
+    border: 1px solid rgba(214,40,40,0.15);
+}
+.matrix-cell.incorrect:hover {
+    background: rgba(214,40,40,0.06);
+    border-color: rgba(214,40,40,0.3);
+    transform: translateY(-2px);
+}
+.matrix-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 32px;
+    font-weight: 500;
+    color: #f0e8cc;
+}
+.matrix-cell.incorrect .matrix-value {
+    color: #e57373;
+}
+.matrix-cell-lbl {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    color: rgba(220,210,185,0.4);
 }
