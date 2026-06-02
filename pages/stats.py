@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
+from venue_intelligence import load_matches, load_deliveries
 #  page config 
 st.set_page_config(
     page_title="CricScope · Stats",
@@ -207,15 +208,8 @@ hr {
 """, unsafe_allow_html=True)
 
 
-#  data loading 
-@st.cache_data
-def load_data():
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
-    return matches, deliveries
-
-
-matches, deliveries = load_data()
+matches = load_matches()
+deliveries = load_deliveries()
 
 #  page header 
 st.markdown("""

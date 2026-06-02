@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import requests
 import time
+from venue_intelligence import load_matches, load_deliveries
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -393,8 +394,8 @@ def resolve_team_name(raw_name: str) -> str:
 # ───────────────────────────────────────────
 @st.cache_resource
 def train_model():
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    matches = load_matches()
+    deliveries = load_deliveries()
 
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
 
