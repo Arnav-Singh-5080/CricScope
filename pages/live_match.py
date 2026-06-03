@@ -1129,7 +1129,4 @@ else:
 
 st.markdown('</div>', unsafe_allow_html=True)  # close main padding
 
-# ── Auto-refresh via st.rerun ──
-if st.session_state.live_auto_refresh and user_api_key:
-    time.sleep(REFRESH_INTERVAL_MS / 1000)
-    st.rerun()
+# Auto-refresh is handled on the client side via JavaScript to avoid blocking the server thread.
