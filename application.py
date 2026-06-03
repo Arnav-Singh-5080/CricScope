@@ -1,3 +1,15 @@
+# Precomputed venue-wise average first-innings scores
+VENUE_AVG_SCORE = {
+    'Mumbai': 165, 'Chennai': 155, 'Delhi': 168, 'Kolkata': 160,
+    'Bangalore': 175, 'Bengaluru': 175, 'Hyderabad': 162, 'Pune': 170,
+    'Ahmedabad': 168, 'Jaipur': 165, 'Mohali': 170, 'Chandigarh': 170,
+    'Indore': 175, 'Visakhapatnam': 160, 'Ranchi': 158, 'Cuttack': 160,
+    'Nagpur': 155, 'Rajkot': 172, 'Dharamsala': 162, 'Kanpur': 160,
+    'Raipur': 158, 'Kochi': 165,
+    'Abu Dhabi': 150, 'Sharjah': 152,
+    'Cape Town': 158, 'Centurion': 165, 'Durban': 160, 'Johannesburg': 168,
+    'Port Elizabeth': 155, 'East London': 152, 'Bloemfontein': 160, 'Kimberley': 165
+}
 import streamlit as st
 st.markdown("""
 <style>
@@ -921,12 +933,114 @@ team_data = {
 # -----------------------------------
 def get_model(model_name='logistic'):
     if model_name == 'logistic':
-        return LogisticRegression(max_iter=1000)
+        return LogisticRegression(
+            max_iter=5000,
+            solver='saga',
+            class_weight='balanced',
+            random_state=42,
+        )
+    
     elif model_name == 'random_forest':
-        return RandomForestClassifier(n_estimators=100, random_state=42)
+        return RandomForestClassifier(
+            n_estimators=300,
+            max_depth=12,
+            min_samples_split=10,
+            min_samples_leaf=4,
+            random_state=42,
+            n_jobs=-1
+        )
+    
     elif model_name == 'xgboost':
-        return XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False, eval_metric='logloss')
+        return XGBClassifier(
+            n_estimators=400,
+            learning_rate=0.05,
+            max_depth=6,
+            min_child_weight=3,
+            subsample=0.9,
+            colsample_bytree=0.8,
+            reg_alpha=0.1,
+            reg_lambda=1.0,
+            random_state=42,
+            eval_metric='logloss',
+            scale_pos_weight=1.2,
+            n_jobs=-1
+        )
+    
+    elif model_name == 'lightgbm':
+        from lightgbm import LGBMClassifier
+        return LGBMClassifier(
+            n_estimators=400,
+            learning_rate=0.05,
+            max_depth=8,
+            num_leaves=31,
+            subsample=0.9,
+            colsample_bytree=0.8,
+            random_state=42,
+            n_jobs=-1,
+            verbose=-1
+        )
+    
     return LogisticRegression(max_iter=1000)
+
+def build_features(matches, deliveries):
+    """Builds engineered features from matches + deliveries dataframes."""
+    df = deliveries.merge(matches, left_on='match_id', right_on='id')
+
+    # First innings total → target
+    total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
+    total_df.rename(columns={'total_runs': 'target'}, inplace=True)
+    df = df.merge(total_df, on='match_id')
+    df = df[df['inning'] == 2].copy()
+
+    # Base features
+    df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
+    df['runs_left'] = df['target'] - df['current_score']
+
+    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
+    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
+
+    df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
+    df['wickets_fallen'] = df.groupby('match_id')['player_dismissed'].cumsum()
+    df['wickets'] = 10 - df['wickets_fallen']
+
+    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
+    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
+    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
+
+    # 🆕 NEW FEATURES
+    df['run_rate_diff'] = df['rrr'] - df['crr']
+    df['pressure_index'] = df['rrr'] * df['wickets_fallen']
+    df['resources_left'] = (df['balls_left'] / 120) * (df['wickets'] / 10)
+    df['is_powerplay'] = (df['over'] <= 6).astype(int)
+    df['is_death'] = (df['over'] >= 16).astype(int)
+
+    # Momentum: last 30 balls runs & wickets
+    df = df.sort_values(['match_id', 'over', 'ball']).reset_index(drop=True)
+    df['last_30_runs'] = df.groupby('match_id')['total_runs'].transform(
+        lambda x: x.rolling(30, min_periods=1).sum()
+    )
+    df['last_30_wickets'] = df.groupby('match_id')['player_dismissed'].transform(
+        lambda x: x.rolling(30, min_periods=1).sum()
+    )
+
+    # Venue-based avg first innings score
+    venue_avg = df.groupby('city')['target'].mean().to_dict()
+    df['venue_avg_score'] = df['city'].map(venue_avg).fillna(df['target'].mean())
+
+    # Clean
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
+
+    feature_cols = [
+        'batting_team', 'bowling_team', 'city',
+        'runs_left', 'balls_left', 'wickets', 'target',
+        'crr', 'rrr', 'run_rate_diff', 'pressure_index',
+        'resources_left', 'is_powerplay', 'is_death',
+        'last_30_runs', 'last_30_wickets', 'venue_avg_score'
+    ]
+    df = df[df['over'] >= 5]
+    final_df = df[feature_cols + ['result', 'match_id']].dropna().reset_index(drop=True)
+    return final_df
 
 @st.cache_resource
 def train_model(model_name='logistic'):
@@ -941,46 +1055,23 @@ def train_model(model_name='logistic'):
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
 
-    df = deliveries.merge(matches, left_on='match_id', right_on='id')
+    final_df = build_features(matches, deliveries)
 
-    total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
-    total_df.rename(columns={'total_runs': 'target'}, inplace=True)
-
-    df = df.merge(total_df, on='match_id')
-    df = df[df['inning'] == 2]
-
-    df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
-    df['runs_left'] = df['target'] - df['current_score']
-    
-    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
-    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
-
-    df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
-    df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
-    df['wickets'] = 10 - df['wickets']
-
-    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
-    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
-    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
-
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
-
-    final_df = df[['batting_team', 'bowling_team', 'city',
-                   'runs_left', 'balls_left', 'wickets',
-                   'target', 'crr', 'rrr', 'result']]
-    final_df.dropna(inplace=True)
-
-    X = final_df.drop('result', axis=1)
+    X = final_df.drop(['result', 'match_id'], axis=1)
     y = final_df['result']
+    groups = final_df['match_id']  # for GroupKFold
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    # Categorical & numerical columns
+    cat_cols = ['batting_team', 'bowling_team', 'city']
+    num_cols = [c for c in X.columns if c not in cat_cols]
+
+    from sklearn.preprocessing import StandardScaler
+    from category_encoders import TargetEncoder
 
     preprocessor = ColumnTransformer([
-        ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
-        ('num', 'passthrough', ['runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr'])
+        ('cat_low', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team']),
+        ('cat_high', TargetEncoder(), ['city']),
+        ('num', StandardScaler(), num_cols)
     ])
 
     pipe = Pipeline([
@@ -988,15 +1079,32 @@ def train_model(model_name='logistic'):
         ('model', get_model(model_name))
     ])
 
-    # Fit pipeline before evaluations to avoid UnboundLocalError
+    # 🆕 GroupKFold (prevents data leakage)
+    from sklearn.model_selection import GroupKFold, train_test_split
+
+    # Train/test split by match (not by row) to mirror real prediction scenario
+    unique_matches = final_df['match_id'].unique()
+    train_matches, test_matches = train_test_split(unique_matches, test_size=0.2, random_state=42)
+
+    train_mask = final_df['match_id'].isin(train_matches)
+    test_mask = final_df['match_id'].isin(test_matches)
+
+    X_train, X_test = X[train_mask], X[test_mask]
+    y_train, y_test = y[train_mask], y[test_mask]
+
     pipe.fit(X_train, y_train)
     predictions = pipe.predict(X_test)
 
-    # Logging evaluations safely
     try:
-        scores = cross_val_score(pipe, X_train, y_train, cv=5)
+        from sklearn.model_selection import cross_val_score
+        gkf = GroupKFold(n_splits=5)
+        scores = cross_val_score(
+            pipe, X_train, y_train,
+            cv=gkf.split(X_train, y_train, groups[train_mask]),
+            scoring='accuracy', n_jobs=-1
+        )
         logging.info(f"Model trained: {model_name}")
-        logging.info(f"Cross Validation Scores: {scores}")
+        logging.info(f"GroupKFold CV Scores: {scores}")
         logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
         logging.info(f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}")
     except Exception as eval_error:
@@ -1010,48 +1118,29 @@ def train_model(model_name='logistic'):
     return pipe
 
 @st.cache_resource
+@st.cache_resource
 def evaluate_model(model_name='logistic'):
     pipe = train_model(model_name)
 
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
 
-    df = deliveries.merge(matches, left_on='match_id', right_on='id')
+    final_df = build_features(matches, deliveries)
 
-    total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
-    total_df.rename(columns={'total_runs': 'target'}, inplace=True)
-
-    df = df.merge(total_df, on='match_id')
-    df = df[df['inning'] == 2]
-
-    df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
-    df['runs_left'] = df['target'] - df['current_score']
-    
-    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
-    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
-
-    df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
-    df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
-    df['wickets'] = 10 - df['wickets']
-
-    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
-    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
-    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
-
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
-
-    final_df = df[['batting_team', 'bowling_team', 'city',
-                   'runs_left', 'balls_left', 'wickets',
-                   'target', 'crr', 'rrr', 'result']]
-    final_df.dropna(inplace=True)
-
-    X = final_df.drop('result', axis=1)
+    X = final_df.drop(['result', 'match_id'], axis=1)
     y = final_df['result']
+    groups = final_df['match_id']
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    from sklearn.model_selection import GroupKFold, train_test_split, cross_val_score
+
+    unique_matches = final_df['match_id'].unique()
+    train_matches, test_matches = train_test_split(unique_matches, test_size=0.2, random_state=42)
+
+    train_mask = final_df['match_id'].isin(train_matches)
+    test_mask = final_df['match_id'].isin(test_matches)
+
+    X_train, X_test = X[train_mask], X[test_mask]
+    y_train, y_test = y[train_mask], y[test_mask]
 
     predictions = pipe.predict(X_test)
 
@@ -1062,9 +1151,12 @@ def evaluate_model(model_name='logistic'):
 
     tn, fp, fn, tp = confusion_matrix(y_test, predictions).ravel()
 
-    scores = cross_val_score(pipe, X_train, y_train, cv=5)
-    cv_mean = scores.mean()
-    cv_std = scores.std()
+    gkf = GroupKFold(n_splits=5)
+    scores = cross_val_score(
+        pipe, X_train, y_train,
+        cv=gkf.split(X_train, y_train, groups[train_mask]),
+        scoring='accuracy', n_jobs=-1
+    )
 
     return {
         'accuracy': float(accuracy),
@@ -1075,9 +1167,10 @@ def evaluate_model(model_name='logistic'):
         'fp': int(fp),
         'fn': int(fn),
         'tp': int(tp),
-        'cv_mean': float(cv_mean),
-        'cv_std': float(cv_std),
-        'cv_scores': scores.tolist()
+        'cv_mean': float(scores.mean()),
+        'cv_std': float(scores.std()),
+        'cv_scores': scores.tolist(),
+        'model_name': model_name
     }
 
 selected_model_key = st.session_state.get('selected_model', 'logistic')
@@ -1094,32 +1187,45 @@ def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, ta
         }
         return pd.DataFrame(data)
 
+    venue_avg = VENUE_AVG_SCORE.get(selected_city, 160)
     records = []
+
     for b in range(1, total_balls + 1):
         curr_over = (b - 1) // 6 + 1
         curr_ball = (b - 1) % 6 + 1
-        
+
         fraction = b / total_balls
         curr_score = int(score * fraction)
         curr_wickets = int(wickets * fraction)
-        
+
         runs_left = target - curr_score
         balls_left = max(120 - b, 0)
+        wickets_remaining = 10 - curr_wickets
         crr = curr_score / (b / 6) if b > 0 else 0.0
         rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
-        
+
+        # 🆕 Build input with ALL features matching training pipeline
         input_df = pd.DataFrame({
             'batting_team': [batting_team],
             'bowling_team': [bowling_team],
             'city': [selected_city],
             'runs_left': [runs_left],
             'balls_left': [balls_left],
-            'wickets': [10 - curr_wickets],
+            'wickets': [wickets_remaining],
             'target': [target],
             'crr': [crr],
-            'rrr': [rrr]
+            'rrr': [rrr],
+            # 🆕 NEW FEATURES
+            'run_rate_diff': [rrr - crr],
+            'pressure_index': [rrr * curr_wickets],
+            'resources_left': [(balls_left / 120) * (wickets_remaining / 10)],
+            'is_powerplay': [1 if curr_over <= 6 else 0],
+            'is_death': [1 if curr_over >= 16 else 0],
+            'last_30_runs': [0],
+            'last_30_wickets': [0],
+            'venue_avg_score': [venue_avg]
         })
-        
+
         if runs_left <= 0:
             win = 1.0
             lose = 0.0
@@ -1135,14 +1241,14 @@ def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, ta
                     win, lose = proba[1], proba[0]
             except Exception:
                 win, lose = 0.5, 0.5
-            
+
         records.append({
             'over': curr_over,
             'ball': curr_ball,
             'batting_team_prob': round(win, 4),
             'bowling_team_prob': round(lose, 4)
         })
-        
+
     return pd.DataFrame(records)
 
 def safe_calculate_rates(score, target, overs):
@@ -1426,39 +1532,56 @@ elif st.session_state.page == "Performance":
         """, unsafe_allow_html=True)
         
     with col_cm:
-        st.markdown(f"""
+        matrix_html = f"""
             <div class="matrix-wrapper">
                 <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
                 <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
                     A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
                 </div>
                 <div class="matrix-grid">
-                    <div class="matrix-header">Actual \\ Pred</div>
+                    <div class="matrix-header">Actual / Pred</div>
                     <div class="matrix-header">Bowl Win (0)</div>
                     <div class="matrix-header">Bat Win (1)</div>
-                    
                     <div class="matrix-label">Bowl Win (0)</div>
                     <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tn']:,}</div>
+                        <div class="matrix-value">{int(metrics['tn']):,}</div>
                         <div class="matrix-cell-lbl">True Neg</div>
                     </div>
                     <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fp']:,}</div>
+                        <div class="matrix-value">{int(metrics['fp']):,}</div>
                         <div class="matrix-cell-lbl">False Pos</div>
                     </div>
-                    
                     <div class="matrix-label">Bat Win (1)</div>
                     <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fn']:,}</div>
+                        <div class="matrix-value">{int(metrics['fn']):,}</div>
                         <div class="matrix-cell-lbl">False Neg</div>
                     </div>
                     <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tp']:,}</div>
+                        <div class="matrix-value">{int(metrics['tp']):,}</div>
                         <div class="matrix-cell-lbl">True Pos</div>
                     </div>
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(matrix_html, unsafe_allow_html=True)
+
+    # Fold scores (separate section, no need to be inside wrapper)
+    st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="input-label" style="font-size:11px; margin-bottom: 12px; padding-left: 4px;">Stratified 5-Fold Scores</div>',
+        unsafe_allow_html=True
+    )
+
+    cv_cols = st.columns(5)
+    for idx, score in enumerate(metrics['cv_scores']):
+        with cv_cols[idx]:
+            st.markdown(f"""
+                <div style="background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.05);
+                            border-radius:10px; padding:12px; text-align:center;">
+                    <div style="font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(220,210,185,0.35); margin-bottom:4px;">Fold {idx+1}</div>
+                    <div style="font-family:'DM Mono',monospace; font-size:15px; color:#e8d89a; font-weight:500;">{score:.2%}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
     # Fold scores display
     st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
@@ -1476,6 +1599,36 @@ elif st.session_state.page == "Performance":
             """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
+def build_prediction_input(batting_team, bowling_team, city, target, score, overs, wickets):
+    """Builds a feature-complete input DataFrame for prediction."""
+    runs_left = target - score
+    balls_left = 120 - (overs * 6)
+    wickets_remaining = 10 - wickets
+    crr = score / overs if overs > 0 else 0
+    rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
+    venue_avg = VENUE_AVG_SCORE.get(city, 160)
+
+    return pd.DataFrame({
+        'batting_team': [batting_team],
+        'bowling_team': [bowling_team],
+        'city': [city],
+        'runs_left': [runs_left],
+        'balls_left': [balls_left],
+        'wickets': [wickets_remaining],
+        'target': [target],
+        'crr': [crr],
+        'rrr': [rrr],
+        # 🆕 NEW FEATURES
+        'run_rate_diff': [rrr - crr],
+        'pressure_index': [rrr * wickets],
+        'resources_left': [(balls_left / 120) * (wickets_remaining / 10)],
+        'is_powerplay': [1 if overs < 6 else 0],
+        'is_death': [1 if overs >= 16 else 0],
+        'last_30_runs': [0],          # unknown at prediction time
+        'last_30_wickets': [0],       # unknown at prediction time
+        'venue_avg_score': [venue_avg]
+    })
 
 # -----------------------------------
 # ANALYSIS PAGE
@@ -1618,17 +1771,11 @@ if st.session_state.page == "Analysis":
     if analyze:
         runs_left, balls_left, crr, rrr = safe_calculate_rates(score, target, overs)
 
-        input_df = pd.DataFrame({
-            'batting_team': [batting_team],
-            'bowling_team': [bowling_team],
-            'city': [selected_city],
-            'runs_left': [runs_left],
-            'balls_left': [balls_left],
-            'wickets': [10 - wickets],
-            'target': [target],
-            'crr': [crr],
-            'rrr': [rrr]
-        })
+        # 🆕 Use helper to build feature-complete input
+        input_df = build_prediction_input(
+            batting_team, bowling_team, selected_city,
+            target, score, overs, wickets
+        )
 
         # ---- VALIDATION LAYER (Issue #118) ----
         is_match_decided = False
@@ -1826,17 +1973,19 @@ if st.session_state.page == "Analysis":
                 c_crr = c_score / (total_balls_done / 6) if total_balls_done > 0 else 0
                 c_rrr = (r_left * 6) / b_left if b_left > 0 else 0
 
-                proj_df = pd.DataFrame({
-                    'batting_team': [batting_team],
-                    'bowling_team': [bowling_team],
-                    'city': ['Mumbai'],
-                    'runs_left': [r_left],
-                    'balls_left': [b_left],
-                    'wickets': [10 - wickets],
-                    'target': [target],
-                    'crr': [c_crr],
-                    'rrr': [c_rrr]
-                })
+                proj_df = build_prediction_input(
+                    batting_team, bowling_team, selected_city,
+                    target, score, ov, wickets
+                )
+                # Override the dynamic values for this ball
+                proj_df['runs_left'] = r_left
+                proj_df['balls_left'] = b_left
+                proj_df['crr'] = c_crr
+                proj_df['rrr'] = c_rrr
+                proj_df['run_rate_diff'] = c_rrr - c_crr
+                proj_df['resources_left'] = (b_left / 120) * ((10 - wickets) / 10)
+                proj_df['is_powerplay'] = 1 if ov < 6 else 0
+                proj_df['is_death'] = 1 if ov >= 16 else 0
 
                 try:
                     proj_proba = pipe.predict_proba(proj_df)[0]
