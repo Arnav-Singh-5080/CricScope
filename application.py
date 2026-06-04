@@ -2093,11 +2093,42 @@ elif st.session_state.page == "FanPulse":
         mood_names = ['ANGRY', 'NEUTRAL', 'EXCITED']
         for i, (emoji, name) in enumerate(zip(moods, mood_names)):
             with btn_cols[i]:
-                if st.button(f"{emoji}<br><span style='font-size:12px'>{name}</span>", key=f"mood_{name}", help=f"Click to vote {name}"):
-                    st.session_state.mood_votes[emoji] += 1
-                    show_toast(f"🎉 You voted {emoji}!")
-                    st.rerun()
-        
+
+                st.markdown(
+            f"""
+            <div style="
+                background: linear-gradient(145deg,#0b1630,#101f45);
+                border:1px solid rgba(255,193,7,0.25);
+                border-radius:16px;
+                padding:18px;
+                text-align:center;
+                box-shadow:0 4px 12px rgba(0,0,0,0.25);
+            ">
+                <div style="font-size:34px;">{emoji}</div>
+
+                <div style="
+                    color:#fbbf24;
+                    font-size:13px;
+                    font-weight:700;
+                    letter-spacing:2px;
+                    margin-top:6px;
+                ">
+                    {name}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        if st.button(
+            "CAST VOTE",
+            key=f"mood_{name}",
+            use_container_width=True
+        ):
+            st.session_state.mood_votes[emoji] += 1
+            show_toast(f"🎉 Vote registered for {name}")
+            st.rerun()
+
         total_votes = sum(st.session_state.mood_votes.values())
         
         # Circular gauge for dominant mood percentage
