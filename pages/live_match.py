@@ -744,7 +744,7 @@ if not user_api_key:
                 pc1, pc2 = st.columns(2, gap="large")
                 with pc1:
                     st.markdown(f"""
-                        <div class="prediction-card">
+                        <div class="prediction-card" aria-live="polite">
                             <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
                                         color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
                                 Batting · {bat_data['abbr']}</div>
@@ -775,7 +775,7 @@ if not user_api_key:
 
                 with pc2:
                     st.markdown(f"""
-                        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
+                        <div aria-live="polite" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
                                     border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;">
                             <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
                                         color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
@@ -947,7 +947,7 @@ else:
                     inning_score = f"{sc.get('r', 0)}/{sc.get('w', 0)}"
                     inning_overs = sc.get("o", 0)
                     st.markdown(f"""
-                        <div class="glass-card" style="text-align:center;">
+                        <div class="glass-card" style="text-align:center;" aria-live="polite">
                             <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
                                         color:rgba(200,185,140,0.4);margin-bottom:8px;">{inning_name}</div>
                             <div style="font-family:'DM Mono',monospace;font-size:28px;
@@ -1007,7 +1007,7 @@ else:
 
                     with pc1:
                         st.markdown(f"""
-                            <div class="prediction-card">
+                            <div class="prediction-card" aria-live="polite">
                                 <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
                                             color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
                                     Chasing · {bat_display['abbr']}</div>
@@ -1041,7 +1041,7 @@ else:
 
                     with pc2:
                         st.markdown(f"""
-                            <div style="background:rgba(255,255,255,0.02);
+                            <div aria-live="polite" style="background:rgba(255,255,255,0.02);
                                         border:1px solid rgba(255,255,255,0.07);
                                         border-radius:24px;padding:36px 32px;">
                                 <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
