@@ -1389,7 +1389,7 @@ if st.session_state.page == "Analysis":
 
         with res_col1:
             st.markdown(
-                f'<div class="prediction-card">'
+                f'<div class="prediction-card" aria-live="polite" aria-atomic="true">'
                 f'<div class="prediction-label">Batting Team · {t1_abbr}</div>'
                 f'<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;font-weight:500;color:#c8b870;margin-bottom:16px;">{t1_name}</div>'
                 f'<div class="win-probability">{bat_pct}%</div>'
@@ -1407,7 +1407,7 @@ if st.session_state.page == "Analysis":
 
         with res_col2:
             st.markdown(
-                f'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;">'
+                f'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;" aria-live="polite" aria-atomic="true">'
                 f'<div class="prediction-label">Bowling Team · {t2_abbr}</div>'
                 f'<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;font-weight:500;color:#c8b870;margin-bottom:16px;">{t2_name}</div>'
                 f'<div style="font-family:\'DM Mono\',monospace;font-size:72px;font-weight:500;color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">{bowl_pct}%</div>'
@@ -1426,7 +1426,7 @@ if st.session_state.page == "Analysis":
         st.markdown(f"""
             <div style="background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.1);
                         border-radius:16px;padding:20px 28px;display:flex;
-                        align-items:center;justify-content:space-between;">
+                        align-items:center;justify-content:space-between;" aria-live="polite" aria-atomic="true">
                 <div>
                     <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
                                 color:rgba(212,175,55,0.35);margin-bottom:6px;">Model Verdict</div>
