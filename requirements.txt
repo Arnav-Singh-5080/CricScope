@@ -8,3 +8,5 @@ seaborn
 plotly
 xgboost
 requests
+voice_input
+groq
