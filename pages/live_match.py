@@ -148,7 +148,7 @@ footer { visibility: hidden; }
     font-size: 10px;
     letter-spacing: 4px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.5);
+    color: rgba(212,175,55,0.75);
     margin-bottom: 14px;
     font-weight: 400;
 }
@@ -166,7 +166,7 @@ footer { visibility: hidden; }
 }
 .hero-subtitle {
     font-size: 15px;
-    color: rgba(220,210,185,0.55);
+    color: rgba(220,210,185,0.85);
     font-weight: 300;
     letter-spacing: 0.3px;
     max-width: 560px;
@@ -275,7 +275,7 @@ footer { visibility: hidden; }
 }
 .match-card .status {
     font-size: 11px;
-    color: rgba(200,185,140,0.45);
+    color: rgba(200,185,140,0.8);
     letter-spacing: 0.5px;
 }
 
@@ -289,7 +289,7 @@ footer { visibility: hidden; }
     font-size: 10px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.4);
+    color: rgba(212,175,55,0.75);
     margin-bottom: 16px;
     font-weight: 500;
 }
@@ -702,7 +702,7 @@ if not user_api_key:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown(
             '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;'
-            'color:rgba(212,175,55,0.5);margin-bottom:12px;font-weight:500;">Teams</div>',
+            'color:rgba(212,175,55,0.75);margin-bottom:12px;font-weight:500;">Teams</div>',
             unsafe_allow_html=True,
         )
         demo_bat = st.selectbox("Batting Team", all_teams, key="demo_bat")
@@ -718,7 +718,7 @@ if not user_api_key:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown(
             '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;'
-            'color:rgba(212,175,55,0.5);margin-bottom:12px;font-weight:500;">Match State</div>',
+            'color:rgba(212,175,55,0.75);margin-bottom:12px;font-weight:500;">Match State</div>',
             unsafe_allow_html=True,
         )
         demo_target = st.number_input("Target", min_value=50, max_value=300, value=185, key="demo_target")
@@ -746,13 +746,13 @@ if not user_api_key:
                     st.markdown(f"""
                         <div class="prediction-card">
                             <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-                                        color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+                                        color:rgba(212,175,55,0.75);margin-bottom:8px;font-weight:500;">
                                 Batting · {bat_data['abbr']}</div>
                             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
                                         font-weight:500;color:#c8b870;margin-bottom:12px;">{demo_bat}</div>
                             <div class="win-probability">{result['batting_win']}%</div>
                             <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                                        color:rgba(200,185,140,0.35);margin-bottom:16px;">Win Probability</div>
+                                        color:rgba(200,185,140,0.8);margin-bottom:16px;">Win Probability</div>
                             <div class="prob-bar-track">
                                 <div class="prob-bar-fill" style="width:{result['batting_win']}%;"></div>
                             </div>
@@ -778,7 +778,7 @@ if not user_api_key:
                         <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
                                     border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;">
                             <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-                                        color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+                                        color:rgba(212,175,55,0.75);margin-bottom:8px;font-weight:500;">
                                 Bowling · {bowl_data['abbr']}</div>
                             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
                                         font-weight:500;color:#c8b870;margin-bottom:12px;">{demo_bowl}</div>
@@ -786,7 +786,7 @@ if not user_api_key:
                                         color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
                                 {result['bowling_win']}%</div>
                             <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                                        color:rgba(200,185,140,0.35);margin-bottom:16px;">Win Probability</div>
+                                        color:rgba(200,185,140,0.8);margin-bottom:16px;">Win Probability</div>
                             <div class="prob-bar-track">
                                 <div style="height:100%;border-radius:100px;background:rgba(200,185,140,0.2);
                                             width:{result['bowling_win']}%;transition:width 0.8s ease;"></div>
@@ -918,7 +918,7 @@ else:
                             <div style="font-family:'Cormorant Garamond',serif;font-size:32px;
                                         font-weight:600;color:{t1_display['color']};letter-spacing:2px;">
                                 {t1_display['abbr']}</div>
-                            <div style="font-size:11px;color:rgba(200,185,140,0.4);margin-top:4px;">
+                            <div style="font-size:11px;color:rgba(200,185,140,0.8);margin-top:4px;">
                                 {team1_name}</div>
                         </div>
                         <div style="font-family:'Cormorant Garamond',serif;font-size:36px;
@@ -927,11 +927,11 @@ else:
                             <div style="font-family:'Cormorant Garamond',serif;font-size:32px;
                                         font-weight:600;color:{t2_display['color']};letter-spacing:2px;">
                                 {t2_display['abbr']}</div>
-                            <div style="font-size:11px;color:rgba(200,185,140,0.4);margin-top:4px;">
+                            <div style="font-size:11px;color:rgba(200,185,140,0.8);margin-top:4px;">
                                 {team2_name}</div>
                         </div>
                     </div>
-                    <div style="font-size:11px;color:rgba(200,185,140,0.3);margin-top:12px;
+                    <div style="font-size:11px;color:rgba(200,185,140,0.8);margin-top:12px;
                                 letter-spacing:0.5px;">🏟 {venue}</div>
                 </div>
             """, unsafe_allow_html=True)
@@ -949,10 +949,10 @@ else:
                     st.markdown(f"""
                         <div class="glass-card" style="text-align:center;">
                             <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
-                                        color:rgba(200,185,140,0.4);margin-bottom:8px;">{inning_name}</div>
+                                        color:rgba(200,185,140,0.8);margin-bottom:8px;">{inning_name}</div>
                             <div style="font-family:'DM Mono',monospace;font-size:28px;
                                         color:#e8d89a;font-weight:500;">{inning_score}</div>
-                            <div style="font-size:12px;color:rgba(200,185,140,0.35);
+                            <div style="font-size:12px;color:rgba(200,185,140,0.8);
                                         margin-top:4px;">({inning_overs} Ov)</div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -1009,14 +1009,14 @@ else:
                         st.markdown(f"""
                             <div class="prediction-card">
                                 <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-                                            color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+                                            color:rgba(212,175,55,0.75);margin-bottom:8px;font-weight:500;">
                                     Chasing · {bat_display['abbr']}</div>
                                 <div style="font-family:'Cormorant Garamond',serif;font-size:20px;
                                             font-weight:500;color:#c8b870;margin-bottom:12px;">
                                     {batting_2nd}</div>
                                 <div class="win-probability">{result['batting_win']}%</div>
                                 <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                                            color:rgba(200,185,140,0.35);margin-bottom:16px;">
+                                            color:rgba(200,185,140,0.8);margin-bottom:16px;">
                                     Win Probability</div>
                                 <div class="prob-bar-track">
                                     <div class="prob-bar-fill" style="width:{result['batting_win']}%;"></div>
@@ -1045,7 +1045,7 @@ else:
                                         border:1px solid rgba(255,255,255,0.07);
                                         border-radius:24px;padding:36px 32px;">
                                 <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-                                            color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+                                            color:rgba(212,175,55,0.75);margin-bottom:8px;font-weight:500;">
                                     Defending · {bowl_display['abbr']}</div>
                                 <div style="font-family:'Cormorant Garamond',serif;font-size:20px;
                                             font-weight:500;color:#c8b870;margin-bottom:12px;">
@@ -1054,7 +1054,7 @@ else:
                                             color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
                                     {result['bowling_win']}%</div>
                                 <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                                            color:rgba(200,185,140,0.35);margin-bottom:16px;">
+                                            color:rgba(200,185,140,0.8);margin-bottom:16px;">
                                     Win Probability</div>
                                 <div class="prob-bar-track">
                                     <div style="height:100%;border-radius:100px;
