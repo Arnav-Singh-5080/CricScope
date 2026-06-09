@@ -135,3 +135,4 @@ def run_agent(user_message: str, chat_history: list[dict]) -> str:
             return "⚠️ Request timed out. Please try again."
         else:
             return f"⚠️ Something went wrong: {str(e)}"
+
