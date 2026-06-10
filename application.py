@@ -951,14 +951,17 @@ def train_model(model_name='logistic'):
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
     
-    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
+    # Count only legal deliveries — wides and no-balls increment the ball
+    # number in deliveries.csv but do not consume a ball from the over
+    df['is_legal_delivery'] = ((df['wide_runs'] == 0) & (df['noball_runs'] == 0)).astype(int)
+    balls_bowled = df.groupby('match_id')['is_legal_delivery'].cumsum()
     df['balls_left'] = (120 - balls_bowled).clip(lower=0)
 
     df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
     df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
     df['wickets'] = 10 - df['wickets']
 
-    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
+    overs_bowled = balls_bowled / 6
     df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
     df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
 
@@ -1026,14 +1029,17 @@ def evaluate_model(model_name='logistic'):
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
     
-    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
+    # Count only legal deliveries — wides and no-balls increment the ball
+    # number in deliveries.csv but do not consume a ball from the over
+    df['is_legal_delivery'] = ((df['wide_runs'] == 0) & (df['noball_runs'] == 0)).astype(int)
+    balls_bowled = df.groupby('match_id')['is_legal_delivery'].cumsum()
     df['balls_left'] = (120 - balls_bowled).clip(lower=0)
 
     df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
     df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
     df['wickets'] = 10 - df['wickets']
 
-    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
+    overs_bowled = balls_bowled / 6
     df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
     df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
 
