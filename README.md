@@ -234,15 +234,26 @@ cricscope/
 │
 ├── assets/
 │   ├── dashboard.png
-│   ├── prediction-page.png
 │   ├── analytics.png
-│   
-├── app.py
+│   ├── win-probability-prediction.png
+│   └── cricscope.gif
+│
+├── pages/
+│   ├── live_match.py
+│   └── stats.py
+│
+├── model/
+│   └── feature_engineering.py
+│
+├── application.py
+├── cricket_agent.py
+├── venue_intelligence.py
+├── voice_input.py
+├── test_calculations.py
 ├── matches.csv
 ├── deliveries.csv
 ├── requirements.txt
 └── README.md
-└── demo_.gif
 ```
 
 <br/>
@@ -302,7 +313,7 @@ pip install -r requirements.txt
 
 ```text
 cricscope/
-├── app.py
+├── application.py
 ├── matches.csv
 └── deliveries.csv
 ```
@@ -312,7 +323,7 @@ cricscope/
 ## 5 — Run Application
 
 ```bash
-streamlit run app.py
+streamlit run application.py
 ```
 
 Visit:
