@@ -96,7 +96,7 @@ source venv/bin/activate
 Install Dependencies
 pip install -r requirements.txt
 Run the Application
-streamlit run app.py
+streamlit run application.py
 
 The app will start locally at:
 
@@ -158,32 +158,3 @@ By contributing to this project, you agree that your contributions will be licen
 Thank you for contributing to CricScope!
 
 Your support and contributions help improve the project for the open-source community. 🚀
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
