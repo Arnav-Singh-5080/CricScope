@@ -937,8 +937,8 @@ def train_model(model_name='logistic'):
         except Exception as e:
             logging.error(f"Failed to load cached model from {model_path}: {e}")
 
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    matches = load_matches()
+    deliveries = load_deliveries()
 
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
 
@@ -1012,8 +1012,8 @@ def train_model(model_name='logistic'):
 def evaluate_model(model_name='logistic'):
     pipe = train_model(model_name)
 
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    matches = load_matches()
+    deliveries = load_deliveries()
 
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
 
@@ -1893,7 +1893,7 @@ if st.session_state.page == "Team Analysis":
 
     team = st.session_state.selected_team
     
-    matches_df = pd.read_csv("matches.csv")
+    matches_df = load_matches()
 
     team_matches = matches_df[
         (matches_df["team1"] == team) |
@@ -1984,7 +1984,7 @@ if st.session_state.page == "Team Analysis":
      # Team Strength Analysis
         st.subheader("📈 Team Statistics")
         
-        deliveries_df = pd.read_csv("deliveries.csv")
+        deliveries_df = load_deliveries()
 
         team_batting = deliveries_df[
         deliveries_df["batting_team"] == team
