@@ -27,6 +27,8 @@ import time
 import os
 import joblib
 import logging
+import os
+import streamlit as st
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -36,6 +38,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
+from explain.explain import generate_explanation
 
 logging.basicConfig(level=logging.INFO)
 
@@ -1628,6 +1631,24 @@ if st.session_state.page == "Analysis":
             'crr': [crr],
             'rrr': [rrr]
         })
+        explanation = generate_explanation(
+            crr,
+            rrr,
+            10 - wickets
+        )
+        st.markdown(f"""
+        <div style="
+            padding: 12px 16px;
+            border: 1px solid #D4AF37;
+            background: rgba(212,175,55,0.08);
+            border-radius: 10px;
+            color: #D4AF37;
+            font-weight: 500;
+        ">
+        {explanation}
+        </div>
+            """, unsafe_allow_html=True)
+        
 
         # ---- VALIDATION LAYER (Issue #118) ----
         is_match_decided = False
