@@ -1,4 +1,6 @@
 import streamlit as st
+if "history" not in st.session_state:
+    st.session_state.history =[] 
 st.markdown("""
 <style>
 
@@ -38,7 +40,9 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 
 logging.basicConfig(level=logging.INFO)
-
+matches = pd.read_csv("matches.csv")
+deliveries = pd.read_csv("deliveries.csv")
+matches['match_name']=matches['team1']+ "vs"+matches['team2']
 
 
 # -----------------------------------
@@ -937,9 +941,7 @@ def train_model(model_name='logistic'):
         except Exception as e:
             logging.error(f"Failed to load cached model from {model_path}: {e}")
 
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
-
+    
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
 
     total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
@@ -1606,15 +1608,30 @@ if st.session_state.page == "Analysis":
             </div>
         """, unsafe_allow_html=True)
 
-    st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
+match_list=matches['match_name'].unique()
+selected_match = st.selectbox("select match", match_list)
+if "history" not in st.session_state:
+    st.session_state.history=[]
+if selected_match:
+        if selected_match in st.session_state.history:
+            st.session_state.history.remove(selected_match)
+        st.session_state.history.append(selected_match)
 
+st.sidebar.title("recent searches")
+for item in reversed(st.session_state.history[-10:]):
+    st.sidebar.write(item)
+
+for i,item in enumerate(reversed(st.session_state.history[-10:])):
+    if st.sidebar.button(item,key=f"history_{i}"):
+        st.success(f"Selected:{item}")
     # ---- ANALYZE BUTTON ----
-    st.markdown('<div class="analyze-btn">', unsafe_allow_html=True)
-    analyze = st.button("Run Analysis", key="analyze_btn", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div class="analyze-btn">', unsafe_allow_html=True)
+analyze = st.button("Run Analysis", key="analyze_btn_main", use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
     # ---- PREDICTION OUTPUT ----
-    if analyze:
+if analyze:
         runs_left, balls_left, crr, rrr = safe_calculate_rates(score, target, overs)
 
         input_df = pd.DataFrame({
@@ -1876,7 +1893,7 @@ if st.session_state.page == "Analysis":
             use_container_width=True
         )
 
-    st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
+st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
     
 # -----------------------------------
 # TEAM ANALYSIS PAGE
