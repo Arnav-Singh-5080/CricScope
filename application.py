@@ -27,6 +27,7 @@ import time
 import os
 import joblib
 import logging
+import json
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -927,16 +928,8 @@ def get_model(model_name='logistic'):
         return XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False, eval_metric='logloss')
     return LogisticRegression(max_iter=1000)
 
-@st.cache_resource
-def train_model(model_name='logistic'):
-    model_path = f"{model_name}_model.pkl"
-
-    if os.path.exists(model_path):
-        try:
-            return joblib.load(model_path)
-        except Exception as e:
-            logging.error(f"Failed to load cached model from {model_path}: {e}")
-
+@st.cache_data
+def load_and_preprocess_data():
     matches = pd.read_csv("matches.csv")
     deliveries = pd.read_csv("deliveries.csv")
 
@@ -973,9 +966,20 @@ def train_model(model_name='logistic'):
     X = final_df.drop('result', axis=1)
     y = final_df['result']
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    return train_test_split(X, y, test_size=0.2, random_state=42)
+
+@st.cache_resource
+def train_model(model_name='logistic'):
+    model_path = f"{model_name}_model.pkl"
+    metrics_path = f"{model_name}_metrics.json"
+
+    if os.path.exists(model_path) and os.path.exists(metrics_path):
+        try:
+            return joblib.load(model_path)
+        except Exception as e:
+            logging.error(f"Failed to load cached model from {model_path}: {e}")
+
+    X_train, X_test, y_train, y_test = load_and_preprocess_data()
 
     preprocessor = ColumnTransformer([
         ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
@@ -987,17 +991,37 @@ def train_model(model_name='logistic'):
         ('model', get_model(model_name))
     ])
 
-    # Fit pipeline before evaluations to avoid UnboundLocalError
     pipe.fit(X_train, y_train)
     predictions = pipe.predict(X_test)
 
-    # Logging evaluations safely
     try:
         scores = cross_val_score(pipe, X_train, y_train, cv=5)
+        accuracy = accuracy_score(y_test, predictions)
+        precision = precision_score(y_test, predictions)
+        recall = recall_score(y_test, predictions)
+        f1 = f1_score(y_test, predictions)
+        tn, fp, fn, tp = confusion_matrix(y_test, predictions).ravel()
+        
+        metrics = {
+            'accuracy': float(accuracy),
+            'precision': float(precision),
+            'recall': float(recall),
+            'f1': float(f1),
+            'tn': int(tn),
+            'fp': int(fp),
+            'fn': int(fn),
+            'tp': int(tp),
+            'cv_mean': float(scores.mean()),
+            'cv_std': float(scores.std()),
+            'cv_scores': scores.tolist()
+        }
+        with open(metrics_path, 'w') as f:
+            json.dump(metrics, f)
+            
         logging.info(f"Model trained: {model_name}")
         logging.info(f"Cross Validation Scores: {scores}")
         logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
-        logging.info(f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}")
+        logging.info(f"Test Accuracy: {accuracy:.4f}")
     except Exception as eval_error:
         logging.warning(f"Evaluation failed: {eval_error}")
 
@@ -1010,74 +1034,17 @@ def train_model(model_name='logistic'):
 
 @st.cache_resource
 def evaluate_model(model_name='logistic'):
-    pipe = train_model(model_name)
-
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
-
-    df = deliveries.merge(matches, left_on='match_id', right_on='id')
-
-    total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
-    total_df.rename(columns={'total_runs': 'target'}, inplace=True)
-
-    df = df.merge(total_df, on='match_id')
-    df = df[df['inning'] == 2]
-
-    df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
-    df['runs_left'] = df['target'] - df['current_score']
+    metrics_path = f"{model_name}_metrics.json"
     
-    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
-    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
-
-    df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
-    df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
-    df['wickets'] = 10 - df['wickets']
-
-    overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
-    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
-    df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
-
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
-
-    final_df = df[['batting_team', 'bowling_team', 'city',
-                   'runs_left', 'balls_left', 'wickets',
-                   'target', 'crr', 'rrr', 'result']]
-    final_df.dropna(inplace=True)
-
-    X = final_df.drop('result', axis=1)
-    y = final_df['result']
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-
-    predictions = pipe.predict(X_test)
-
-    accuracy = accuracy_score(y_test, predictions)
-    precision = precision_score(y_test, predictions)
-    recall = recall_score(y_test, predictions)
-    f1 = f1_score(y_test, predictions)
-
-    tn, fp, fn, tp = confusion_matrix(y_test, predictions).ravel()
-
-    scores = cross_val_score(pipe, X_train, y_train, cv=5)
-    cv_mean = scores.mean()
-    cv_std = scores.std()
-
-    return {
-        'accuracy': float(accuracy),
-        'precision': float(precision),
-        'recall': float(recall),
-        'f1': float(f1),
-        'tn': int(tn),
-        'fp': int(fp),
-        'fn': int(fn),
-        'tp': int(tp),
-        'cv_mean': float(cv_mean),
-        'cv_std': float(cv_std),
-        'cv_scores': scores.tolist()
-    }
+    if not os.path.exists(metrics_path):
+        train_model(model_name)
+        
+    try:
+        with open(metrics_path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logging.error(f"Failed to load metrics: {e}")
+        return {}
 
 selected_model_key = st.session_state.get('selected_model', 'logistic')
 pipe = train_model(selected_model_key)
