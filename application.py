@@ -32,7 +32,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, GroupShuffleSplit, GroupKFold
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
@@ -965,17 +965,21 @@ def train_model(model_name='logistic'):
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
-    final_df = df[['batting_team', 'bowling_team', 'city',
+    final_df = df[['match_id', 'batting_team', 'bowling_team', 'city',
                    'runs_left', 'balls_left', 'wickets',
                    'target', 'crr', 'rrr', 'result']]
     final_df.dropna(inplace=True)
 
-    X = final_df.drop('result', axis=1)
+    X = final_df.drop(['result', 'match_id'], axis=1)
     y = final_df['result']
+    groups = final_df['match_id']
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    gss = GroupShuffleSplit(test_size=0.2, n_splits=1, random_state=42)
+    train_idx, test_idx = next(gss.split(X, y, groups))
+    
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    groups_train = groups.iloc[train_idx]
 
     preprocessor = ColumnTransformer([
         ('cat', OneHotEncoder(handle_unknown='ignore'), ['batting_team', 'bowling_team', 'city']),
@@ -993,7 +997,8 @@ def train_model(model_name='logistic'):
 
     # Logging evaluations safely
     try:
-        scores = cross_val_score(pipe, X_train, y_train, cv=5)
+        gkf = GroupKFold(n_splits=5)
+        scores = cross_val_score(pipe, X_train, y_train, cv=gkf, groups=groups_train)
         logging.info(f"Model trained: {model_name}")
         logging.info(f"Cross Validation Scores: {scores}")
         logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
@@ -1040,17 +1045,21 @@ def evaluate_model(model_name='logistic'):
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
-    final_df = df[['batting_team', 'bowling_team', 'city',
+    final_df = df[['match_id', 'batting_team', 'bowling_team', 'city',
                    'runs_left', 'balls_left', 'wickets',
                    'target', 'crr', 'rrr', 'result']]
     final_df.dropna(inplace=True)
 
-    X = final_df.drop('result', axis=1)
+    X = final_df.drop(['result', 'match_id'], axis=1)
     y = final_df['result']
+    groups = final_df['match_id']
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    gss = GroupShuffleSplit(test_size=0.2, n_splits=1, random_state=42)
+    train_idx, test_idx = next(gss.split(X, y, groups))
+    
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    groups_train = groups.iloc[train_idx]
 
     predictions = pipe.predict(X_test)
 
@@ -1061,7 +1070,8 @@ def evaluate_model(model_name='logistic'):
 
     tn, fp, fn, tp = confusion_matrix(y_test, predictions).ravel()
 
-    scores = cross_val_score(pipe, X_train, y_train, cv=5)
+    gkf = GroupKFold(n_splits=5)
+    scores = cross_val_score(pipe, X_train, y_train, cv=gkf, groups=groups_train)
     cv_mean = scores.mean()
     cv_std = scores.std()
 
