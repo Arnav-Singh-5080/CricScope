@@ -1,35 +1,30 @@
 import unittest
 import pandas as pd
 import numpy as np
+from utils import (
+    calculate_prediction_inputs, 
+    resolve_team_name, 
+    resolve_city_name, 
+    parse_overs_to_balls
+)
 
-# Helper functions replicating the implementation logic in application.py
+# Helper functions replicating the pandas vectorized logic to verify data engineering consistency
 def calculate_balls_left_df(over, ball):
-    # Replicates pandas training logic
     df = pd.DataFrame({'over': over, 'ball': ball})
     balls_bowled = ((df['over'] - 1) * 6) + df['ball']
     df['balls_left'] = (120 - balls_bowled).clip(lower=0)
     return df['balls_left'].tolist()
 
 def calculate_crr_df(current_score, over, ball):
-    # Replicates pandas training logic
     df = pd.DataFrame({'current_score': current_score, 'over': over, 'ball': ball})
     overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
     df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
     return df['crr'].tolist()
 
 def calculate_rrr_df(runs_left, balls_left):
-    # Replicates pandas training logic
     df = pd.DataFrame({'runs_left': runs_left, 'balls_left': balls_left})
     df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
     return df['rrr'].tolist()
-
-def calculate_prediction_inputs(target, score, overs):
-    # Replicates streamlit/prediction logic
-    runs_left = target - score
-    balls_left = max(120 - (overs * 6), 0)
-    crr = score / overs if overs > 0 else 0.0
-    rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
-    return runs_left, balls_left, crr, rrr
 
 
 class TestCricScopeCalculations(unittest.TestCase):
@@ -67,7 +62,7 @@ class TestCricScopeCalculations(unittest.TestCase):
 
     def test_prediction_inputs_normal(self):
         # 10 overs completed, target 180, score 80
-        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(180, 80, 10)
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(180, 80, 10.0)
         self.assertEqual(runs_left, 100)
         self.assertEqual(balls_left, 60)
         self.assertEqual(crr, 8.0)
@@ -75,18 +70,41 @@ class TestCricScopeCalculations(unittest.TestCase):
 
     def test_prediction_inputs_boundaries(self):
         # 0 overs completed (start of innings)
-        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(180, 0, 0)
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(180, 0, 0.0)
         self.assertEqual(runs_left, 180)
         self.assertEqual(balls_left, 120)
         self.assertEqual(crr, 0.0)
         self.assertEqual(rrr, 9.0)
 
         # 20 overs completed (completed innings)
-        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(180, 150, 20)
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(180, 150, 20.0)
         self.assertEqual(runs_left, 30)
         self.assertEqual(balls_left, 0)
         self.assertEqual(crr, 7.5)
         self.assertEqual(rrr, 0.0)
+
+    def test_overs_to_balls_parsing(self):
+        # Normal fractional over parsing (e.g. 14.2 overs -> 14*6 + 2 = 86 balls)
+        self.assertEqual(parse_overs_to_balls(14.2), 86)
+        self.assertEqual(parse_overs_to_balls(0.0), 0)
+        self.assertEqual(parse_overs_to_balls(20.0), 120)
+        self.assertEqual(parse_overs_to_balls(19.5), 119)
+
+    def test_team_resolving(self):
+        self.assertEqual(resolve_team_name("CSK"), "Chennai Super Kings")
+        self.assertEqual(resolve_team_name("Royal Challengers Bangalore"), "Royal Challengers Bangalore")
+        self.assertEqual(resolve_team_name("RCB"), "Royal Challengers Bangalore")
+        self.assertEqual(resolve_team_name("Unknown Team"), "Unknown Team")
+
+    def test_city_resolving(self):
+        # Standard venues with commas
+        self.assertEqual(resolve_city_name("MA Chidambaram Stadium, Chepauk, Chennai"), "Chennai")
+        # Comma-less venues with stadium indicators
+        self.assertEqual(resolve_city_name("Wankhede Stadium"), "Mumbai")
+        self.assertEqual(resolve_city_name("Eden Gardens"), "Kolkata")
+        self.assertEqual(resolve_city_name("Sawai Mansingh Stadium"), "Jaipur")
+        # Unknown fallback
+        self.assertEqual(resolve_city_name("Some random stadium"), "Mumbai")
 
 
 if __name__ == '__main__':

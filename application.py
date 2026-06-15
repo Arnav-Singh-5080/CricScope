@@ -27,6 +27,7 @@ import time
 import os
 import joblib
 import logging
+from utils import calculate_prediction_inputs
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -1145,11 +1146,7 @@ def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, ta
     return pd.DataFrame(records)
 
 def safe_calculate_rates(score, target, overs):
-    runs_left = target - score
-    balls_left = max(120 - (overs * 6), 0)
-    crr = score / overs if overs > 0 else 0.0
-    rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
-    return runs_left, balls_left, crr, rrr
+    return calculate_prediction_inputs(target, score, overs)
 
 # -----------------------------------
 # SIDEBAR
