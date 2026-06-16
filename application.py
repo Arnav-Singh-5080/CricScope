@@ -1423,41 +1423,25 @@ elif st.session_state.page == "Performance":
                 </div>
             </div>
         """, unsafe_allow_html=True)
-        
+
     with col_cm:
-        st.markdown(f"""
-            <div class="matrix-wrapper">
-                <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
-                <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
-                    A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
-                </div>
-                <div class="matrix-grid">
-                    <div class="matrix-header">Actual \\ Pred</div>
-                    <div class="matrix-header">Bowl Win (0)</div>
-                    <div class="matrix-header">Bat Win (1)</div>
-                    
-                    <div class="matrix-label">Bowl Win (0)</div>
-                    <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tn']:,}</div>
-                        <div class="matrix-cell-lbl">True Neg</div>
-                    </div>
-                    <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fp']:,}</div>
-                        <div class="matrix-cell-lbl">False Pos</div>
-                    </div>
-                    
-                    <div class="matrix-label">Bat Win (1)</div>
-                    <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fn']:,}</div>
-                        <div class="matrix-cell-lbl">False Neg</div>
-                    </div>
-                    <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tp']:,}</div>
-                        <div class="matrix-cell-lbl">True Pos</div>
-                    </div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
+    st.markdown("### Confusion Matrix")
+
+    h1, h2, h3 = st.columns([1,1,1])
+    h1.write("")
+    h2.write("Pred 0")
+    h3.write("Pred 1")
+
+    r1, r2, r3 = st.columns([1,1,1])
+    r1.write("Actual 0")
+    r2.metric("TN", metrics["tn"])
+    r3.metric("FP", metrics["fp"])
+
+    r4, r5, r6 = st.columns([1,1,1])
+    r4.write("Actual 1")
+    r5.metric("FN", metrics["fn"])
+    r6.metric("TP", metrics["tp"])
+  
 
     # Fold scores display
     st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
