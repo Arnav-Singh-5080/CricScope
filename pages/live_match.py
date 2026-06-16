@@ -730,6 +730,24 @@ if not user_api_key:
     if st.button("🔮 Predict Win Probability", key="demo_predict", use_container_width=True):
         demo_runs, demo_wickets = parse_score_string(demo_score_str)
         if demo_runs is not None and demo_wickets is not None:
+            # ---- INPUT VALIDATION LAYER ----
+            errors = []
+            if demo_target <= 0:
+                errors.append("❌ Target score must be greater than 0.")
+            if demo_runs < 0:
+                errors.append("❌ Current score cannot be negative.")
+            if demo_runs >= demo_target:
+                errors.append("❌ Current score cannot be greater than or equal to the target.")
+            if demo_wickets < 0 or demo_wickets > 10:
+                errors.append("❌ Wickets fallen must be between 0 and 10.")
+            if demo_overs < 0 or demo_overs > 20:
+                errors.append("❌ Overs completed must be between 0 and 20.")
+                
+            if errors:
+                for msg in errors:
+                    st.error(msg)
+                st.stop()
+
             result = compute_prediction(
                 demo_bat, demo_bowl, demo_venue,
                 demo_target, demo_runs, demo_wickets, demo_overs,

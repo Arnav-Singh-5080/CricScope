@@ -1615,6 +1615,24 @@ if st.session_state.page == "Analysis":
 
     # ---- PREDICTION OUTPUT ----
     if analyze:
+        # ---- INPUT VALIDATION LAYER ----
+        errors = []
+        if target <= 0:
+            errors.append("❌ Target score must be greater than 0.")
+        if score < 0:
+            errors.append("❌ Current score cannot be negative.")
+        if score >= target:
+            errors.append("❌ Current score cannot be greater than or equal to the target.")
+        if wickets < 0 or wickets > 10:
+            errors.append("❌ Wickets fallen must be between 0 and 10.")
+        if overs < 0 or overs > 20:
+            errors.append("❌ Overs completed must be between 0 and 20.")
+            
+        if errors:
+            for msg in errors:
+                st.error(msg)
+            st.stop()
+
         runs_left, balls_left, crr, rrr = safe_calculate_rates(score, target, overs)
 
         input_df = pd.DataFrame({
