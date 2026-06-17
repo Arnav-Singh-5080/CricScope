@@ -1432,57 +1432,58 @@ elif st.session_state.page == "Performance":
             </div>
         """), unsafe_allow_html=True)
         
-    with col_cm:
-        st.markdown(textwrap.dedent(f"""
-            <div class="matrix-wrapper">
-                <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
-                <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
-                    A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
-                </div>
-                <div class="matrix-grid">
-                    <div class="matrix-header">Actual \\ Pred</div>
-                    <div class="matrix-header">Bowl Win (0)</div>
-                    <div class="matrix-header">Bat Win (1)</div>
-                    
-                    <div class="matrix-label">Bowl Win (0)</div>
-                    <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tn']:,}</div>
-                        <div class="matrix-cell-lbl">True Neg</div>
-                    </div>
-                    <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fp']:,}</div>
-                        <div class="matrix-cell-lbl">False Pos</div>
-                    </div>
-                    
-                    <div class="matrix-label">Bat Win (1)</div>
-                    <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fn']:,}</div>
-                        <div class="matrix-cell-lbl">False Neg</div>
-                    </div>
-                    <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tp']:,}</div>
-                        <div class="matrix-cell-lbl">True Pos</div>
-                    </div>
-                </div>
-            </div>
-        """), unsafe_allow_html=True)
+with col_cm:
+        # Keep the content inside the string flat, but notice how the Python variable block is indented!
+        matrix_html = (
+            '<div class="matrix-wrapper">\n'
+            '<div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>\n'
+            '<div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">\n'
+            'A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.\n'
+            '</div>\n'
+            '<div class="matrix-grid">\n'
+            '<div class="matrix-header">Actual \\\\ Pred</div>\n'
+            '<div class="matrix-header">Bowl Win (0)</div>\n'
+            '<div class="matrix-header">Bat Win (1)</div>\n'
+            '<div class="matrix-label">Bowl Win (0)</div>\n'
+            '<div class="matrix-cell correct">\n'
+            f'<div class="matrix-value">{metrics["tn"]:,}</div>\n'
+            '<div class="matrix-cell-lbl">True Neg</div>\n'
+            '</div>\n'
+            '<div class="matrix-cell incorrect">\n'
+            f'<div class="matrix-value">{metrics["fp"]:,}</div>\n'
+            '<div class="matrix-cell-lbl">False Pos</div>\n'
+            '</div>\n'
+            '<div class="matrix-label">Bat Win (1)</div>\n'
+            '<div class="matrix-cell incorrect">\n'
+            f'<div class="matrix-value">{metrics["fn"]:,}</div>\n'
+            '<div class="matrix-cell-lbl">False Neg</div>\n'
+            '</div>\n'
+            '<div class="matrix-cell correct">\n'
+            f'<div class="matrix-value">{metrics["tp"]:,}</div>\n'
+            '<div class="matrix-cell-lbl">True Pos</div>\n'
+            '</div>\n'
+            '</div>\n'
+            '</div>'
+        )
+        st.markdown(matrix_html, unsafe_allow_html=True)
 
-    # Fold scores display
-    st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="input-label" style="font-size:11px; margin-bottom: 12px; padding-left: 4px;">Stratified 5-Fold Scores</div>', unsafe_allow_html=True)
-    
-    cv_cols = st.columns(5)
-    for idx, score in enumerate(metrics['cv_scores']):
-        with cv_cols[idx]:
-            st.markdown(textwrap.dedent(f"""
-                <div style="background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.05);
-                            border-radius:10px; padding:12px; text-align:center;">
-                    <div style="font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(220,210,185,0.35); margin-bottom:4px;">Fold {idx+1}</div>
-                    <div style="font-family:'DM Mono',monospace; font-size:15px; color:#e8d89a; font-weight:500;">{score:.2%}</div>
-                </div>
-            """), unsafe_allow_html=True)
+# Fold scores display
+        st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="input-label" style="font-size:11px; margin-bottom: 12px; padding-left: 4px;">Stratified 5-Fold Scores</div>', unsafe_allow_html=True)
+        
+        cv_cols = st.columns(5)
+        for idx, score in enumerate(metrics['cv_scores']):
+            with cv_cols[idx]:
+                cv_html = (
+                    '<div style="background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.05); '
+                    'border-radius:10px; padding:12px; text-align:center;">\n'
+                    f'<div style="font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(220,210,185,0.35); margin-bottom:4px;">Fold {idx+1}</div>\n'
+                    f'<div style="font-family:\'DM Mono\',monospace; font-size:15px; color:#e8d89a; font-weight:500;">{score:.2%}</div>\n'
+                    '</div>'
+                )
+                st.markdown(cv_html, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # -----------------------------------
 # ANALYSIS PAGE
