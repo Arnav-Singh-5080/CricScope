@@ -13,48 +13,7 @@ import pandas as pd
 import numpy as np
 import requests
 import time
-
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-
-# ───────────────────────────────────────────
-#  PAGE CONFIG
-# ───────────────────────────────────────────
-st.set_page_config(
-    page_title="CricScope · Live",
-    page_icon="🔴",
-    layout="wide",
-)
-
-# ───────────────────────────────────────────
-#  AUTO-REFRESH (pure JS, no extra dependency)
-# ───────────────────────────────────────────
-REFRESH_INTERVAL_MS = 30_000  # 30 seconds
-
-if "live_auto_refresh" not in st.session_state:
-    st.session_state.live_auto_refresh = False
-
-# Inject a self-refreshing script when auto-refresh is toggled on
-if st.session_state.live_auto_refresh:
-    st.markdown(
-        f"""
-        <script>
-            (function() {{
-                if (window._cricscope_timer) clearTimeout(window._cricscope_timer);
-                window._cricscope_timer = setTimeout(function() {{
-                    window.parent.document
-                        .querySelectorAll('button[kind="secondary"]')
-                        .forEach(function(btn) {{
-                            if (btn.innerText.trim() === '↻ Force Refresh') btn.click();
-                        }});
-                }}, {REFRESH_INTERVAL_MS});
-            }})();
-        </script>
-        """,
-        unsafe_allow_html=True,
-    )
+import logging
 
 # ───────────────────────────────────────────
 #  LUXURY CSS (matches main app aesthetic)
@@ -595,8 +554,10 @@ def compute_prediction(batting_team, bowling_team, venue, target,
             "wickets_in_hand": wickets_in_hand,
         }
 
-    except Exception:
-        return None
+    except Exception as exc:
+        # Surface the real failure to the caller instead of hiding it behind a silent None.
+        logging.exception("Live match prediction failed")
+        raise RuntimeError(str(exc)) from exc
 
 
 # ───────────────────────────────────────────
@@ -739,112 +700,117 @@ if not user_api_key:
     if st.button("🔮 Predict Win Probability", key="demo_predict", use_container_width=True):
         demo_runs, demo_wickets = parse_score_string(demo_score_str)
         if demo_runs is not None and demo_wickets is not None:
-            result = compute_prediction(
-                demo_bat, demo_bowl, demo_venue,
-                demo_target, demo_runs, demo_wickets, demo_overs,
-            )
-            if result:
-                st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
-                st.markdown('<div class="section-label">Prediction Output</div>', unsafe_allow_html=True)
+                try:
+                    result = compute_prediction(
+                        demo_bat, demo_bowl, demo_venue,
+                        demo_target, demo_runs, demo_wickets, demo_overs,
+                    )
+                except RuntimeError as exc:
+                    st.error(f"Could not compute prediction: {exc}")
+                    result = None
 
-                bat_data = TEAM_DISPLAY.get(demo_bat, {"abbr": "BAT", "color": "#d4af37"})
-                bowl_data = TEAM_DISPLAY.get(demo_bowl, {"abbr": "BOWL", "color": "#888"})
+                if result:
+                    st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
+                    st.markdown('<div class="section-label">Prediction Output</div>', unsafe_allow_html=True)
 
-                pc1, pc2 = st.columns(2, gap="large")
-                with pc1:
-                    st.markdown(f"""
-                        <div class="prediction-card">
-                            <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-                                        color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
-                                Batting · {bat_data['abbr']}</div>
-                            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                                        font-weight:500;color:#c8b870;margin-bottom:12px;">{demo_bat}</div>
-                            <div class="win-probability">{result['batting_win']}%</div>
-                            <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                                        color:rgba(200,185,140,0.35);margin-bottom:16px;">Win Probability</div>
-                            <div class="prob-bar-track">
-                                <div class="prob-bar-fill" style="width:{result['batting_win']}%;"></div>
+                    bat_data = TEAM_DISPLAY.get(demo_bat, {"abbr": "BAT", "color": "#d4af37"})
+                    bowl_data = TEAM_DISPLAY.get(demo_bowl, {"abbr": "BOWL", "color": "#888"})
+
+                    pc1, pc2 = st.columns(2, gap="large")
+                    with pc1:
+                        st.markdown(f"""
+                            <div class="prediction-card">
+                                <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
+                                            color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+                                    Batting · {bat_data['abbr']}</div>
+                                <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                                            font-weight:500;color:#c8b870;margin-bottom:12px;">{demo_bat}</div>
+                                <div class="win-probability">{result['batting_win']}%</div>
+                                <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
+                                            color:rgba(200,185,140,0.35);margin-bottom:16px;">Win Probability</div>
+                                <div class="prob-bar-track">
+                                    <div class="prob-bar-fill" style="width:{result['batting_win']}%;"></div>
+                                </div>
+                                <div style="display:flex;gap:10px;margin-top:18px;">
+                                    <div class="metric-chip">
+                                        <div class="metric-chip-value">{demo_runs}</div>
+                                        <div class="metric-chip-label">Score</div>
+                                    </div>
+                                    <div class="metric-chip">
+                                        <div class="metric-chip-value">{result['runs_left']}</div>
+                                        <div class="metric-chip-label">Needed</div>
+                                    </div>
+                                    <div class="metric-chip">
+                                        <div class="metric-chip-value">{result['balls_left']}</div>
+                                        <div class="metric-chip-label">Balls Left</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div style="display:flex;gap:10px;margin-top:18px;">
-                                <div class="metric-chip">
-                                    <div class="metric-chip-value">{demo_runs}</div>
-                                    <div class="metric-chip-label">Score</div>
+                        """, unsafe_allow_html=True)
+
+                    with pc2:
+                        st.markdown(f"""
+                            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
+                                        border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;">
+                                <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
+                                            color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+                                    Bowling · {bowl_data['abbr']}</div>
+                                <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                                            font-weight:500;color:#c8b870;margin-bottom:12px;">{demo_bowl}</div>
+                                <div style="font-family:'DM Mono',monospace;font-size:64px;font-weight:500;
+                                            color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
+                                    {result['bowling_win']}%</div>
+                                <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
+                                            color:rgba(200,185,140,0.35);margin-bottom:16px;">Win Probability</div>
+                                <div class="prob-bar-track">
+                                    <div style="height:100%;border-radius:100px;background:rgba(200,185,140,0.2);
+                                                width:{result['bowling_win']}%;transition:width 0.8s ease;"></div>
                                 </div>
-                                <div class="metric-chip">
-                                    <div class="metric-chip-value">{result['runs_left']}</div>
-                                    <div class="metric-chip-label">Needed</div>
+                                <div style="display:flex;gap:10px;margin-top:18px;">
+                                    <div class="metric-chip">
+                                        <div class="metric-chip-value">{result['crr']}</div>
+                                        <div class="metric-chip-label">CRR</div>
+                                    </div>
+                                    <div class="metric-chip">
+                                        <div class="metric-chip-value">{result['rrr']}</div>
+                                        <div class="metric-chip-label">RRR</div>
+                                    </div>
+                                    <div class="metric-chip">
+                                        <div class="metric-chip-value">{result['wickets_in_hand']}</div>
+                                        <div class="metric-chip-label">Wickets</div>
+                                    </div>
                                 </div>
-                                <div class="metric-chip">
-                                    <div class="metric-chip-value">{result['balls_left']}</div>
-                                    <div class="metric-chip-label">Balls Left</div>
-                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
+
+                    # Verdict
+                    verdict = demo_bat if result['batting_win'] > 50 else demo_bowl
+                    conf = max(result['batting_win'], result['bowling_win'])
+                    conf_label = "High" if conf > 75 else "Moderate" if conf > 55 else "Close"
+
+                    st.markdown(f"""
+                        <div style="margin-top:16px;background:rgba(212,175,55,0.03);
+                                    border:1px solid rgba(212,175,55,0.1);border-radius:16px;
+                                    padding:20px 28px;display:flex;align-items:center;
+                                    justify-content:space-between;">
+                            <div>
+                                <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+                                            color:rgba(212,175,55,0.35);margin-bottom:6px;">Model Verdict</div>
+                                <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
+                                            font-weight:500;color:#f0e8cc;">{verdict} favoured to win</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+                                            color:rgba(212,175,55,0.35);margin-bottom:6px;">Confidence</div>
+                                <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
+                                    {conf_label} · {conf}%</div>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
-
-                with pc2:
-                    st.markdown(f"""
-                        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
-                                    border-radius:24px;padding:36px 32px;position:relative;overflow:hidden;">
-                            <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-                                        color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
-                                Bowling · {bowl_data['abbr']}</div>
-                            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                                        font-weight:500;color:#c8b870;margin-bottom:12px;">{demo_bowl}</div>
-                            <div style="font-family:'DM Mono',monospace;font-size:64px;font-weight:500;
-                                        color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
-                                {result['bowling_win']}%</div>
-                            <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                                        color:rgba(200,185,140,0.35);margin-bottom:16px;">Win Probability</div>
-                            <div class="prob-bar-track">
-                                <div style="height:100%;border-radius:100px;background:rgba(200,185,140,0.2);
-                                            width:{result['bowling_win']}%;transition:width 0.8s ease;"></div>
-                            </div>
-                            <div style="display:flex;gap:10px;margin-top:18px;">
-                                <div class="metric-chip">
-                                    <div class="metric-chip-value">{result['crr']}</div>
-                                    <div class="metric-chip-label">CRR</div>
-                                </div>
-                                <div class="metric-chip">
-                                    <div class="metric-chip-value">{result['rrr']}</div>
-                                    <div class="metric-chip-label">RRR</div>
-                                </div>
-                                <div class="metric-chip">
-                                    <div class="metric-chip-value">{result['wickets_in_hand']}</div>
-                                    <div class="metric-chip-label">Wickets</div>
-                                </div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-
-                # Verdict
-                verdict = demo_bat if result['batting_win'] > 50 else demo_bowl
-                conf = max(result['batting_win'], result['bowling_win'])
-                conf_label = "High" if conf > 75 else "Moderate" if conf > 55 else "Close"
-
-                st.markdown(f"""
-                    <div style="margin-top:16px;background:rgba(212,175,55,0.03);
-                                border:1px solid rgba(212,175,55,0.1);border-radius:16px;
-                                padding:20px 28px;display:flex;align-items:center;
-                                justify-content:space-between;">
-                        <div>
-                            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                        color:rgba(212,175,55,0.35);margin-bottom:6px;">Model Verdict</div>
-                            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
-                                        font-weight:500;color:#f0e8cc;">{verdict} favoured to win</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                        color:rgba(212,175,55,0.35);margin-bottom:6px;">Confidence</div>
-                            <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
-                                {conf_label} · {conf}%</div>
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.error("Could not compute prediction. Team names may not match the training data.")
-        else:
-            st.error("Invalid score format. Use format like '124/3'.")
+                else:
+                    st.error("Could not compute prediction. Team names may not match the training data.")
+    else:
+        st.error("Invalid score format. Use format like '124/3'.")
 
 else:
     # ── LIVE API MODE ──
@@ -994,10 +960,14 @@ else:
                 # Extract city from venue
                 city = venue.split(",")[-1].strip() if venue else "Mumbai"
 
-                result = compute_prediction(
-                    batting_2nd, bowling_2nd, city,
-                    target, current_score, wickets_fallen, overs_bowled,
-                )
+                try:
+                    result = compute_prediction(
+                        batting_2nd, bowling_2nd, city,
+                        target, current_score, wickets_fallen, overs_bowled,
+                    )
+                except RuntimeError as exc:
+                    st.error(f"Could not compute prediction: {exc}")
+                    result = None
 
                 if result:
                     st.markdown('<div class="section-label" style="margin-top:16px;">Win Prediction</div>',

@@ -96,7 +96,11 @@ source venv/bin/activate
 Install Dependencies
 pip install -r requirements.txt
 Run the Application
-streamlit run app.py
+streamlit run application.py
+
+Note: `application.py` is the repo's current Streamlit entrypoint, so using it avoids a dead-end for first-time contributors.
+
+Required datasets: place `matches.csv` and `deliveries.csv` in the project root before launching the app. The dataset source and file purpose are documented in `dataset_info.txt`.
 
 The app will start locally at:
 
