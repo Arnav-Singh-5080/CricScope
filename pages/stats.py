@@ -1,12 +1,17 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
+from theme_utils import init_theme, render_sidebar_theme_toggle, render_theme_bridge
 #  page config 
 st.set_page_config(
     page_title="CricScope · Stats",
     page_icon="📊",
     layout="wide",
 )
+
+init_theme()
+render_theme_bridge()
+render_sidebar_theme_toggle("theme_toggle_stats")
 
 # shared CSS (matches application.py dark-gold aesthetic) 
 st.markdown("""
@@ -203,6 +208,121 @@ hr {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: #0c0c0c; }
 ::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); border-radius: 4px; }
+
+/* ---- LIGHT THEME ---- */
+[data-testid="stAppViewContainer"][data-theme="light"],
+[data-testid="stAppViewContainer"][data-theme="light"] .stApp {
+    background: #faf7f0 !important;
+    background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212,175,55,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(180,140,60,0.07) 0%, transparent 50%) !important;
+    color: #1a1208 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] section[data-testid="stSidebar"] {
+    background: #f0ead8 !important;
+    border-right: 1px solid rgba(160,120,32,0.2) !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .theme-toggle-btn button {
+    background: rgba(180,140,40,0.12) !important;
+    border: 1px solid rgba(160,120,32,0.28) !important;
+    border-radius: 10px !important;
+    color: #5d4300 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .hero-wrapper {
+    border-bottom-color: rgba(160,120,32,0.15) !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .hero-title {
+    background: linear-gradient(160deg, #2a1e00 0%, #6a4e00 35%, #b8962e 70%, #8a6800 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .hero-subtitle,
+[data-testid="stAppViewContainer"][data-theme="light"] .section-desc {
+    color: rgba(50,38,10,0.68) !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .hero-eyebrow {
+    color: rgba(120,88,20,0.76) !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .section-title {
+    color: #2a1e00 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .glass-card {
+    background: rgba(255,255,255,0.68) !important;
+    border-color: rgba(180,140,40,0.18) !important;
+    box-shadow: 0 4px 18px rgba(180,140,40,0.07);
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .stat-badge {
+    background: rgba(212,175,55,0.13) !important;
+    border-color: rgba(180,140,40,0.24) !important;
+    color: #6a4e00 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .win-bar-wrap {
+    background: rgba(180,140,40,0.12) !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .stSelectbox > div > div,
+[data-testid="stAppViewContainer"][data-theme="light"] .stNumberInput input,
+[data-testid="stAppViewContainer"][data-theme="light"] [data-baseweb="select"] > div,
+[data-testid="stAppViewContainer"][data-theme="light"] [data-baseweb="input"] input,
+[data-testid="stAppViewContainer"][data-theme="light"] [data-baseweb="base-input"] input {
+    background: rgba(255,255,255,0.94) !important;
+    border-color: rgba(180,140,40,0.24) !important;
+    color: #1a1208 !important;
+    -webkit-text-fill-color: #1a1208 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .stSelectbox label,
+[data-testid="stAppViewContainer"][data-theme="light"] .stNumberInput label {
+    color: rgba(76,55,8,0.78) !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] [data-baseweb="select"] span,
+[data-testid="stAppViewContainer"][data-theme="light"] [data-baseweb="select"] div {
+    color: #1a1208 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] [data-baseweb="select"] svg,
+[data-testid="stAppViewContainer"][data-theme="light"] .stNumberInput svg {
+    color: #6a5000 !important;
+    fill: #6a5000 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] .stNumberInput button {
+    background: rgba(250,247,240,0.95) !important;
+    border-color: rgba(180,140,40,0.24) !important;
+    color: #4a3800 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] [data-baseweb="popover"],
+[data-testid="stAppViewContainer"][data-theme="light"] [role="listbox"],
+[data-testid="stAppViewContainer"][data-theme="light"] [role="option"] {
+    background: #fffdf8 !important;
+    color: #1a1208 !important;
+}
+[data-theme="light"] [data-baseweb="popover"],
+[data-theme="light"] [role="listbox"],
+[data-theme="light"] [role="option"] {
+    background: #fffdf8 !important;
+    color: #1a1208 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] [role="option"]:hover,
+[data-testid="stAppViewContainer"][data-theme="light"] [aria-selected="true"] {
+    background: rgba(212,175,55,0.16) !important;
+    color: #2a1e00 !important;
+}
+[data-theme="light"] [role="option"]:hover,
+[data-theme="light"] [aria-selected="true"] {
+    background: rgba(212,175,55,0.16) !important;
+    color: #2a1e00 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] [style*="color:rgba(212,175,55,0.4)"],
+[data-testid="stAppViewContainer"][data-theme="light"] [style*="color: rgba(212,175,55,0.4)"] {
+    color: rgba(120,88,20,0.78) !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] hr {
+    border-top-color: rgba(180,140,40,0.15) !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] ::-webkit-scrollbar-track {
+    background: #f0ead8 !important;
+}
+[data-testid="stAppViewContainer"][data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: rgba(180,140,40,0.3) !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -266,9 +386,13 @@ fig = go.Figure(data=[go.Pie(
     hole=0.5
 )])
 
+chart_bg = "#fffdf8" if st.session_state.get("theme") == "light" else "#0E1117"
+chart_text = "#1a1208" if st.session_state.get("theme") == "light" else "white"
+
 fig.update_layout(
-    paper_bgcolor="#0E1117",
-    font_color="white",
+    paper_bgcolor=chart_bg,
+    plot_bgcolor=chart_bg,
+    font_color=chart_text,
     margin=dict(l=20,r=20,t=20,b=20))
 
 st.plotly_chart(fig, use_container_width=True)
