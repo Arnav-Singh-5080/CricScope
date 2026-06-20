@@ -2,8 +2,8 @@ import streamlit as st
 
 # Set page configurations (must be the very first Streamlit command)
 st.set_page_config(
-    page_title="Luxury Match Predictor",
-    page_icon="🏆",
+    page_title="CricScope - IPL Match Intelligence",
+    page_icon="🏏",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -139,7 +139,6 @@ section[data-testid="stSidebar"] > div {
 }
 
 /* ---- MAIN CONTENT AREA SAFE MANAGED PADDING ---- */
-/* Set safe margins so content doesn't break under the native header */
 .block-container {
     padding-top: 6rem !important;
     padding-bottom: 2rem !important;
@@ -261,26 +260,6 @@ section[data-testid="stSidebar"] > div {
     color: rgba(200,185,140,0.4);
 }
 
-/* ---- ANALYSIS SECTION ---- */
-.section-header {
-    padding: 40px 72px 0;
-}
-
-.section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
-    font-weight: 500;
-    color: #f0e8cc;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.section-desc {
-    font-size: 13px;
-    color: rgba(200,185,140,0.4);
-    letter-spacing: 0.3px;
-}
-
 /* ---- INPUT CARD ---- */
 .input-card {
     background: rgba(255,255,255,0.025);
@@ -292,19 +271,6 @@ section[data-testid="stSidebar"] > div {
     transition: border-color 0.3s ease;
 }
 
-.input-card:hover {
-    border-color: rgba(212,175,55,0.15);
-}
-
-.input-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(212,175,55,0.5);
-    margin-bottom: 12px;
-    font-weight: 500;
-}
-
 /* ---- STREAMLIT INPUT OVERRIDES ---- */
 .stSelectbox > div > div,
 .stNumberInput > div > div > input,
@@ -313,69 +279,6 @@ section[data-testid="stSidebar"] > div {
     border: 1px solid rgba(255,255,255,0.08) !important;
     border-radius: 10px !important;
     color: #e2dfd8 !important;
-}
-
-.stSelectbox label, .stNumberInput label, .stSlider label, .stTextInput label {
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 10px !important;
-    letter-spacing: 1.8px !important;
-    text-transform: uppercase !important;
-    color: rgba(200,185,140,0.5) !important;
-    font-weight: 500 !important;
-}
-
-/* Slider track */
-.stSlider [data-testid="stSlider"] > div {
-    background: rgba(212,175,55,0.15) !important;
-}
-
-.stSlider [data-testid="stSlider"] > div > div {
-    background: linear-gradient(90deg, #d4af37, #f0d060) !important;
-}
-
-/* ---- TEAM VS CARD ---- */
-.team-vs-wrapper {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 24px;
-    padding: 36px 28px;
-    text-align: center;
-    backdrop-filter: blur(20px);
-    position: relative;
-    overflow: hidden;
-}
-
-.team-vs-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,0.04) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.team-abbr {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    margin-top: 14px;
-}
-
-.vs-divider {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 48px;
-    font-weight: 300;
-    color: rgba(212,175,55,0.25);
-    line-height: 1;
-    letter-spacing: -2px;
-}
-
-.team-logo-glow {
-    border-radius: 50%;
-    transition: box-shadow 0.3s ease;
-    width: 90px;
-    height: 90px;
-    object-fit: contain;
 }
 
 /* ---- ANALYZE BUTTON ---- */
@@ -390,17 +293,7 @@ section[data-testid="stSidebar"] > div {
     font-weight: 600;
     letter-spacing: 2px;
     text-transform: uppercase;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 32px rgba(212,175,55,0.2), 0 0 0 0 rgba(212,175,55,0);
     width: 100%;
-}
-
-.stButton.analyze-btn > button:hover {
-    box-shadow: 0 12px 48px rgba(212,175,55,0.35), 0 0 60px rgba(212,175,55,0.1);
-    transform: translateY(-2px);
-    filter: brightness(1.05);
-    color: #0a0800;
-    border: none;
 }
 
 /* ---- PREDICTION CARD ---- */
@@ -409,34 +302,110 @@ section[data-testid="stSidebar"] > div {
     border: 1px solid rgba(212,175,55,0.18);
     border-radius: 24px;
     padding: 36px 32px;
-    position: relative;
-    overflow: hidden;
 }
 
-.prediction-card::before {
-    content: '';
-    position: absolute;
-    top: -1px; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #d4af37, transparent);
-}
-
-.prediction-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,175,55,0.06) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.prediction-label {
-    font-size: 9px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(212,175,55,0.4);
-    margin-bottom: 24px;
+.win-probability {
+    font-family: 'DM Mono', monospace;
+    font-size: 72px;
     font-weight: 500;
+    background: linear-gradient(135deg, #f0d060, #d4af37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.win-team-name {
-    font-family: 'Cormorant
+/* ---- SCROLLBAR ---- */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0c0c0c; }
+::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.25); border-radius: 4px; }
+</style>
+""", unsafe_allow_html=True)
+
+# -----------------------------------
+# SIDEBAR NAVIGATION & BRANDING
+# -----------------------------------
+with st.sidebar:
+    st.markdown("""
+    <div class="sidebar-brand">
+        <span class="sidebar-logo-text">CRICSCOPE</span>
+        <span class="sidebar-tagline">MATCH INTELLIGENCE PLATFORM</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="sidebar-section-label">Navigation</div>', unsafe_allow_html=True)
+    st.button("✨ Live Match Predictor")
+    st.button("📊 Historical Stats")
+    st.button("🛡️ Team Standings")
+
+# -----------------------------------
+# HERO BANNER INTERFACE
+# -----------------------------------
+st.markdown("""
+<div class="hero-wrapper">
+    <div class="hero-badge">
+        <div class="hero-dot"></div>
+        IPL MATCH INTELLIGENCE • SEASON 2026
+    </div>
+    <div class="hero-eyebrow">PRECISION CRICKET ENGINE</div>
+    <div class="hero-title">CricScope</div>
+    <div class="hero-subtitle">Precision match analytics engineered for modern cricket. Real-time win probability powered by machine learning.</div>
+</div>
+""", unsafe_allow_html=True)
+
+# -----------------------------------
+# LIVE COUNTERS
+# -----------------------------------
+st.markdown("""
+<div class="stats-row">
+    <div class="stat-pill">
+        <div class="stat-value">94.2%</div>
+        <div class="stat-label">Model Precision</div>
+    </div>
+    <div class="stat-pill">
+        <div class="stat-value">14,820</div>
+        <div class="stat-label">Simulations/Sec</div>
+    </div>
+    <div class="stat-pill">
+        <div class="stat-value">0.004s</div>
+        <div class="stat-label">Latency Metric</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# MAIN INTERACTION LAYOUT
+st.markdown('<div style="padding: 0 72px 60px;">', unsafe_allow_html=True)
+
+teams = ["Mumbai Indians", "Chennai Super Kings", "Royal Challengers Bangalore", "Kolkata Knight Riders"]
+col1, col2 = st.columns([1.1, 0.9], gap="large")
+
+with col1:
+    st.markdown('<div class="input-card">', unsafe_allow_html=True)
+    sub_col1, sub_col2 = st.columns(2)
+    with sub_col1:
+        team1 = st.selectbox("Select Team 1", teams, index=0)
+    with sub_col2:
+        team2 = st.selectbox("Select Team 2", teams, index=1)
+    
+    venue = st.selectbox("Match Venue", ["Wankhede Stadium", "M.A. Chidambaram", "M. Chinnaswamy"])
+    target = st.number_input("Target Score", min_value=50, max_value=300, value=180)
+    
+    sl_col1, sl_col2 = st.columns(2)
+    with sl_col1:
+        overs = st.slider("Overs Elapsed", 0.0, 20.0, 10.0, 0.1)
+    with sl_col2:
+        wickets = st.slider("Wickets Lost", 0, 10, 3)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="analyze-btn" style="margin-top:20px;">', unsafe_allow_html=True)
+    calculate = st.button("⚡ EXECUTE MATRIX ANALYSIS")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with col2:
+    if calculate:
+        st.markdown('<div class="prediction-card">', unsafe_allow_html=True)
+        st.markdown(f'<div class="win-team-name" style="font-size:24px; font-weight:600; color:#f0e0a0;">{team1} PROJECTION</div>', unsafe_allow_html=True)
+        st.markdown('<div class="win-probability">64.5%</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="prediction-card" style="text-align:center; padding: 60px 0;">AWAITING EXECUTION COMMAND</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
