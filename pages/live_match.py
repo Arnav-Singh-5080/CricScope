@@ -729,12 +729,48 @@ if not user_api_key:
 
     if st.button("🔮 Predict Win Probability", key="demo_predict", use_container_width=True):
         demo_runs, demo_wickets = parse_score_string(demo_score_str)
-        if demo_runs is not None and demo_wickets is not None:
-            result = compute_prediction(
-                demo_bat, demo_bowl, demo_venue,
-                demo_target, demo_runs, demo_wickets, demo_overs,
+
+        if demo_runs is None or demo_wickets is None:
+            st.error("Invalid score format. Use format like 124/3.")
+            st.stop()
+
+        if not (0 <= demo_wickets <= 10):
+            st.error("Wickets must be between 0 and 10.")
+            st.stop()
+        
+        overs_whole = int(demo_overs)
+        balls = int(round((demo_overs - overs_whole) * 10))
+
+        if balls > 5:
+            st.error("Invalid overs format. Decimal part must be between 0 and 5.")
+            st.stop()
+
+        balls_bowled = overs_whole * 6 + balls
+
+        max_possible_runs = balls_bowled * 6 
+
+        if demo_runs > max_possible_runs:
+            st.error(
+                f"Unrealistic match state: {demo_runs}/{demo_wickets} after {demo_overs} overs."
             )
-            if result:
+            st.stop()        
+
+        if demo_runs > max_possible_runs:
+            st.error(
+                f"Invalid match state. {demo_runs} runs cannot be scored in {demo_overs} overs."
+            )
+            st.stop()
+
+        result = compute_prediction(
+            demo_bat,
+            demo_bowl,
+            demo_venue,
+            demo_target,
+            demo_runs,
+            demo_wickets,
+            demo_overs,
+        )
+        if result:
                 st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
                 st.markdown('<div class="section-label">Prediction Output</div>', unsafe_allow_html=True)
 
@@ -832,9 +868,9 @@ if not user_api_key:
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
-            else:
-                st.error("Could not compute prediction. Team names may not match the training data.")
         else:
+                st.error("Could not compute prediction. Team names may not match the training data.")
+    else:
             st.error("Invalid score format. Use format like '124/3'.")
 
 else:
