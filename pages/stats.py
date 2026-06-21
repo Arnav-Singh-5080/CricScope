@@ -73,7 +73,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 10px;
     letter-spacing: 4px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.5);
+    color: rgba(212,175,55,0.75);
     margin-bottom: 18px;
     font-weight: 400;
 }
@@ -93,7 +93,7 @@ section[data-testid="stSidebar"] > div {
 
 .hero-subtitle {
     font-size: 15px;
-    color: rgba(220,210,185,0.55);
+    color: rgba(220,210,185,0.85);
     font-weight: 300;
     letter-spacing: 0.3px;
     max-width: 560px;
@@ -116,7 +116,7 @@ section[data-testid="stSidebar"] > div {
 
 .section-desc {
     font-size: 13px;
-    color: rgba(200,185,140,0.4);
+    color: rgba(200,185,140,0.8);
     letter-spacing: 0.3px;
 }
 
@@ -239,7 +239,7 @@ st.markdown('<div style="padding: 0 60px 60px;">', unsafe_allow_html=True)
 st.markdown('<div style="height:40px;"></div>', unsafe_allow_html=True)
 st.markdown("""
 <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-            color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+            color:rgba(212,175,55,0.75);margin-bottom:8px;font-weight:500;">
     Head-to-Head Record
 </div>
 <div class="section-title">⚔️ Team Matchup</div>
@@ -252,26 +252,6 @@ with col2:
     remaining = [t for t in all_teams if t != team_a]
     team_b = st.selectbox("Team B", remaining, index=remaining.index("Chennai Super Kings") if "Chennai Super Kings" in remaining else 0, key="h2h_b")
     
-#Example value
-team_a = "Chennai Super KIngs"
-team_b = "Mumbai Indians"
-
-team_a_wins = 11
-team_b_wins = 17
-
-#Pie Chart
-fig = go.Figure(data=[go.Pie(
-    labels=[f"{team_a}Wins",f"{team_b}Wins"],
-    values=[11,17],
-    hole=0.5
-)])
-
-fig.update_layout(
-    paper_bgcolor="#0E1117",
-    font_color="white",
-    margin=dict(l=20,r=20,t=20,b=20))
-
-st.plotly_chart(fig, use_container_width=True)
 # filter h2h matches
 h2h = matches[
     ((matches["team1"] == team_a) & (matches["team2"] == team_b)) |
@@ -284,6 +264,19 @@ else:
     total = len(h2h)
     a_wins = (h2h["winner"] == team_a).sum()
     b_wins = (h2h["winner"] == team_b).sum()
+    fig = go.Figure(data=[go.Pie(
+        labels=[f"{team_a} Wins", f"{team_b} Wins"],
+        values=[a_wins, b_wins],
+        hole=0.5
+    )])
+
+    fig.update_layout(
+        paper_bgcolor="#0E1117",
+        font_color="white",
+        margin=dict(l=20, r=20, t=20, b=20)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
     no_result = total - a_wins - b_wins
 
     a_pct = round(a_wins / total * 100, 1) if total else 0
@@ -294,7 +287,7 @@ else:
         st.markdown(f"""
         <div class="glass-card" style="text-align:center;">
             <div style="font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:500; color:#e8d89a; line-height:1; margin-bottom:8px;">{a_wins}</div>
-            <div style="color:rgba(200,185,140,0.45); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">{team_a} Wins</div>
+            <div style="color:rgba(200,185,140,0.85); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">{team_a} Wins</div>
             <div class="win-bar-wrap" style="margin-top:14px;"><div class="win-bar-fill" style="width:{a_pct}%;"></div></div>
             <span class="stat-badge">{a_pct}%</span>
         </div>
@@ -303,15 +296,15 @@ else:
         st.markdown(f"""
         <div class="glass-card" style="text-align:center;">
             <div style="font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:500; color:#e8d89a; line-height:1; margin-bottom:8px;">{total}</div>
-            <div style="color:rgba(200,185,140,0.45); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">Total Matches</div>
-            <div style="margin-top:14px; color:rgba(200,185,140,0.3); font-size:11px; letter-spacing:1px; text-transform:uppercase;">No Result: {no_result}</div>
+            <div style="color:rgba(200,185,140,0.85); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">Total Matches</div>
+            <div style="margin-top:14px; color:rgba(200,185,140,0.8); font-size:11px; letter-spacing:1px; text-transform:uppercase;">No Result: {no_result}</div>
         </div>
         """, unsafe_allow_html=True)
     with cc:
         st.markdown(f"""
         <div class="glass-card" style="text-align:center;">
             <div style="font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:500; color:#e8d89a; line-height:1; margin-bottom:8px;">{b_wins}</div>
-            <div style="color:rgba(200,185,140,0.45); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">{team_b} Wins</div>
+            <div style="color:rgba(200,185,140,0.85); font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">{team_b} Wins</div>
             <div class="win-bar-wrap" style="margin-top:14px;"><div class="win-bar-fill" style="width:{b_pct}%;"></div></div>
             <span class="stat-badge">{b_pct}%</span>
         </div>
@@ -320,7 +313,7 @@ else:
     # recent 5 matches
     st.markdown("""
     <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                color:rgba(212,175,55,0.4);margin:24px 0 12px;font-weight:500;">
+                color:rgba(212,175,55,0.75);margin:24px 0 12px;font-weight:500;">
         Recent Encounters
     </div>
     """, unsafe_allow_html=True)
@@ -337,7 +330,7 @@ st.markdown('<div style="height:1px; background:linear-gradient(90deg, transpare
 # SECTION 2 — Top Run Scorers & Wicket Takers per Team 
 st.markdown("""
 <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-            color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+            color:rgba(212,175,55,0.75);margin-bottom:8px;font-weight:500;">
     Player Performance by Team
 </div>
 <div class="section-title">🏏 Top Performers</div>
@@ -379,7 +372,7 @@ with col_bat:
     st.markdown(f"""
     <div class="glass-card" style="padding:20px 24px; margin-bottom:16px;">
         <div style="font-size:10px; letter-spacing:2px; text-transform:uppercase;
-                    color:rgba(212,175,55,0.5); font-weight:500;">
+                    color:rgba(212,175,55,0.75); font-weight:500;">
             Top Run Scorers — {selected_team}
         </div>
     </div>
@@ -387,7 +380,7 @@ with col_bat:
 
     for i, row in top_batters.iterrows():
         bar_pct = int(row["Runs"] / top_batters["Runs"].max() * 100)
-        rank_color = "#d4af37" if i == 0 else "rgba(200,185,140,0.35)"
+        rank_color = "#d4af37" if i == 0 else "rgba(200,185,140,0.8)"
         st.markdown(f"""
         <div style="display:flex; align-items:center; margin-bottom:0.5rem; gap:0.8rem;">
             <span style="color:{rank_color}; font-family:'DM Mono',monospace; font-size:11px; width:1.4rem;">#{i+1}</span>
@@ -407,7 +400,7 @@ with col_bowl:
     st.markdown(f"""
     <div class="glass-card" style="padding:20px 24px; margin-bottom:16px;">
         <div style="font-size:10px; letter-spacing:2px; text-transform:uppercase;
-                    color:rgba(212,175,55,0.5); font-weight:500;">
+                    color:rgba(212,175,55,0.75); font-weight:500;">
             Top Wicket Takers — {selected_team}
         </div>
     </div>
@@ -415,7 +408,7 @@ with col_bowl:
 
     for i, row in top_bowlers.iterrows():
         bar_pct = int(row["Wickets"] / top_bowlers["Wickets"].max() * 100)
-        rank_color = "#d4af37" if i == 0 else "rgba(200,185,140,0.35)"
+        rank_color = "#d4af37" if i == 0 else "rgba(200,185,140,0.8)"
         st.markdown(f"""
         <div style="display:flex; align-items:center; margin-bottom:0.5rem; gap:0.8rem;">
             <span style="color:{rank_color}; font-family:'DM Mono',monospace; font-size:11px; width:1.4rem;">#{i+1}</span>
@@ -437,7 +430,7 @@ st.markdown('<div style="height:1px; background:linear-gradient(90deg, transpare
 
 st.markdown("""
 <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-            color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+            color:rgba(212,175,55,0.75);margin-bottom:8px;font-weight:500;">
     Venue Performance
 </div>
 <div class="section-title">🏟️ Ground Analysis</div>
@@ -465,7 +458,7 @@ venue_stats = venue_stats.sort_values("Played", ascending=False).head(10)
 
 st.markdown(f"""
 <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-            color:rgba(212,175,55,0.4);margin:24px 0 16px;font-weight:500;">
+            color:rgba(212,175,55,0.75);margin:24px 0 16px;font-weight:500;">
     Top venues by matches played — {venue_team}
 </div>
 """, unsafe_allow_html=True)
