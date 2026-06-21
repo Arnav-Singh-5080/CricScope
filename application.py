@@ -19,6 +19,19 @@ section[data-testid="stSidebar"] {
     padding-top: 2rem;
 }
 
+/* Force dark theme */
+.stApp {
+    background-color: #080808 !important;
+}
+
+header[data-testid="stHeader"] {
+    background-color: #080808 !important;
+}
+
+[data-testid="stBottom"] {
+    background-color: #080808 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 import pandas as pd
@@ -2407,7 +2420,7 @@ if st.session_state.page == "chatbot":
     }
  
     [data-testid="stChatInputTextArea"] {
-        background: transparent !important;
+        background: rgba(15, 12, 5, 0.95) !important;
         color: #e2dfd8 !important;
         font-family: 'DM Sans', sans-serif !important;
         font-size: 14px !important;
@@ -2417,9 +2430,14 @@ if st.session_state.page == "chatbot":
     }
  
     [data-testid="stChatInputTextArea"]::placeholder {
-        color: rgba(200,185,140,0.3) !important;
+        color: rgba(200,185,140,0.6) !important;
         letter-spacing: 0.3px !important;
     }
+                [data-testid="stChatInput"] > div {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(212,175,55,0.2) !important;
+    border-radius: 12px !important;
+}
  
     [data-testid="stChatInputSubmitButton"] button {
         background: linear-gradient(135deg, #c9a227, #d4af37) !important;
