@@ -112,6 +112,10 @@ div[data-testid="stAudioInput"] button svg {
             cursor: pointer !important;
             outline: none !important;
         }
+        div[data-testid="stAudioInput"] > div > button:focus {
+            outline: 2px solid rgba(212,175,55,0.9) !important;
+            outline-offset: 2px !important;
+        }
 
         /* Gold mic SVG */
         div[data-testid="stAudioInput"] > div > button svg {
