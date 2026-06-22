@@ -2557,19 +2557,22 @@ if st.session_state.page == "chatbot":
             try:
                 from cricket_agent import run_agent
                 chatbot_available = True
-
             except Exception as e:
                 chatbot_available = False
                 chatbot_error = str(e)
-            try:
-                response_text = run_agent(
-                    user_message=last_msg["content"],
-                    chat_history=st.session_state.chat_messages[:-1],
-                )
-            except RuntimeError as e:
-                response_text = f"⚠️ Configuration error: {str(e)}"
-            except Exception as e:
-                response_text = f"⚠️ Something went wrong: {str(e)}"
+
+            if chatbot_available:
+                try:
+                    response_text = run_agent(
+                        user_message=last_msg["content"],
+                        chat_history=st.session_state.chat_messages[:-1],
+                    )
+                except RuntimeError as e:
+                    response_text = f"⚠️ Configuration error: {str(e)}"
+                except Exception as e:
+                    response_text = f"⚠️ Something went wrong: {str(e)}"
+            else:
+                response_text = f"⚠️ Chatbot is unavailable: {chatbot_error}"
 
             st.session_state.chat_messages.append({
                 "role":    "assistant",
