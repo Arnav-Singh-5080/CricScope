@@ -76,10 +76,11 @@ html, body, [class*="css"], .stApp {
     min-height: 100vh;
 }
 
-/* Hide only Streamlit branding — leave header & sidebar toggle untouched */
+/* Hide Streamlit default header — we use custom navbar */
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
+header[data-testid="stHeader"] { display: none !important; }
 
 /* ---- SIDEBAR ---- */
 section[data-testid="stSidebar"] {
@@ -183,6 +184,14 @@ section[data-testid="stSidebar"] > div {
     position: relative;
     overflow: hidden;
 }
+@media (max-width: 768px) {
+    .hero-wrapper { padding: 40px 24px 32px; }
+    .hero-title { font-size: clamp(32px, 8vw, 48px) !important; }
+    .hero-subtitle { font-size: 13px; max-width: 100%; }
+}
+@media (max-width: 480px) {
+    .hero-wrapper { padding: 32px 16px 24px; }
+}
 
 .hero-wrapper::before {
     content: '';
@@ -258,6 +267,14 @@ section[data-testid="stSidebar"] > div {
     gap: 16px;
     padding: 24px 72px;
     border-bottom: 1px solid rgba(212,175,55,0.06);
+    flex-wrap: wrap;
+}
+@media (max-width: 768px) {
+    .stats-row { padding: 20px 24px; gap: 10px; }
+    .stat-pill { flex: 1 1 calc(50% - 10px); min-width: 120px; }
+}
+@media (max-width: 480px) {
+    .stat-pill { flex: 1 1 100%; }
 }
 
 .stat-pill {
@@ -291,9 +308,30 @@ section[data-testid="stSidebar"] > div {
     color: rgba(200,185,140,0.4);
 }
 
+/* ---- DASHBOARD SECTION HEADER ---- */
+.dashboard-section-header {
+    padding: 48px 72px 28px;
+}
+.dashboard-section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(212,175,55,0.65);
+    margin-bottom: 28px;
+}
+@media (max-width: 768px) {
+    .dashboard-section-header { padding: 28px 24px 20px; }
+    .dashboard-section-title { font-size: 18px; letter-spacing: 3px; margin-bottom: 20px; }
+}
+
 /* ---- ANALYSIS SECTION ---- */
 .section-header {
     padding: 40px 72px 0;
+}
+@media (max-width: 768px) {
+    .section-header { padding: 24px 24px 0; }
 }
 
 .section-title {
@@ -648,6 +686,31 @@ section[data-testid="stSidebar"] > div {
     color: rgba(200,185,140,0.6);
 }
 
+/* ---- TEAM NAV ACTION BUTTONS ---- */
+button[key^="team_nav"] {
+    background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.06)) !important;
+    border: 1px solid rgba(212,175,55,0.25) !important;
+    border-radius: 10px !important;
+    color: #d4af37 !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.34, 1.2, 0.64, 1) !important;
+    margin-top: 12px !important;
+    text-align: center !important;
+    padding: 10px 16px !important;
+    height: auto !important;
+}
+button[key^="team_nav"]:hover {
+    background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.12)) !important;
+    border-color: rgba(212,175,55,0.5) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(212,175,55,0.15), 0 0 0 1px rgba(212,175,55,0.1) !important;
+    color: #f0d060 !important;
+}
+
 /* ---- STRAY STREAMLIT COMPONENTS ---- */
 .stProgress > div > div {
     background: linear-gradient(90deg, #b8962e, #d4af37) !important;
@@ -690,6 +753,177 @@ hr {
 /* ---- CONTENT PADDING ---- */
 .main-pad {
     padding: 0 72px 60px;
+}
+@media (max-width: 768px) {
+    .main-pad { padding: 0 24px 40px; }
+}
+
+/* ---- GLOBAL NAVBAR ---- */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 72px;
+    height: 56px;
+    background: rgba(8,8,8,0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(212,175,55,0.10);
+}
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.navbar-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, #f0d060 0%, #d4af37 40%, #a07820 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.navbar-tagline {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(212,175,55,0.3);
+    font-weight: 400;
+    border-left: 1px solid rgba(212,175,55,0.12);
+    padding-left: 12px;
+}
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.navbar-page-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(200,185,140,0.35);
+    font-weight: 500;
+}
+
+/* ---- RESPONSIVE DASHBOARD GRID ---- */
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 0 72px 28px;
+}
+@media (max-width: 1100px) {
+    .team-grid { grid-template-columns: repeat(3, 1fr); padding: 0 32px 28px; }
+    .navbar { padding: 0 32px; }
+}
+@media (max-width: 768px) {
+    .team-grid { grid-template-columns: repeat(2, 1fr); padding: 0 20px 28px; }
+    .navbar { padding: 0 20px; }
+    .navbar-tagline { display: none; }
+}
+@media (max-width: 480px) {
+    .team-grid { grid-template-columns: 1fr; padding: 0 16px 28px; }
+}
+
+/* ---- SIDEBAR MOBILE RESPONSIVE ---- */
+@media (max-width: 768px) {
+    section[data-testid="stSidebar"] {
+        width: 280px !important;
+        min-width: 280px !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+        position: fixed !important;
+        z-index: 1000;
+        height: 100vh !important;
+        top: 0;
+        left: 0;
+    }
+    section[data-testid="stSidebar"][aria-expanded="true"],
+    section[data-testid="stSidebar"].sidebar-open {
+        transform: translateX(0);
+    }
+    /* Sidebar overlay */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 999;
+        backdrop-filter: blur(4px);
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
+    /* Hamburger button */
+    .hamburger-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(212,175,55,0.15);
+        border-radius: 10px;
+        color: #d4af37;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        z-index: 1001;
+        position: relative;
+    }
+    .hamburger-btn:hover {
+        background: rgba(212,175,55,0.1);
+        border-color: rgba(212,175,55,0.3);
+    }
+    /* Make sidebar toggle visible on mobile */
+    button[data-testid="stSidebarCollapsedControl"],
+    button[data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+    }
+    /* Show Streamlit's native hamburger fallback */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: flex !important;
+        opacity: 1 !important;
+        z-index: 1001;
+    }
+}
+
+/* ---- TEAM ANALYSIS ACTION BUTTONS ---- */
+.team-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.06));
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 10px;
+    color: #d4af37;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+    text-decoration: none;
+    margin-top: 12px;
+}
+.team-action-btn:hover {
+    background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.12));
+    border-color: rgba(212,175,55,0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(212,175,55,0.15), 0 0 0 1px rgba(212,175,55,0.1);
+    color: #f0d060;
+}
+.team-action-btn:active {
+    transform: translateY(0);
 }
 
 /* ---- SCROLLBAR ---- */
@@ -964,17 +1198,7 @@ section[data-testid="stSidebar"] a:active {
     margin-top: 6px;
     color: rgba(220,210,185,0.4);
 }
-/* Hide team-card nav buttons — cards are the visual; buttons are the click target */
-button[kind="secondary"][data-testid="baseButton-secondary"] {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    opacity: 0 !important;
-    cursor: pointer !important;
-    border-radius: 16px !important;
-    z-index: 10 !important;
-}           
+
 
 </style>
 """, unsafe_allow_html=True)
@@ -1376,6 +1600,30 @@ with st.sidebar:
     )
 
 # -----------------------------------
+# GLOBAL NAVBAR
+# -----------------------------------
+page_labels = {
+    "Dashboard": "Dashboard",
+    "Analysis": "Match Analysis",
+    "Performance": "Model Performance",
+    "Team Analysis": "Team Analysis",
+    "chatbot": "Cricket Assistant"
+}
+current_label = page_labels.get(st.session_state.page, "Dashboard")
+
+st.markdown(f"""
+    <div class="navbar">
+        <div class="navbar-brand">
+            <span class="navbar-logo">CRICSCOPE</span>
+            <span class="navbar-tagline">Match Intelligence</span>
+        </div>
+        <div class="navbar-right">
+            <span class="navbar-page-label">{current_label}</span>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# -----------------------------------
 # DASHBOARD PAGE
 # -----------------------------------
 if st.session_state.page == "Dashboard":
@@ -1419,14 +1667,14 @@ if st.session_state.page == "Dashboard":
     """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div style="padding: 48px 72px 28px;">
-            <div style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:500;
-                        letter-spacing:4px; text-transform:uppercase; 
-                        color:rgba(212,175,55,0.65); margin-bottom:28px;">
+        <div class="dashboard-section-header">
+            <div class="dashboard-section-title">
                 IPL Teams &amp; Analytics
             </div>
+        </div>
     """, unsafe_allow_html=True)
-
+    
+    # Responsive team grid using columns
     team_cols = st.columns(4)
     for i, (team_name, tdata) in enumerate(team_data.items()):
         with team_cols[i % 4]:
@@ -1441,11 +1689,10 @@ if st.session_state.page == "Dashboard":
                     background: rgba(255,255,255,0.025);
                     border: 1px solid rgba(255,255,255,0.07);
                     border-radius: 16px;
-                    padding: 20px;
+                    padding: 20px 20px 16px;
                     text-align: center;
                     margin-bottom: 0px;
                     transition: all 0.3s cubic-bezier(0.34,1.2,0.64,1);
-                    cursor: pointer;
                     position: relative;
                     overflow: hidden;
                 }}
@@ -1480,7 +1727,7 @@ if st.session_state.page == "Dashboard":
                 }}
                 </style>
 
-                <div class="team-card-{i}" onclick="window.__teamClick_{i}=true">
+                <div class="team-card-{i}">
                     <div class="logo-ring-{i}">
                         <img src="{tdata['logo']}"
                              style="width:100%;height:100%;object-fit:cover;
@@ -1492,32 +1739,14 @@ if st.session_state.page == "Dashboard":
                         {tdata['abbr']}
                     </div>
                     <div style="font-size:10px; color:rgba(200,185,140,0.38);
-                                margin-top:4px; letter-spacing:0.5px;">
+                                margin-top:4px; letter-spacing:0.5px; margin-bottom:4px;">
                         {team_name}
                     </div>
                 </div>
             """, unsafe_allow_html=True)
 
-            # Invisible full-width button that acts as the click handler
-            st.markdown(f"""
-                <style>
-                div[data-testid="stButton"]:has(button[key="team_nav_{i}"]) {{
-                    position: relative;
-                    margin-top: -118px;
-                    height: 118px;
-                    z-index: 99;
-                    opacity: 0;
-                }}
-                div[data-testid="stButton"]:has(button[key="team_nav_{i}"]) button {{
-                    height: 118px !important;
-                    width: 100% !important;
-                    cursor: pointer !important;
-                    border-radius: 16px !important;
-                }}
-                </style>
-            """, unsafe_allow_html=True)
-
-            if st.button(f"View {team_name} Analytics", key=f"team_nav_{i}", use_container_width=True):
+            # Visible action button with hover effects
+            if st.button(f"View {tdata['abbr']} Analysis ▸", key=f"team_nav_{i}", use_container_width=True):
                 st.session_state.selected_team = team_name
                 st.session_state.page = "Team Analysis"
                 st.rerun()
@@ -2110,6 +2339,13 @@ if st.session_state.page == "Analysis":
 # TEAM ANALYSIS PAGE
 # -----------------------------------
 if st.session_state.page == "Team Analysis":
+    
+    # Scroll to top when entering the page
+    st.markdown("""
+        <script>
+            window.scrollTo(0, 0);
+        </script>
+    """, unsafe_allow_html=True)
     
     if "selected_team" not in st.session_state:
         st.warning("Please select a team from Dashboard.")
