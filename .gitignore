@@ -4,5 +4,3 @@ __pycache__/
 # Streamlit secrets
 .streamlit/secrets.toml
 
-# Or if you want to hide the entire .streamlit folder
-.streamlit/

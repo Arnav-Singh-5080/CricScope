@@ -81,6 +81,25 @@ Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradie
 
 <br/>
 
+## Table of Contents 
+- [Live Demo](#live-demo)
+- [CricScope Documentation](#cricscope-documentation)
+- [Architecture](#architecture)
+- [Model Evaluation Metrics](#model-evaluation-metrics)
+- [Dataset Split](#dataset-split)
+- [Model Highlights](#model-highlights)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Screenshots](#screenshots)
+- [Dashboard](#dashboard)
+- [Win Probability Prediction Analytics Demo](#win-probability-prediction-analytics-demo)
+- [Getting Started](#getting-started)
+- [Prerequisites](#prerequisites)
+- [Contribution Guidelines](#contribution-guidelines)
+- [Security Policies](#security-policies)
+- [Code of Conduct](#code-of-conduct)
+
+
 ## 📚 Documentation
 
 - [Contributing Guidelines](CONTRIBUTING.md)

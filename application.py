@@ -6,6 +6,7 @@ import time
 import os
 import joblib
 import logging
+import textwrap
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -15,7 +16,6 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from venue_intelligence import render_venue_intelligence
 
 logging.basicConfig(level=logging.INFO)
 
@@ -76,6 +76,15 @@ team_data = {
 }
 
 # -----------------------------------
+# DATA LOADING
+# -----------------------------------
+@st.cache_data
+def load_data():
+    matches = pd.read_csv("matches.csv")
+    deliveries = pd.read_csv("deliveries.csv")
+    return matches, deliveries
+
+# -----------------------------------
 # MODEL
 # -----------------------------------
 def get_model(model_name='logistic'):
@@ -97,13 +106,13 @@ def train_model(model_name='logistic'):
         except Exception as e:
             logging.error(f"Failed to load cached model from {model_path}: {e}")
 
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    matches, deliveries = load_data()
 
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
 
     total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
     total_df.rename(columns={'total_runs': 'target'}, inplace=True)
+    total_df['target'] = total_df['target'] + 1
 
     df = df.merge(total_df, on='match_id')
     df = df[df['inning'] == 2]
@@ -172,13 +181,13 @@ def train_model(model_name='logistic'):
 def evaluate_model(model_name='logistic'):
     pipe = train_model(model_name)
 
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    matches, deliveries = load_data()
 
     df = deliveries.merge(matches, left_on='match_id', right_on='id')
 
     total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
     total_df.rename(columns={'total_runs': 'target'}, inplace=True)
+    total_df['target'] = total_df['target'] + 1
 
     df = df.merge(total_df, on='match_id')
     df = df[df['inning'] == 2]
@@ -335,7 +344,7 @@ with st.sidebar:
         st.session_state.page = "Performance"
 
     if st.button("✦  Chatbot", key="nav_chatbot"):
-        st.session_state.page = "chabot"
+        st.session_state.page = "chatbot"
         
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Model Configuration</div>', unsafe_allow_html=True)
@@ -427,75 +436,120 @@ if st.session_state.page == "Dashboard":
     """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div style="padding: 48px 72px;">
-            <div style="font-family:'Cormorant Garamond',serif; font-size:13px; letter-spacing:3px;
-                        text-transform:uppercase; color:rgba(212,175,55,0.4); margin-bottom:28px;">
-                IPL Teams
+        <div style="padding: 48px 72px 28px;">
+            <div style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:500;
+                        letter-spacing:4px; text-transform:uppercase; 
+                        color:rgba(212,175,55,0.65); margin-bottom:28px;">
+                IPL Teams &amp; Analytics
             </div>
-            <div style="display:flex; flex-wrap:wrap; gap:12px;">
     """, unsafe_allow_html=True)
 
     team_cols = st.columns(4)
     for i, (team_name, tdata) in enumerate(team_data.items()):
         with team_cols[i % 4]:
+            color = tdata['color']
+            r = int(color.lstrip('#')[0:2], 16)
+            g = int(color.lstrip('#')[2:4], 16)
+            b = int(color.lstrip('#')[4:6], 16)
+
             st.markdown(f"""
-                <div style="
-                    background:rgba(255,255,255,0.025);
-                    border:1px solid rgba(255,255,255,0.07);
-                    border-radius:16px;
-                    padding:20px;
-                    text-align:center;
-                    transition:all 0.25s ease;
-                    margin-bottom:12px;
-                ">
-                    <div style="width:72px;height:72px;border-radius:50%;margin:0 auto;
-                                overflow:hidden;background:#111;
-                                box-shadow:0 0 20px {tdata['color']}50;
-                                display:flex;align-items:center;justify-content:center;">
+                <style>
+                .team-card-{i} {{
+                    background: rgba(255,255,255,0.025);
+                    border: 1px solid rgba(255,255,255,0.07);
+                    border-radius: 16px;
+                    padding: 20px;
+                    text-align: center;
+                    margin-bottom: 0px;
+                    transition: all 0.3s cubic-bezier(0.34,1.2,0.64,1);
+                    cursor: pointer;
+                    position: relative;
+                    overflow: hidden;
+                }}
+                .team-card-{i}::before {{
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: radial-gradient(ellipse 80% 60% at 50% 0%,
+                        rgba({r},{g},{b},0.10) 0%, transparent 70%);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                    pointer-events: none;
+                }}
+                .team-card-{i}:hover::before {{ opacity: 1; }}
+                .team-card-{i}:hover {{
+                    transform: translateY(-5px) scale(1.03);
+                    border-color: rgba({r},{g},{b},0.55);
+                    box-shadow: 0 16px 48px rgba({r},{g},{b},0.2),
+                                0 0 0 1px rgba({r},{g},{b},0.15);
+                }}
+                .team-card-{i}:hover .logo-ring-{i} {{
+                    box-shadow: 0 0 36px rgba({r},{g},{b},0.7),
+                                0 0 70px rgba({r},{g},{b},0.25) !important;
+                    transform: scale(1.1);
+                }}
+                .logo-ring-{i} {{
+                    width: 72px; height: 72px; border-radius: 50%;
+                    margin: 0 auto; overflow: hidden; background: #111;
+                    box-shadow: 0 0 20px rgba({r},{g},{b},0.4);
+                    display: flex; align-items: center; justify-content: center;
+                    transition: box-shadow 0.3s ease, transform 0.3s ease;
+                }}
+                </style>
+
+                <div class="team-card-{i}" onclick="window.__teamClick_{i}=true">
+                    <div class="logo-ring-{i}">
                         <img src="{tdata['logo']}"
                              style="width:100%;height:100%;object-fit:cover;
                                     mix-blend-mode:screen;border-radius:50%;" />
                     </div>
-                    <div style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600;
-                                color:{tdata['color']}; letter-spacing:2px; margin-top:12px;">
+                    <div style="font-family:'Cormorant Garamond',serif; font-size:18px;
+                                font-weight:600; color:{color}; letter-spacing:2px; margin-top:12px;
+                                transition: letter-spacing 0.3s ease;">
                         {tdata['abbr']}
                     </div>
-                    <div style="font-size:10px; color:rgba(200,185,140,0.35); margin-top:4px;
-                                letter-spacing:0.5px;">
+                    <div style="font-size:10px; color:rgba(200,185,140,0.38);
+                                margin-top:4px; letter-spacing:0.5px;">
                         {team_name}
                     </div>
                 </div>
             """, unsafe_allow_html=True)
-            if st.button(f"View {tdata['abbr']} Analysis", key=f"team_{i}"):
-                 st.session_state.selected_team = team_name
-                 st.session_state.page = "Team Analysis"
-                 st.rerun()
 
-    st.markdown("""
-        <div style="padding:0 72px 32px; text-align:center;">
-            <div style="display:inline-block; background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.15);
-                        border-radius:14px; padding:20px 36px;">
-                <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                            color:rgba(212,175,55,0.5);margin-bottom:8px;">Get Started</div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#f0e8cc;font-weight:500;">
-                    Open Match Analysis from the sidebar →
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+            # Invisible full-width button that acts as the click handler
+            st.markdown(f"""
+                <style>
+                div[data-testid="stButton"]:has(button[key="team_nav_{i}"]) {{
+                    position: relative;
+                    margin-top: -118px;
+                    height: 118px;
+                    z-index: 99;
+                    opacity: 0;
+                }}
+                div[data-testid="stButton"]:has(button[key="team_nav_{i}"]) button {{
+                    height: 118px !important;
+                    width: 100% !important;
+                    cursor: pointer !important;
+                    border-radius: 16px !important;
+                }}
+                </style>
+            """, unsafe_allow_html=True)
 
+            if st.button(f"View {team_name} Analytics", key=f"team_nav_{i}", use_container_width=True):
+                st.session_state.selected_team = team_name
+                st.session_state.page = "Team Analysis"
+                st.rerun()
 # -----------------------------------
 # MODEL PERFORMANCE PAGE
 # -----------------------------------
 elif st.session_state.page == "Performance":
 
-    st.markdown("""
+    st.markdown(textwrap.dedent("""
         <div class="hero-wrapper" style="padding-bottom:32px;">
             <div class="hero-eyebrow">Classifier Diagnostic Metrics</div>
             <div class="hero-title" style="font-size:clamp(36px,4vw,56px); margin-bottom:10px;">Model Report</div>
             <div class="hero-subtitle">Comprehensive performance metrics, cross-validation scoring, and visual confusion matrix for the active model.</div>
         </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     st.markdown('<div class="main-pad">', unsafe_allow_html=True)
     st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
@@ -515,7 +569,7 @@ elif st.session_state.page == "Performance":
     col_m1, col_m2, col_m3 = st.columns(3, gap="medium")
     
     with col_m1:
-        st.markdown(f"""
+        st.markdown(textwrap.dedent(f"""
             <div class="stat-pill">
                 <div class="stat-value">{metrics['accuracy']:.2%}</div>
                 <div class="stat-label">Test Accuracy</div>
@@ -523,10 +577,10 @@ elif st.session_state.page == "Performance":
                     Percentage of correct predictions on unseen test split data.
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
         
     with col_m2:
-        st.markdown(f"""
+        st.markdown(textwrap.dedent(f"""
             <div class="stat-pill">
                 <div class="stat-value">{metrics['cv_mean']:.2%}</div>
                 <div class="stat-label">5-Fold CV Mean Accuracy</div>
@@ -534,10 +588,10 @@ elif st.session_state.page == "Performance":
                     Average validation score across 5 stratified folds. (SD: &plusmn;{metrics['cv_std']:.2%})
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
         
     with col_m3:
-        st.markdown(f"""
+        st.markdown(textwrap.dedent(f"""
             <div class="stat-pill">
                 <div class="stat-value">{metrics['f1']:.2%}</div>
                 <div class="stat-label">F1-Score</div>
@@ -545,7 +599,7 @@ elif st.session_state.page == "Performance":
                     Harmonic mean of precision and recall. Robust measure of model accuracy.
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
 
     st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
 
@@ -553,7 +607,7 @@ elif st.session_state.page == "Performance":
     col_det, col_cm = st.columns([1.1, 1.3], gap="medium")
     
     with col_det:
-        st.markdown(f"""
+        st.markdown(textwrap.dedent(f"""
             <div class="input-card" style="height: 100%;">
                 <div class="input-label" style="font-size:11px;">Evaluation Deep Dive</div>
                 <div style="margin-bottom: 24px;">
@@ -582,10 +636,10 @@ elif st.session_state.page == "Performance":
                     </div>
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
         
     with col_cm:
-        st.markdown(f"""
+        st.markdown(textwrap.dedent(f"""
             <div class="matrix-wrapper">
                 <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
                 <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
@@ -617,7 +671,7 @@ elif st.session_state.page == "Performance":
                     </div>
                 </div>
             </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
 
     # Fold scores display
     st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
@@ -626,13 +680,13 @@ elif st.session_state.page == "Performance":
     cv_cols = st.columns(5)
     for idx, score in enumerate(metrics['cv_scores']):
         with cv_cols[idx]:
-            st.markdown(f"""
+            st.markdown(textwrap.dedent(f"""
                 <div style="background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.05);
                             border-radius:10px; padding:12px; text-align:center;">
                     <div style="font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(220,210,185,0.35); margin-bottom:4px;">Fold {idx+1}</div>
                     <div style="font-family:'DM Mono',monospace; font-size:15px; color:#e8d89a; font-weight:500;">{score:.2%}</div>
                 </div>
-            """, unsafe_allow_html=True)
+            """), unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -964,8 +1018,6 @@ if st.session_state.page == "Analysis":
                 </div>
             </div>
         """, unsafe_allow_html=True)
-
-        render_venue_intelligence(batting_team, bowling_team, selected_city, target)
         # ---- CSV EXPORT ----
         st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
@@ -1055,7 +1107,7 @@ if st.session_state.page == "Team Analysis":
 
     team = st.session_state.selected_team
     
-    matches_df = pd.read_csv("matches.csv")
+    matches_df, _ = load_data()
 
     team_matches = matches_df[
         (matches_df["team1"] == team) |
@@ -1146,7 +1198,7 @@ if st.session_state.page == "Team Analysis":
      # Team Strength Analysis
         st.subheader("📈 Team Statistics")
         
-        deliveries_df = pd.read_csv("deliveries.csv")
+        _, deliveries_df = load_data()
 
         team_batting = deliveries_df[
         deliveries_df["batting_team"] == team
@@ -1196,7 +1248,7 @@ if st.session_state.page == "Team Analysis":
         if st.button("⬅ Back to Dashboard"):
             st.session_state.page = "Dashboard"
             st.rerun()
-if st.session_state.page == "chabot":
+if st.session_state.page == "chatbot":
  
     # ---- Init session state ----
     if "chat_messages" not in st.session_state:
@@ -1706,16 +1758,25 @@ if st.session_state.page == "chabot":
         last_msg = st.session_state.chat_messages[-1]
 
         if last_msg["role"] == "user":
-            from cricket_agent import run_agent
             try:
-                response_text = run_agent(
-                    user_message=last_msg["content"],
-                    chat_history=st.session_state.chat_messages[:-1],
-                )
-            except RuntimeError as e:
-                response_text = f"⚠️ Configuration error: {str(e)}"
+                from cricket_agent import run_agent
+                chatbot_available = True
+
             except Exception as e:
-                response_text = f"⚠️ Something went wrong: {str(e)}"
+                chatbot_available = False
+                chatbot_error = str(e)
+            if not chatbot_available:
+                response_text = f"⚠️ Chatbot unavailable: {chatbot_error}"
+            else:
+                try:
+                    response_text = run_agent(
+                        user_message=last_msg["content"],
+                        chat_history=st.session_state.chat_messages[:-1],
+                    )
+                except RuntimeError as e:
+                    response_text = f"⚠️ Configuration error: {str(e)}"
+                except Exception as e:
+                    response_text = f"⚠️ Something went wrong: {str(e)}"
 
             st.session_state.chat_messages.append({
                 "role":    "assistant",

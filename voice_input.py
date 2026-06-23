@@ -5,22 +5,39 @@ voice_input.py - uses CSS transform to reposition without breaking click target
 import streamlit as st
 from groq import Groq
 import hashlib
+import os
 
 
 def voice_input_component() -> str | None:
 
-    st.markdown("""
+    st.markdown(
+        """
         <style>
         /* Container that wraps stAudioInput — move this to bottom bar area */
         div[data-testid="stElementContainer"]:has(div[data-testid="stAudioInput"]) {
             position: fixed !important;
-            bottom:93px !important;
+            bottom: 93px !important;
             right: 210px !important;
             z-index: 99999 !important;
             width: 42px !important;
             height: 42px !important;
             padding: 0 !important;
             margin: 0 !important;
+        }
+
+        /* Responsive positioning for smaller laptops and tablets */
+        @media (max-width: 1024px) {
+            div[data-testid="stElementContainer"]:has(div[data-testid="stAudioInput"]) {
+                right: 10% !important;
+            }
+        }
+
+        /* Responsive positioning for mobile viewports */
+        @media (max-width: 768px) {
+            div[data-testid="stElementContainer"]:has(div[data-testid="stAudioInput"]) {
+                right: 5% !important;
+                bottom: 80px !important;
+            }
         }
 
         div[data-testid="stAudioInput"] {
@@ -331,7 +348,9 @@ div[data-testid="stAudioInput"] > div > *:not(button):not(:has(button)) {
     z-index: -1 !important;
 }
         </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     if "last_audio_hash" not in st.session_state:
         st.session_state.last_audio_hash = None
@@ -346,7 +365,7 @@ div[data-testid="stAudioInput"] > div > *:not(button):not(:has(button)) {
         return None
 
     audio_bytes = audio.read()
-    audio_hash  = hashlib.md5(audio_bytes).hexdigest()
+    audio_hash = hashlib.md5(audio_bytes).hexdigest()
 
     if audio_hash == st.session_state.last_audio_hash:
         return None
@@ -355,8 +374,11 @@ div[data-testid="stAudioInput"] > div > *:not(button):not(:has(button)) {
 
     try:
         api_key = st.secrets["groq"]["key"]
-    except KeyError:
-        st.warning("⚠️ Groq key missing in secrets.toml")
+    except Exception:
+        api_key = os.environ.get("GROQ_API_KEY")
+
+    if not api_key:
+        st.warning("⚠️ Groq key missing in secrets.toml or as GROQ_API_KEY env var.")
         return None
 
     with st.spinner("Transcribing…"):
