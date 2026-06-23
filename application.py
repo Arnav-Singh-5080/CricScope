@@ -21,7 +21,7 @@ section[data-testid="stSidebar"] {
 
 </style>
 """, unsafe_allow_html=True)
-import pandas as p
+import pandas as pd
 import numpy as np
 import time
 import os
@@ -557,6 +557,95 @@ section[data-testid="stSidebar"] > div {
     text-transform: uppercase;
     color: rgba(180,165,115,0.35);
 }
+/* ---- TEAM CARDS ---- */
+.team-card-link {
+    display: block;
+    text-decoration: none;
+    cursor: pointer;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 12px;
+    transition: all 0.3s cubic-bezier(0.34,1.2,0.64,1);
+    position: relative;
+    overflow: hidden;
+}
+
+.team-card-link::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%,
+        var(--team-color-glow, rgba(212,175,55,0.08)) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.team-card-link:hover::before {
+    opacity: 1;
+}
+
+.team-card-link:hover {
+    transform: translateY(-4px) scale(1.03);
+    border-color: var(--team-border-color, rgba(212,175,55,0.4));
+    box-shadow: 0 12px 40px var(--team-shadow-color, rgba(212,175,55,0.15));
+}
+
+.team-card-logo-ring {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 0 16px var(--team-logo-glow, rgba(212,175,55,0.3));
+}
+
+.team-card-link:hover .team-card-logo-ring {
+    box-shadow: 0 0 32px var(--team-logo-glow, rgba(212,175,55,0.5)),
+                0 0 60px var(--team-logo-glow, rgba(212,175,55,0.2));
+    transform: scale(1.08);
+}
+
+.team-card-logo-ring img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    mix-blend-mode: screen;
+    border-radius: 50%;
+}
+
+.team-card-abbr {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-top: 12px;
+    transition: letter-spacing 0.3s ease;
+}
+
+.team-card-link:hover .team-card-abbr {
+    letter-spacing: 3px;
+}
+
+.team-card-name {
+    font-size: 10px;
+    color: rgba(200,185,140,0.35);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+.team-card-link:hover .team-card-name {
+    color: rgba(200,185,140,0.6);
+}
 
 /* ---- STRAY STREAMLIT COMPONENTS ---- */
 .stProgress > div > div {
@@ -874,6 +963,17 @@ section[data-testid="stSidebar"] a:active {
     margin-top: 6px;
     color: rgba(220,210,185,0.4);
 }
+/* Hide team-card nav buttons — cards are the visual; buttons are the click target */
+button[kind="secondary"][data-testid="baseButton-secondary"] {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    border-radius: 16px !important;
+    z-index: 10 !important;
+}           
 
 </style>
 """, unsafe_allow_html=True)
@@ -1327,63 +1427,108 @@ if st.session_state.page == "Dashboard":
     """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div style="padding: 48px 72px;">
-            <div style="font-family:'Cormorant Garamond',serif; font-size:13px; letter-spacing:3px;
-                        text-transform:uppercase; color:rgba(212,175,55,0.4); margin-bottom:28px;">
-                IPL Teams
+        <div style="padding: 48px 72px 28px;">
+            <div style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:500;
+                        letter-spacing:4px; text-transform:uppercase; 
+                        color:rgba(212,175,55,0.65); margin-bottom:28px;">
+                IPL Teams &amp; Analytics
             </div>
-            <div style="display:flex; flex-wrap:wrap; gap:12px;">
     """, unsafe_allow_html=True)
 
     team_cols = st.columns(4)
     for i, (team_name, tdata) in enumerate(team_data.items()):
         with team_cols[i % 4]:
+            color = tdata['color']
+            r = int(color.lstrip('#')[0:2], 16)
+            g = int(color.lstrip('#')[2:4], 16)
+            b = int(color.lstrip('#')[4:6], 16)
+
             st.markdown(f"""
-                <div style="
-                    background:rgba(255,255,255,0.025);
-                    border:1px solid rgba(255,255,255,0.07);
-                    border-radius:16px;
-                    padding:20px;
-                    text-align:center;
-                    transition:all 0.25s ease;
-                    margin-bottom:12px;
-                ">
-                    <div style="width:72px;height:72px;border-radius:50%;margin:0 auto;
-                                overflow:hidden;background:#111;
-                                box-shadow:0 0 20px {tdata['color']}50;
-                                display:flex;align-items:center;justify-content:center;">
+                <style>
+                .team-card-{i} {{
+                    background: rgba(255,255,255,0.025);
+                    border: 1px solid rgba(255,255,255,0.07);
+                    border-radius: 16px;
+                    padding: 20px;
+                    text-align: center;
+                    margin-bottom: 0px;
+                    transition: all 0.3s cubic-bezier(0.34,1.2,0.64,1);
+                    cursor: pointer;
+                    position: relative;
+                    overflow: hidden;
+                }}
+                .team-card-{i}::before {{
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: radial-gradient(ellipse 80% 60% at 50% 0%,
+                        rgba({r},{g},{b},0.10) 0%, transparent 70%);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                    pointer-events: none;
+                }}
+                .team-card-{i}:hover::before {{ opacity: 1; }}
+                .team-card-{i}:hover {{
+                    transform: translateY(-5px) scale(1.03);
+                    border-color: rgba({r},{g},{b},0.55);
+                    box-shadow: 0 16px 48px rgba({r},{g},{b},0.2),
+                                0 0 0 1px rgba({r},{g},{b},0.15);
+                }}
+                .team-card-{i}:hover .logo-ring-{i} {{
+                    box-shadow: 0 0 36px rgba({r},{g},{b},0.7),
+                                0 0 70px rgba({r},{g},{b},0.25) !important;
+                    transform: scale(1.1);
+                }}
+                .logo-ring-{i} {{
+                    width: 72px; height: 72px; border-radius: 50%;
+                    margin: 0 auto; overflow: hidden; background: #111;
+                    box-shadow: 0 0 20px rgba({r},{g},{b},0.4);
+                    display: flex; align-items: center; justify-content: center;
+                    transition: box-shadow 0.3s ease, transform 0.3s ease;
+                }}
+                </style>
+
+                <div class="team-card-{i}" onclick="window.__teamClick_{i}=true">
+                    <div class="logo-ring-{i}">
                         <img src="{tdata['logo']}"
                              style="width:100%;height:100%;object-fit:cover;
                                     mix-blend-mode:screen;border-radius:50%;" />
                     </div>
-                    <div style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600;
-                                color:{tdata['color']}; letter-spacing:2px; margin-top:12px;">
+                    <div style="font-family:'Cormorant Garamond',serif; font-size:18px;
+                                font-weight:600; color:{color}; letter-spacing:2px; margin-top:12px;
+                                transition: letter-spacing 0.3s ease;">
                         {tdata['abbr']}
                     </div>
-                    <div style="font-size:10px; color:rgba(200,185,140,0.35); margin-top:4px;
-                                letter-spacing:0.5px;">
+                    <div style="font-size:10px; color:rgba(200,185,140,0.38);
+                                margin-top:4px; letter-spacing:0.5px;">
                         {team_name}
                     </div>
                 </div>
             """, unsafe_allow_html=True)
-            if st.button(f"View {tdata['abbr']} Analysis", key=f"team_{i}"):
-                 st.session_state.selected_team = team_name
-                 st.session_state.page = "Team Analysis"
-                 st.rerun()
 
-    st.markdown("""
-        <div style="padding:0 72px 32px; text-align:center;">
-            <div style="display:inline-block; background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.15);
-                        border-radius:14px; padding:20px 36px;">
-                <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-                            color:rgba(212,175,55,0.5);margin-bottom:8px;">Get Started</div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#f0e8cc;font-weight:500;">
-                    Open Match Analysis from the sidebar →
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+            # Invisible full-width button that acts as the click handler
+            st.markdown(f"""
+                <style>
+                div[data-testid="stButton"]:has(button[key="team_nav_{i}"]) {{
+                    position: relative;
+                    margin-top: -118px;
+                    height: 118px;
+                    z-index: 99;
+                    opacity: 0;
+                }}
+                div[data-testid="stButton"]:has(button[key="team_nav_{i}"]) button {{
+                    height: 118px !important;
+                    width: 100% !important;
+                    cursor: pointer !important;
+                    border-radius: 16px !important;
+                }}
+                </style>
+            """, unsafe_allow_html=True)
 
+            if st.button(f"View {team_name} Analytics", key=f"team_nav_{i}", use_container_width=True):
+                st.session_state.selected_team = team_name
+                st.session_state.page = "Team Analysis"
+                st.rerun()
 # -----------------------------------
 # MODEL PERFORMANCE PAGE
 # -----------------------------------
@@ -2611,15 +2756,18 @@ if st.session_state.page == "chatbot":
             except Exception as e:
                 chatbot_available = False
                 chatbot_error = str(e)
-            try:
-                response_text = run_agent(
-                    user_message=last_msg["content"],
-                    chat_history=st.session_state.chat_messages[:-1],
-                )
-            except RuntimeError as e:
-                response_text = f"⚠️ Configuration error: {str(e)}"
-            except Exception as e:
-                response_text = f"⚠️ Something went wrong: {str(e)}"
+            if not chatbot_available:
+                response_text = f"⚠️ Chatbot unavailable: {chatbot_error}"
+            else:
+                try:
+                    response_text = run_agent(
+                        user_message=last_msg["content"],
+                        chat_history=st.session_state.chat_messages[:-1],
+                    )
+                except RuntimeError as e:
+                    response_text = f"⚠️ Configuration error: {str(e)}"
+                except Exception as e:
+                    response_text = f"⚠️ Something went wrong: {str(e)}"
 
             st.session_state.chat_messages.append({
                 "role":    "assistant",
