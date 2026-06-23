@@ -337,6 +337,7 @@ section[data-testid="stSidebar"] > div {
 /* ---- STREAMLIT INPUT OVERRIDES ---- */
 .stSelectbox > div > div,
 .stNumberInput > div > div > input,
+.stTextInput > div > div > input,
 .stSlider > div {
     background: rgba(255,255,255,0.03) !important;
     border: 1px solid rgba(255,255,255,0.08) !important;
@@ -1277,49 +1278,84 @@ if st.session_state.page == "Dashboard":
     """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div style="padding: 48px 72px;">
+        <div style="padding: 48px 72px 12px 72px;">
             <div style="font-family:'Cormorant Garamond',serif; font-size:13px; letter-spacing:3px;
-                        text-transform:uppercase; color:rgba(212,175,55,0.4); margin-bottom:28px;">
+                        text-transform:uppercase; color:rgba(212,175,55,0.4); margin-bottom:0px;">
                 IPL Teams
             </div>
-            <div style="display:flex; flex-wrap:wrap; gap:12px;">
+        </div>
     """, unsafe_allow_html=True)
 
-    team_cols = st.columns(4)
-    for i, (team_name, tdata) in enumerate(team_data.items()):
-        with team_cols[i % 4]:
-            st.markdown(f"""
-                <div style="
-                    background:rgba(255,255,255,0.025);
-                    border:1px solid rgba(255,255,255,0.07);
-                    border-radius:16px;
-                    padding:20px;
-                    text-align:center;
-                    transition:all 0.25s ease;
-                    margin-bottom:12px;
-                ">
-                    <div style="width:72px;height:72px;border-radius:50%;margin:0 auto;
-                                overflow:hidden;background:#111;
-                                box-shadow:0 0 20px {tdata['color']}50;
-                                display:flex;align-items:center;justify-content:center;">
-                        <img src="{tdata['logo']}"
-                             style="width:100%;height:100%;object-fit:cover;
-                                    mix-blend-mode:screen;border-radius:50%;" />
+    # Search & Filter Controls
+    col_search, col_sort = st.columns([3, 1])
+    with col_search:
+        search_query = st.text_input("Search Team", placeholder="Search by name or abbreviation...", label_visibility="collapsed")
+    with col_sort:
+        sort_order = st.selectbox("Sort Order", ["A → Z", "Z → A"], label_visibility="collapsed")
+
+    # Filter and sort teams
+    filtered_teams = list(team_data.items())
+    if search_query:
+        search_query_lower = search_query.lower()
+        filtered_teams = [
+            (name, data) for name, data in filtered_teams
+            if search_query_lower in name.lower() or search_query_lower in data['abbr'].lower()
+        ]
+
+    if sort_order == "A → Z":
+        filtered_teams.sort(key=lambda x: x[0])
+    elif sort_order == "Z → A":
+        filtered_teams.sort(key=lambda x: x[0], reverse=True)
+
+    st.markdown("""
+        <div style="padding: 0 72px 12px 72px;">
+            <div style="display:flex; flex-wrap:wrap; gap:12px;">
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    if not filtered_teams:
+        st.markdown("""
+            <div style="padding: 48px 72px; text-align: center; color: rgba(200,185,140,0.4); font-size: 14px;">
+                No teams found matching search criteria.
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        team_cols = st.columns(4)
+        for i, (team_name, tdata) in enumerate(filtered_teams):
+            with team_cols[i % 4]:
+                st.markdown(f"""
+                    <div style="
+                        background:rgba(255,255,255,0.025);
+                        border:1px solid rgba(255,255,255,0.07);
+                        border-radius:16px;
+                        padding:20px;
+                        text-align:center;
+                        transition:all 0.25s ease;
+                        margin-bottom:12px;
+                    ">
+                        <div style="width:72px;height:72px;border-radius:50%;margin:0 auto;
+                                    overflow:hidden;background:#111;
+                                    box-shadow:0 0 20px {tdata['color']}50;
+                                    display:flex;align-items:center;justify-content:center;">
+                            <img src="{tdata['logo']}"
+                                 style="width:100%;height:100%;object-fit:cover;
+                                        mix-blend-mode:screen;border-radius:50%;" />
+                        </div>
+                        <div style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600;
+                                    color:{tdata['color']}; letter-spacing:2px; margin-top:12px;">
+                            {tdata['abbr']}
+                        </div>
+                        <div style="font-size:10px; color:rgba(200,185,140,0.35); margin-top:4px;
+                                    letter-spacing:0.5px;">
+                            {team_name}
+                        </div>
                     </div>
-                    <div style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600;
-                                color:{tdata['color']}; letter-spacing:2px; margin-top:12px;">
-                        {tdata['abbr']}
-                    </div>
-                    <div style="font-size:10px; color:rgba(200,185,140,0.35); margin-top:4px;
-                                letter-spacing:0.5px;">
-                        {team_name}
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-            if st.button(f"View {tdata['abbr']} Analysis", key=f"team_{i}"):
-                 st.session_state.selected_team = team_name
-                 st.session_state.page = "Team Analysis"
-                 st.rerun()
+                """, unsafe_allow_html=True)
+                if st.button(f"View {tdata['abbr']} Analysis", key=f"team_btn_{tdata['abbr']}"):
+                     st.session_state.selected_team = team_name
+                     st.session_state.page = "Team Analysis"
+                     st.rerun()
 
     st.markdown("""
         <div style="padding:0 72px 32px; text-align:center;">
