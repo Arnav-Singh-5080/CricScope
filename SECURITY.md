@@ -27,13 +27,44 @@ If you discover a vulnerability:
 
 ---
 
-# ⏱ Response Timeline
+# 📋 Vulnerability Report Template
 
-- Initial acknowledgment within 48 hours
-- Verification and investigation process
-- Security fix implementation
-- Responsible disclosure coordination
-- Resolution notification after patch deployment
+When reporting a security issue, please include:
+
+### Summary
+Brief description of the vulnerability.
+
+### Affected Component
+File, module, endpoint, or feature affected.
+
+### Steps to Reproduce
+1. Step 1
+2. Step 2
+3. Step 3
+
+### Expected Behavior
+What should happen.
+
+### Actual Behavior
+What actually happens.
+
+### Potential Impact
+Explain the security risk and severity.
+
+### Proof of Concept (Optional)
+Screenshots, logs, or sample payloads.
+
+---
+
+
+# ⏱ Service Level Agreement (SLA)
+
+| Stage | Target Time |
+|--------|------------|
+| Initial Acknowledgement | Within 48 hours |
+| Initial Assessment | Within 7 days |
+| Status Updates | Every 14 days |
+| Resolution Goal | Within 30 days (depending on severity) |
 
 ---
 

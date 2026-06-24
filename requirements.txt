@@ -8,3 +8,6 @@ seaborn
 plotly
 xgboost
 requests
+groq
+langchain-groq
+python-dotenv
