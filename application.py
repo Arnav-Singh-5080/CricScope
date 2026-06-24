@@ -1680,7 +1680,7 @@ if st.session_state.page == "Analysis":
         st.markdown('<div class="input-card">', unsafe_allow_html=True)
         st.markdown('<div class="input-label">Match State</div>', unsafe_allow_html=True)
         target = st.number_input("Target Score", min_value=50, max_value=300, value=180, step=1)
-        score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
+        score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=min(50,target-1), step=1)
         col_ov, col_wk = st.columns(2)
         with col_ov:
             overs = st.slider("Overs Completed", min_value=0, max_value=20, value=10)
