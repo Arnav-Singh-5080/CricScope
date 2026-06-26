@@ -445,6 +445,12 @@ git push origin feature/your-feature-name
 - Write meaningful commit messages
 - Respect UI consistency
 
+### 👥 Contributors
+
+Thanks to all contributors ❤️
+
+[![Contributors](https://contrib.rocks/image?repo=Arnav-Singh-5080/CricScope)](https://github.com/Arnav-Singh-5080/CricScope/graphs/contributors)
+
 ---
 ## 🔐 Security Policy
 
