@@ -51,6 +51,8 @@ if "last_prediction" not in st.session_state:
     st.session_state.last_prediction = None
 if "selected_model" not in st.session_state:
     st.session_state.selected_model = "logistic"
+if "chatbot_backend" not in st.session_state:
+    st.session_state.chatbot_backend = "Groq"
 
 # -----------------------------------
 # LUXURY CSS
@@ -1303,6 +1305,19 @@ with st.sidebar:
         key="selected_model_widget"
     )
     st.session_state.selected_model = model_options[selected_model_name]
+
+    if st.session_state.page == "chatbot":
+        st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:20px 0;"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-section-label">AI Assistant Config</div>', unsafe_allow_html=True)
+        
+        chatbot_backend_options = ["Groq", "Google Gemini"]
+        selected_backend = st.selectbox(
+            "Choose AI Backend",
+            options=chatbot_backend_options,
+            index=chatbot_backend_options.index(st.session_state.get("chatbot_backend", "Groq")),
+            key="chatbot_backend_widget"
+        )
+        st.session_state.chatbot_backend = selected_backend
 
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:20px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
@@ -2588,14 +2603,15 @@ if st.session_state.page == "chatbot":
         return datetime.datetime.now().strftime("%H:%M")
  
     # ---- HERO ----
-    st.markdown("""
+    backend_display_name = st.session_state.get("chatbot_backend", "Groq")
+    st.markdown(f"""
         <div class="chat-hero">
             <div class="chat-hero-top">
                 <div class="chat-hero-left">
                     <div class="chat-eyebrow">AI Cricket Intelligence</div>
                     <div class="chat-title">Cricket Assistant</div>
                     <div class="chat-subtitle">
-                        Powered by Groq 
+                        Powered by {backend_display_name} 
                     </div>
                 </div>
                 <div class="chat-hero-right">
