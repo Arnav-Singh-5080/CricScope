@@ -70,7 +70,7 @@ def get_chain():
         api_key = os.environ.get("GROQ_API_KEY")
 
     if not api_key:
-        st.error(" Groq API key not found.")
+        st.error("⚠️ Groq API key not found.")
 
         st.info(
             "To enable the chatbot, either:\n\n"
