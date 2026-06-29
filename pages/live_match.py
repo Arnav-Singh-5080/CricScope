@@ -242,7 +242,7 @@ footer { visibility: hidden; }
     font-size: 9px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(180,165,115,0.35);
+    color: rgba(180,165,115,0.85);
 }
 
 /* ---- MATCH CARD ---- */
@@ -323,7 +323,7 @@ footer { visibility: hidden; }
 }
 .info-box .text {
     font-size: 13px;
-    color: rgba(200,185,140,0.6);
+    color: rgba(200,185,140,0.85);
     line-height: 1.5;
 }
 </style>
@@ -828,7 +828,7 @@ if not user_api_key:
                             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
                                         font-weight:500;color:#c8b870;margin-bottom:12px;">{demo_bowl}</div>
                             <div style="font-family:'DM Mono',monospace;font-size:64px;font-weight:500;
-                                        color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
+                                        color:rgba(200,185,140,0.85);line-height:1;margin-bottom:4px;">
                                 {result['bowling_win']}%</div>
                             <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
                                         color:rgba(200,185,140,0.8);margin-bottom:16px;">Win Probability</div>
@@ -865,13 +865,13 @@ if not user_api_key:
                                 justify-content:space-between;">
                         <div>
                             <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                        color:rgba(212,175,55,0.35);margin-bottom:6px;">Model Verdict</div>
+                                        color:rgba(212,175,55,0.85);margin-bottom:6px;">Model Verdict</div>
                             <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
                                         font-weight:500;color:#f0e8cc;">{verdict} favoured to win</div>
                         </div>
                         <div style="text-align:right;">
                             <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                        color:rgba(212,175,55,0.35);margin-bottom:6px;">Confidence</div>
+                                        color:rgba(212,175,55,0.85);margin-bottom:6px;">Confidence</div>
                             <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
                                 {conf_label} · {conf}%</div>
                         </div>
@@ -967,7 +967,7 @@ else:
                                 {team1_name}</div>
                         </div>
                         <div style="font-family:'Cormorant Garamond',serif;font-size:36px;
-                                    font-weight:300;color:rgba(212,175,55,0.2);">vs</div>
+                                    font-weight:300;color:rgba(212,175,55,0.85);">vs</div>
                         <div>
                             <div style="font-family:'Cormorant Garamond',serif;font-size:32px;
                                         font-weight:600;color:{t2_display['color']};letter-spacing:2px;">
@@ -1096,7 +1096,7 @@ else:
                                             font-weight:500;color:#c8b870;margin-bottom:12px;">
                                     {bowling_2nd}</div>
                                 <div style="font-family:'DM Mono',monospace;font-size:64px;font-weight:500;
-                                            color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
+                                            color:rgba(200,185,140,0.85);line-height:1;margin-bottom:4px;">
                                     {result['bowling_win']}%</div>
                                 <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
                                             color:rgba(200,185,140,0.8);margin-bottom:16px;">
@@ -1136,7 +1136,7 @@ else:
                                     justify-content:space-between;">
                             <div>
                                 <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                            color:rgba(212,175,55,0.35);margin-bottom:6px;">
+                                            color:rgba(212,175,55,0.85);margin-bottom:6px;">
                                     Model Verdict</div>
                                 <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
                                             font-weight:500;color:#f0e8cc;">
@@ -1144,7 +1144,7 @@ else:
                             </div>
                             <div style="text-align:right;">
                                 <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                            color:rgba(212,175,55,0.35);margin-bottom:6px;">
+                                            color:rgba(212,175,55,0.85);margin-bottom:6px;">
                                     Confidence</div>
                                 <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
                                     {conf_label} · {conf}%</div>
@@ -1166,7 +1166,7 @@ else:
     # Last updated timestamp
     st.markdown(f"""
         <div style="text-align:center;margin-top:32px;padding-bottom:24px;font-size:9px;
-                    letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,185,140,0.18);">
+                    letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,185,140,0.85);">
             Last fetched · {time.strftime("%H:%M:%S")} ·
             {"Auto-refresh ON" if st.session_state.live_auto_refresh else "Auto-refresh OFF"}
         </div>
