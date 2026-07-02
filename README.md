@@ -171,6 +171,33 @@ Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradie
 The prediction engine uses a **Logistic Regression classifier**
 trained on IPL ball-by-ball match data spanning IPL seasons from 2008–2020.
 
+### Evaluation Results
+
+| Metric | Value |
+|--------|------:|
+| Accuracy | **73.90%** |
+| Log Loss | **0.5707** |
+| Brier Score | **0.1834** |
+
+### Calibration Curve
+
+In addition to classification metrics, the model was evaluated using a **reliability (calibration) curve**, which compares the predicted win probabilities against the observed win rates. A perfectly calibrated model follows the diagonal reference line, indicating that its predicted probabilities closely match real-world outcomes.
+
+![Calibration Curve](assets/calibration_curve_logistic.png)
+
+### Reproducing the Evaluation
+
+The evaluation can be reproduced by running:
+
+```bash
+python evaluation/evaluate_model.py --model logistic
+```
+
+This command generates:
+
+- `evaluation/results.json` containing the evaluation metrics.
+- `assets/calibration_curve_logistic.png` containing the reliability diagram for the Logistic Regression model.
+
 ### Dataset Split
 
 | Split Type | Ratio |
