@@ -1580,39 +1580,33 @@ elif st.session_state.page == "Performance":
         """), unsafe_allow_html=True)
         
     with col_cm:
-        st.markdown(textwrap.dedent(f"""
-            <div class="matrix-wrapper">
-                <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
-                <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
-                    A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
-                </div>
-                <div class="matrix-grid">
-                    <div class="matrix-header">Actual \\ Pred</div>
-                    <div class="matrix-header">Bowl Win (0)</div>
-                    <div class="matrix-header">Bat Win (1)</div>
-                    
-                    <div class="matrix-label">Bowl Win (0)</div>
-                    <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tn']:,}</div>
-                        <div class="matrix-cell-lbl">True Neg</div>
-                    </div>
-                    <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fp']:,}</div>
-                        <div class="matrix-cell-lbl">False Pos</div>
-                    </div>
-                    
-                    <div class="matrix-label">Bat Win (1)</div>
-                    <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fn']:,}</div>
-                        <div class="matrix-cell-lbl">False Neg</div>
-                    </div>
-                    <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tp']:,}</div>
-                        <div class="matrix-cell-lbl">True Pos</div>
-                    </div>
-                </div>
-            </div>
-        """), unsafe_allow_html=True)
+        tn, fp, fn, tp = metrics['tn'], metrics['fp'], metrics['fn'], metrics['tp']
+
+        matrix_html = (
+            '<div class="matrix-wrapper">'
+            '<div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>'
+            '<div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 4px; line-height:1.4;">'
+            'TN / FP / FN / TP counts for Bowl Win (0) vs Bat Win (1)'
+            '</div>'
+            '<div class="matrix-grid">'
+            '<div></div>'
+            '<div class="matrix-header">Predicted: Bowl Win</div>'
+            '<div class="matrix-header">Predicted: Bat Win</div>'
+            '<div class="matrix-label">Actual: Bowl Win</div>'
+            f'<div class="matrix-cell correct"><div class="matrix-value">{tn}</div><div class="matrix-cell-lbl">True Negative</div></div>'
+            f'<div class="matrix-cell incorrect"><div class="matrix-value">{fp}</div><div class="matrix-cell-lbl">False Positive</div></div>'
+            '<div class="matrix-label">Actual: Bat Win</div>'
+            f'<div class="matrix-cell incorrect"><div class="matrix-value">{fn}</div><div class="matrix-cell-lbl">False Negative</div></div>'
+            f'<div class="matrix-cell correct"><div class="matrix-value">{tp}</div><div class="matrix-cell-lbl">True Positive</div></div>'
+            '</div>'
+            '<div style="margin-top:16px; font-size:12px; color:rgba(220,210,185,0.6); line-height:1.4;">'
+            '<b>Row</b> = Actual outcome, <b>Column</b> = Predicted outcome'
+            '</div>'
+            '</div>'
+        )
+
+        st.markdown(matrix_html, unsafe_allow_html=True)
+       
 
     # Fold scores display
     st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
