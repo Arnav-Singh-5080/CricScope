@@ -1,0 +1,28 @@
+# VCS
+.git/
+.github/
+
+# Python caches / venvs
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Notebook / local tooling artifacts
+.ipynb_checkpoints/
+.virtual_documents/
+
+# Data/model artifacts you may regenerate locally
+# (keep if you want them in the image; we currently rely on repo files)
+
+# Environment / secrets
+.streamlit/secrets.toml
+.env
+
+# Large local experiment folders
+anaconda_projects/
+
+# Build output (if any)
+**/dist/
+**/build/
+

@@ -295,50 +295,28 @@ cd cricscope
 
 ---
 
-## 2 — Create Virtual Environment
+## 2 — Run with Docker (Recommended)
 
 ```bash
-python -m venv venv
-
-# Linux / macOS
-source venv/bin/activate
-
-# Windows
-venv\Scripts\activate
+docker compose up --build
 ```
 
 ---
 
-## 3 — Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 4 — Add Dataset
-
-```text
-cricscope/
-├── app.py
-├── matches.csv
-└── deliveries.csv
-```
-
----
-
-## 5 — Run Application
-
-```bash
-streamlit run app.py
-```
+## 3 — Open the app
 
 Visit:
 
 ```text
 http://localhost:8501
 ```
+
+---
+
+## 4 — Dataset files
+
+The container expects `matches.csv` and `deliveries.csv` to be present in the repository root (they are already included in this repo).
+
 
 <br/>
 

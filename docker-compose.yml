@@ -1,0 +1,12 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    # Helpful for contributors: keep source synced for rapid UI tweaks.
+    volumes:
+      - .:/app
+
