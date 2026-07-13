@@ -5,6 +5,12 @@ try:
     from langchain_groq import ChatGroq
 except ImportError:
     ChatGroq = None
+
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except ImportError:
+    ChatGoogleGenerativeAI = None
+
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
@@ -52,7 +58,7 @@ RESPONSE STYLE:
 
 
 @st.cache_resource
-def get_chain():
+def get_chain(backend="Groq"):
     """
     Build and cache the LCEL chain:
         prompt | llm | output_parser
@@ -60,35 +66,67 @@ def get_chain():
     Cached so the LLM isn't re-instantiated on every Streamlit rerun.
     """
 
-    if ChatGroq is None:
-        raise RuntimeError(
-            "langchain-groq is not installed.\n" "Run:\n" "pip install langchain-groq"
+    if backend == "Google Gemini":
+        if ChatGoogleGenerativeAI is None:
+            raise RuntimeError(
+                "langchain-google-genai is not installed.\n"
+                "Run:\n"
+                "pip install langchain-google-genai"
+            )
+        try:
+            api_key = st.secrets["gemini"]["key"]
+        except Exception:
+            api_key = os.environ.get("GEMINI_API_KEY")
+
+        if not api_key:
+            st.error("Google Gemini API key not found.")
+            st.info(
+                "To enable the chatbot with Google Gemini, either:\n\n"
+                "**Option A —** create a `.streamlit/secrets.toml` file in the project root with:\n"
+                '```toml\n[gemini]\nkey = "YOUR_GEMINI_API_KEY"\n```\n\n'
+                "**Option B —** create a `.env` file in the project root with:\n"
+                "```\nGEMINI_API_KEY=YOUR_GEMINI_API_KEY\n```\n\n"
+                "Get your API key at https://aistudio.google.com"
+            )
+            st.stop()
+
+        os.environ["GOOGLE_API_KEY"] = api_key
+        os.environ["GEMINI_API_KEY"] = api_key
+
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-1.5-flash",
+            google_api_key=api_key,
+            temperature=0.7,
+            max_output_tokens=1024,
         )
-    try:
-        api_key = st.secrets["groq"]["key"]
-    except Exception:
-        api_key = os.environ.get("GROQ_API_KEY")
+    else:
+        if ChatGroq is None:
+            raise RuntimeError(
+                "langchain-groq is not installed.\n" "Run:\n" "pip install langchain-groq"
+            )
+        try:
+            api_key = st.secrets["groq"]["key"]
+        except Exception:
+            api_key = os.environ.get("GROQ_API_KEY")
 
-    if not api_key:
-        st.error(" Groq API key not found.")
+        if not api_key:
+            st.error("Groq API key not found.")
+            st.info(
+                "To enable the chatbot with Groq, either:\n\n"
+                "**Option A —** create a `.streamlit/secrets.toml` file in the project root with:\n"
+                '```toml\n[groq]\nkey = "YOUR_GROQ_API_KEY"\n```\n\n'
+                "**Option B —** create a `.env` file in the project root with:\n"
+                "```\nGROQ_API_KEY=YOUR_GROQ_API_KEY\n```\n\n"
+                "Get your free API key at https://console.groq.com"
+            )
+            st.stop()
 
-        st.info(
-            "To enable the chatbot, either:\n\n"
-            "**Option A —** create a `.streamlit/secrets.toml` file in the project root with:\n"
-            '```toml\n[groq]\nkey = "YOUR_GROQ_API_KEY"\n```\n\n'
-            "**Option B —** create a `.env` file in the project root with:\n"
-            "```\nGROQ_API_KEY=YOUR_GROQ_API_KEY\n```\n\n"
-            "Get your free API key at https://console.groq.com"
+        llm = ChatGroq(
+            groq_api_key=api_key,
+            model_name="llama-3.1-8b-instant",
+            temperature=0.7,
+            max_tokens=1024,
         )
-
-        st.stop()
-
-    llm = ChatGroq(
-        groq_api_key=api_key,
-        model_name="llama-3.1-8b-instant",
-        temperature=0.7,
-        max_tokens=1024,
-    )
 
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -138,7 +176,8 @@ def run_agent(user_message: str, chat_history: list[dict]) -> str:
     Returns:
         The assistant's response as a plain string.
     """
-    chain = get_chain()
+    backend = st.session_state.get("chatbot_backend", "Groq")
+    chain = get_chain(backend=backend)
 
     history = _build_history(chat_history)
 
@@ -156,9 +195,9 @@ def run_agent(user_message: str, chat_history: list[dict]) -> str:
 
         # Friendly error messages for common failure modes
         if "api_key" in err or "authentication" in err or "401" in err:
-            return "⚠️ Invalid Groq API key."
+            return f"⚠️ Invalid {backend} API key."
         elif "rate" in err or "429" in err:
-            return "⚠️ Groq rate limit hit. Wait a moment and try again."
+            return f"⚠️ {backend} rate limit hit. Wait a moment and try again."
         elif "timeout" in err:
             return "⚠️ Request timed out. Please try again."
         else:

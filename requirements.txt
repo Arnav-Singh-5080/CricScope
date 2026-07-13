@@ -11,3 +11,4 @@ requests
 groq
 langchain-groq
 python-dotenv
+langchain-google-genai
