@@ -415,7 +415,8 @@ def train_model():
 
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
-    df['balls_left'] = 120 - (df['over'] * 6 + df['ball'])
+    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
+    df['balls_left'] = (120 - balls_bowled).clip(lower=0)
 
     df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
     df['wickets'] = df.groupby('match_id')['player_dismissed'].cumsum()
