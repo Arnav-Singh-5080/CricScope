@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 st.markdown("""
 <style>
 
@@ -2252,7 +2251,7 @@ if st.session_state.page == "Analysis":
                 proj_df = pd.DataFrame({
                     'batting_team': [batting_team],
                     'bowling_team': [bowling_team],
-                    'city': ['Mumbai'],
+                    'city': [selected_city],
                     'runs_left': [r_left],
                     'balls_left': [b_left],
                     'wickets': [10 - wickets],
