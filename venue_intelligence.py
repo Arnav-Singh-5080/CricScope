@@ -207,7 +207,6 @@ def render_venue_bias_card(city: str):
 
     # Stat row
     c1, c2, c3 = st.columns(3)
-    _info_card.__func__ = _info_card  # avoid issue with reuse
     with c1:
         _info_card("Total Matches", str(bias["total_matches"]), "at this venue")
     with c2:
