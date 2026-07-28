@@ -2111,13 +2111,13 @@ if st.session_state.page == "Team Analysis":
         winning_matches = team_matches[
         team_matches["winner"] == team
 ]
-        best_venue = winning_matches["venue"].mode()[0]
+        best_venue = winning_matches["venue"].mode().iloc[0] if not winning_matches["venue"].mode().empty else "N/A"
 
         seasons_played = team_matches["Season"].nunique()
         
         pom_count = winning_matches["player_of_match"].value_counts()
-        top_player = pom_count.index[0]
-        top_player_awards = pom_count.iloc[0]
+        top_player = pom_count.index[0] if not pom_count.empty else "N/A"
+        top_player_awards = pom_count.iloc[0] if not pom_count.empty else 0
 
         col1, col2, col3 = st.columns(3)
 
