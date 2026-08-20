@@ -409,6 +409,7 @@ def train_model():
 
     total_df = df[df['inning'] == 1].groupby('match_id')['total_runs'].sum().reset_index()
     total_df.rename(columns={'total_runs': 'target'}, inplace=True)
+    total_df['target'] = total_df['target'] + 1
 
     df = df.merge(total_df, on='match_id')
     df = df[df['inning'] == 2]
