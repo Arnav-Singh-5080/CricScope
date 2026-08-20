@@ -1803,7 +1803,7 @@ if st.session_state.page == "Analysis":
                 win = 0.5
                 lose = 0.5
             else:
-                verdict_msg = f"❌ Match Decided: **{batting_team}** is all out for {score} (target {target}). **{bowling_team}** won by {target - 1 - score} runs!"
+                verdict_msg = f"❌ Match Decided: **{batting_team}** is all out for {score} (target {target}). **{bowling_team}** won by {target - score} runs!"
                 verdict_type = "error"
                 win = 0.0
                 lose = 1.0
@@ -1815,7 +1815,7 @@ if st.session_state.page == "Analysis":
                 win = 0.5
                 lose = 0.5
             else:
-                verdict_msg = f"❌ Match Decided: Overs completed. **{batting_team}** failed to reach the target of {target} and lost by {target - 1 - score} runs!"
+                verdict_msg = f"❌ Match Decided: Overs completed. **{batting_team}** failed to reach the target of {target} and lost by {target - score} runs!"
                 verdict_type = "error"
                 win = 0.0
                 lose = 1.0
