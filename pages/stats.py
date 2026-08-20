@@ -8,6 +8,25 @@ st.set_page_config(
     layout="wide",
 )
 
+
+# -----------------------------------
+# DATASET VALIDATION
+# -----------------------------------
+def check_datasets_exist():
+    import os
+    missing = []
+    if not os.path.exists("matches.csv"):
+        missing.append("matches.csv")
+    if not os.path.exists("deliveries.csv"):
+        missing.append("deliveries.csv")
+    if missing:
+        st.error(f"❌ **Missing Required Dataset File(s):** {', '.join(missing)}")
+        st.warning("💡 **Setup Instructions:** Please ensure you have downloaded and placed both `matches.csv` and `deliveries.csv` in the root directory of this project. For more details, refer to `dataset_info.txt` or the README setup instructions.")
+        st.stop()
+
+check_datasets_exist()
+
+
 # shared CSS (matches application.py dark-gold aesthetic) 
 st.markdown("""
 <style>
