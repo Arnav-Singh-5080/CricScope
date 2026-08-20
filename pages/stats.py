@@ -271,6 +271,7 @@ fig.update_layout(
     font_color="white",
     margin=dict(l=20,r=20,t=20,b=20))
 
+st.markdown('<p style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 8px;">Interactive Pie chart showing the head-to-head match win comparison between the two selected teams.</p>', unsafe_allow_html=True)
 st.plotly_chart(fig, use_container_width=True)
 # filter h2h matches
 h2h = matches[
