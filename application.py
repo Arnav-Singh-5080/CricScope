@@ -115,7 +115,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 11px;
     letter-spacing: 2.5px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.45);
+    color: rgba(212,175,55,1.0);
     font-weight: 400;
 }
 
@@ -126,10 +126,10 @@ section[data-testid="stSidebar"] > div {
 }
 
 .sidebar-section-label {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(180,160,100,0.35);
+    color: rgba(180,160,100,0.85);
     padding: 14px 32px 8px;
     font-weight: 500;
 }
@@ -141,7 +141,7 @@ section[data-testid="stSidebar"] > div {
     background: transparent;
     border: none;
     border-radius: 0;
-    color: rgba(220,210,180,0.65);
+    color: rgba(220,210,180,0.95);
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
     font-weight: 400;
@@ -193,10 +193,10 @@ section[data-testid="stSidebar"] > div {
 }
 
 .hero-eyebrow {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 4px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.5);
+    color: rgba(212,175,55,0.95);
     margin-bottom: 18px;
     font-weight: 400;
 }
@@ -216,7 +216,7 @@ section[data-testid="stSidebar"] > div {
 
 .hero-subtitle {
     font-size: 15px;
-    color: rgba(220,210,185,0.55);
+    color: rgba(220,210,185,0.95);
     font-weight: 300;
     letter-spacing: 0.3px;
     max-width: 460px;
@@ -232,7 +232,7 @@ section[data-testid="stSidebar"] > div {
     border-radius: 100px;
     padding: 5px 14px 5px 10px;
     font-size: 11px;
-    color: rgba(212,175,55,0.8);
+    color: rgba(212,175,55,1.0);
     letter-spacing: 0.5px;
     margin-bottom: 24px;
     width: fit-content;
@@ -284,10 +284,10 @@ section[data-testid="stSidebar"] > div {
 }
 
 .stat-label {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(200,185,140,0.4);
+    color: rgba(200,185,140,0.9);
 }
 
 /* ---- ANALYSIS SECTION ---- */
@@ -306,7 +306,7 @@ section[data-testid="stSidebar"] > div {
 
 .section-desc {
     font-size: 13px;
-    color: rgba(200,185,140,0.4);
+    color: rgba(200,185,140,0.9);
     letter-spacing: 0.3px;
 }
 
@@ -326,10 +326,10 @@ section[data-testid="stSidebar"] > div {
 }
 
 .input-label {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.5);
+    color: rgba(212,175,55,0.95);
     margin-bottom: 12px;
     font-weight: 500;
 }
@@ -349,7 +349,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 10px !important;
     letter-spacing: 1.8px !important;
     text-transform: uppercase !important;
-    color: rgba(200,185,140,0.5) !important;
+    color: rgba(200,185,140,0.95) !important;
     font-weight: 500 !important;
 }
 
@@ -394,7 +394,7 @@ section[data-testid="stSidebar"] > div {
     font-family: 'Cormorant Garamond', serif;
     font-size: 48px;
     font-weight: 300;
-    color: rgba(212,175,55,0.25);
+    color: rgba(212,175,55,1.0);
     line-height: 1;
     letter-spacing: -2px;
 }
@@ -462,7 +462,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 9px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.4);
+    color: rgba(212,175,55,0.85);
     margin-bottom: 24px;
     font-weight: 500;
 }
@@ -489,10 +489,10 @@ section[data-testid="stSidebar"] > div {
 }
 
 .win-prob-label {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(200,185,140,0.35);
+    color: rgba(200,185,140,0.85);
     margin-bottom: 28px;
 }
 
@@ -522,7 +522,7 @@ section[data-testid="stSidebar"] > div {
     justify-content: space-between;
     margin-top: 10px;
     font-size: 11px;
-    color: rgba(200,185,140,0.4);
+    color: rgba(200,185,140,0.9);
     font-family: 'DM Mono', monospace;
     letter-spacing: 0.5px;
 }
@@ -555,7 +555,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 9px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(180,165,115,0.35);
+    color: rgba(180,165,115,0.85);
 }
 /* ---- TEAM CARDS ---- */
 .team-card-link {
@@ -636,15 +636,15 @@ section[data-testid="stSidebar"] > div {
 }
 
 .team-card-name {
-    font-size: 10px;
-    color: rgba(200,185,140,0.35);
+    font-size: 12px;
+    color: rgba(200,185,140,0.85);
     margin-top: 4px;
     letter-spacing: 0.5px;
     transition: color 0.3s ease;
 }
 
 .team-card-link:hover .team-card-name {
-    color: rgba(200,185,140,0.6);
+    color: rgba(200,185,140,0.85);
 }
 
 /* ---- STRAY STREAMLIT COMPONENTS ---- */
@@ -667,7 +667,7 @@ div[data-testid="metric-container"] {
 }
 
 div[data-testid="metric-container"] label {
-    color: rgba(200,185,140,0.45) !important;
+    color: rgba(200,185,140,0.85) !important;
     font-size: 10px !important;
     letter-spacing: 1.5px !important;
     text-transform: uppercase !important;
@@ -787,10 +787,10 @@ section[data-testid="stSidebar"] a:active {
 
 /* Role */
 .profile-role {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(212, 175, 55, 0.45);
+    color: rgba(212,175,55,0.85);
     font-weight: 500;
     line-height: 1;
     position: relative;
@@ -841,7 +841,7 @@ section[data-testid="stSidebar"] a:active {
 /* Icon - plain, no badge box */
 .profile-link-icon {
     font-size: 12px;
-    color: rgba(212, 175, 55, 0.6);
+    color: rgba(212,175,55,0.85);
     flex-shrink: 0;
     width: 14px;
     text-align: center;
@@ -850,13 +850,13 @@ section[data-testid="stSidebar"] a:active {
 }
 
 .profile-link:hover .profile-link-icon {
-    color: rgba(212, 175, 55, 0.9);
+    color: rgba(212,175,55,0.9);
 }
 
 /* Link text */
 .profile-link-text {
     font-size: 12px;
-    color: rgba(200, 185, 140, 0.55);
+    color: rgba(200,185,140,0.85);
     font-weight: 400;
     letter-spacing: 0.2px;
     overflow: hidden;
@@ -869,7 +869,7 @@ section[data-testid="stSidebar"] a:active {
 }
 
 .profile-link:hover .profile-link-text {
-    color: rgba(212, 175, 55, 0.82);
+    color: rgba(212,175,55,0.82);
 }
 
 /* Version footer */
@@ -879,13 +879,13 @@ section[data-testid="stSidebar"] a:active {
     font-size: 9px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(200, 185, 140, 0.18);
+    color: rgba(200,185,140,0.85);
     font-weight: 400;
     transition: color 0.3s ease;
 }
 
 .sidebar-version:hover {
-    color: rgba(200, 185, 140, 0.3);
+    color: rgba(200,185,140,0.85);
 }
 
 /* ---- PERFORMANCE REPORT & CONFUSION MATRIX ---- */
@@ -908,7 +908,7 @@ section[data-testid="stSidebar"] a:active {
     font-size: 11px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.6);
+    color: rgba(212,175,55,0.85);
     font-weight: 500;
     padding: 10px 0;
 }
@@ -916,7 +916,7 @@ section[data-testid="stSidebar"] a:active {
     font-size: 11px;
     letter-spacing: 1.2px;
     text-transform: uppercase;
-    color: rgba(220,210,185,0.4);
+    color: rgba(220,210,185,0.85);
     text-align: left;
     font-weight: 500;
 }
@@ -935,7 +935,7 @@ section[data-testid="stSidebar"] a:active {
 }
 .matrix-cell.correct:hover {
     background: rgba(212,175,55,0.1);
-    border-color: rgba(212,175,55,0.45);
+    border-color: rgba(212,175,55,1.0);
     transform: translateY(-2px);
 }
 .matrix-cell.incorrect {
@@ -961,7 +961,7 @@ section[data-testid="stSidebar"] a:active {
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-top: 6px;
-    color: rgba(220,210,185,0.4);
+    color: rgba(220,210,185,0.85);
 }
 /* Hide team-card nav buttons — cards are the visual; buttons are the click target */
 button[kind="secondary"][data-testid="baseButton-secondary"] {
@@ -1380,7 +1380,7 @@ if st.session_state.page == "Dashboard":
         <div style="padding: 48px 72px 28px;">
             <div style="font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:500;
                         letter-spacing:4px; text-transform:uppercase; 
-                        color:rgba(212,175,55,0.65); margin-bottom:28px;">
+                        color:rgba(212,175,55,0.85); margin-bottom:28px;">
                 IPL Teams &amp; Analytics
             </div>
     """, unsafe_allow_html=True)
@@ -1449,7 +1449,7 @@ if st.session_state.page == "Dashboard":
                                 transition: letter-spacing 0.3s ease;">
                         {tdata['abbr']}
                     </div>
-                    <div style="font-size:10px; color:rgba(200,185,140,0.38);
+                    <div style="font-size:10px; color:rgba(200,185,140,0.85);
                                 margin-top:4px; letter-spacing:0.5px;">
                         {team_name}
                     </div>
@@ -1514,7 +1514,7 @@ elif st.session_state.page == "Performance":
             <div class="stat-pill">
                 <div class="stat-value">{metrics['accuracy']:.2%}</div>
                 <div class="stat-label">Test Accuracy</div>
-                <div style="font-size:11px; color:rgba(220,210,185,0.45); margin-top:8px; line-height:1.4;">
+                <div style="font-size:11px; color:rgba(220,210,185,0.85); margin-top:8px; line-height:1.4;">
                     Percentage of correct predictions on unseen test split data.
                 </div>
             </div>
@@ -1525,7 +1525,7 @@ elif st.session_state.page == "Performance":
             <div class="stat-pill">
                 <div class="stat-value">{metrics['cv_mean']:.2%}</div>
                 <div class="stat-label">5-Fold CV Mean Accuracy</div>
-                <div style="font-size:11px; color:rgba(220,210,185,0.45); margin-top:8px; line-height:1.4;">
+                <div style="font-size:11px; color:rgba(220,210,185,0.85); margin-top:8px; line-height:1.4;">
                     Average validation score across 5 stratified folds. (SD: &plusmn;{metrics['cv_std']:.2%})
                 </div>
             </div>
@@ -1536,7 +1536,7 @@ elif st.session_state.page == "Performance":
             <div class="stat-pill">
                 <div class="stat-value">{metrics['f1']:.2%}</div>
                 <div class="stat-label">F1-Score</div>
-                <div style="font-size:11px; color:rgba(220,210,185,0.45); margin-top:8px; line-height:1.4;">
+                <div style="font-size:11px; color:rgba(220,210,185,0.85); margin-top:8px; line-height:1.4;">
                     Harmonic mean of precision and recall. Robust measure of model accuracy.
                 </div>
             </div>
@@ -1556,7 +1556,7 @@ elif st.session_state.page == "Performance":
                         <span style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#f0e8cc; font-weight:500;">Precision</span>
                         <span style="font-family:'DM Mono',monospace; font-size:22px; color:#d4af37; font-weight:500;">{metrics['precision']:.2%}</span>
                     </div>
-                    <p style="font-size:13px; color:rgba(220,210,185,0.5); line-height:1.5; margin:0;">
+                    <p style="font-size:13px; color:rgba(220,210,185,0.85); line-height:1.5; margin:0;">
                         Out of all matches the model predicted as a win, how many were actual wins? High precision minimizes false positives.
                     </p>
                 </div>
@@ -1565,13 +1565,13 @@ elif st.session_state.page == "Performance":
                         <span style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#f0e8cc; font-weight:500;">Recall (Sensitivity)</span>
                         <span style="font-family:'DM Mono',monospace; font-size:22px; color:#d4af37; font-weight:500;">{metrics['recall']:.2%}</span>
                     </div>
-                    <p style="font-size:13px; color:rgba(220,210,185,0.5); line-height:1.5; margin:0;">
+                    <p style="font-size:13px; color:rgba(220,210,185,0.85); line-height:1.5; margin:0;">
                         Out of all actual wins that occurred in the dataset, how many did the model correctly identify? High recall minimizes false negatives.
                     </p>
                 </div>
                 <div>
-                    <div style="font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(212,175,55,0.35); margin-bottom:6px;">Model Settings</div>
-                    <div style="font-family:'DM Mono',monospace; font-size:12px; color:rgba(220,210,185,0.6); background:rgba(0,0,0,0.2); padding:10px 14px; border-radius:8px; border:1px solid rgba(212,175,55,0.06); line-height:1.5;">
+                    <div style="font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(212,175,55,0.85); margin-bottom:6px;">Model Settings</div>
+                    <div style="font-family:'DM Mono',monospace; font-size:12px; color:rgba(220,210,185,0.85); background:rgba(0,0,0,0.2); padding:10px 14px; border-radius:8px; border:1px solid rgba(212,175,55,0.06); line-height:1.5;">
                         Active Classifier: {active_model_name}<br>
                         CV Strategy: 5-Fold Stratified K-Fold
                     </div>
@@ -1583,7 +1583,7 @@ elif st.session_state.page == "Performance":
         st.markdown(textwrap.dedent(f"""
             <div class="matrix-wrapper">
                 <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
-                <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
+                <div style="font-size:12px; color:rgba(220,210,185,0.85); margin-bottom: 20px; line-height:1.4;">
                     A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
                 </div>
                 <div class="matrix-grid">
@@ -1624,7 +1624,7 @@ elif st.session_state.page == "Performance":
             st.markdown(textwrap.dedent(f"""
                 <div style="background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.05);
                             border-radius:10px; padding:12px; text-align:center;">
-                    <div style="font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(220,210,185,0.35); margin-bottom:4px;">Fold {idx+1}</div>
+                    <div style="font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(220,210,185,0.85); margin-bottom:4px;">Fold {idx+1}</div>
                     <div style="font-family:'DM Mono',monospace; font-size:15px; color:#e8d89a; font-weight:500;">{score:.2%}</div>
                 </div>
             """), unsafe_allow_html=True)
@@ -1652,7 +1652,7 @@ if st.session_state.page == "Analysis":
     # ---- INPUT SECTION ----
     st.markdown("""
         <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                    color:rgba(212,175,55,0.4);margin-bottom:20px;font-weight:500;">
+                    color:rgba(212,175,55,0.85);margin-bottom:20px;font-weight:500;">
             Match Configuration
         </div>
     """, unsafe_allow_html=True)
@@ -1699,7 +1699,7 @@ if st.session_state.page == "Analysis":
 
     st.markdown("""
         <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                    color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+                    color:rgba(212,175,55,0.85);margin-bottom:16px;font-weight:500;">
             Fixture
         </div>
     """, unsafe_allow_html=True)
@@ -1723,7 +1723,7 @@ if st.session_state.page == "Analysis":
                             color:{t1['color']};letter-spacing:3px;margin-top:14px;">
                     {t1['abbr']}
                 </div>
-                <div style="font-size:10px;color:rgba(200,185,140,0.3);margin-top:4px;letter-spacing:0.5px;">
+                <div style="font-size:10px;color:rgba(200,185,140,0.85);margin-top:4px;letter-spacing:0.5px;">
                     BATTING
                 </div>
             </div>
@@ -1733,7 +1733,7 @@ if st.session_state.page == "Analysis":
         st.markdown("""
             <div style="display:flex;align-items:center;justify-content:center;height:100%;
                         font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;
-                        color:rgba(212,175,55,0.2);letter-spacing:-2px;padding:28px 0;">
+                        color:rgba(212,175,55,0.85);letter-spacing:-2px;padding:28px 0;">
                 vs
             </div>
         """, unsafe_allow_html=True)
@@ -1755,7 +1755,7 @@ if st.session_state.page == "Analysis":
                             color:{t2['color']};letter-spacing:3px;margin-top:14px;">
                     {t2['abbr']}
                 </div>
-                <div style="font-size:10px;color:rgba(200,185,140,0.3);margin-top:4px;letter-spacing:0.5px;">
+                <div style="font-size:10px;color:rgba(200,185,140,0.85);margin-top:4px;letter-spacing:0.5px;">
                     BOWLING
                 </div>
             </div>
@@ -1842,7 +1842,7 @@ if st.session_state.page == "Analysis":
         st.markdown('<div style="height:28px;"></div>', unsafe_allow_html=True)
         st.markdown("""
             <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
-                        color:rgba(212,175,55,0.4);margin-bottom:16px;font-weight:500;">
+                        color:rgba(212,175,55,0.85);margin-bottom:16px;font-weight:500;">
                 Prediction Output
             </div>
         """, unsafe_allow_html=True)
@@ -1903,7 +1903,7 @@ if st.session_state.page == "Analysis":
                         {bowling_team}
                     </div>
                     <div style="font-family:'DM Mono',monospace;font-size:72px;font-weight:500;
-                                color:rgba(200,185,140,0.55);line-height:1;margin-bottom:4px;">
+                                color:rgba(200,185,140,0.85);line-height:1;margin-bottom:4px;">
                         {bowl_pct}%
                     </div>
                     <div class="win-prob-label">Win Probability</div>
@@ -1944,7 +1944,7 @@ if st.session_state.page == "Analysis":
                         align-items:center;justify-content:space-between;">
                 <div>
                     <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                color:rgba(212,175,55,0.35);margin-bottom:6px;">Model Verdict</div>
+                                color:rgba(212,175,55,0.85);margin-bottom:6px;">Model Verdict</div>
                     <div style="font-family:'Cormorant Garamond',serif;font-size:22px;
                                 font-weight:500;color:#f0e8cc;">
                         {verdict} favoured to win
@@ -1952,7 +1952,7 @@ if st.session_state.page == "Analysis":
                 </div>
                 <div style="text-align:right;">
                     <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                                color:rgba(212,175,55,0.35);margin-bottom:6px;">Confidence</div>
+                                color:rgba(212,175,55,0.85);margin-bottom:6px;">Confidence</div>
                     <div style="font-family:'DM Mono',monospace;font-size:20px;color:#d4af37;">
                         {conf_label} · {round(conf*100)}%
                     </div>
@@ -2236,10 +2236,10 @@ if st.session_state.page == "chatbot":
     .chat-hero-left {}
  
     .chat-eyebrow {
-        font-size: 10px;
+        font-size: 12px;
         letter-spacing: 4px;
         text-transform: uppercase;
-        color: rgba(212,175,55,0.45);
+        color: rgba(212,175,55,1.0);
         margin-bottom: 8px;
         font-weight: 400;
     }
@@ -2258,7 +2258,7 @@ if st.session_state.page == "chatbot":
  
     .chat-subtitle {
         font-size: 12px;
-        color: rgba(220,210,185,0.4);
+        color: rgba(220,210,185,0.85);
         letter-spacing: 0.3px;
         font-weight: 300;
     }
@@ -2312,10 +2312,10 @@ if st.session_state.page == "chatbot":
         border: 1px solid rgba(255,255,255,0.06);
         border-radius: 100px;
         padding: 5px 14px;
-        font-size: 10px;
+        font-size: 12px;
         letter-spacing: 1.2px;
         text-transform: uppercase;
-        color: rgba(200,185,140,0.4);
+        color: rgba(200,185,140,0.9);
         font-weight: 500;
     }
  
@@ -2385,14 +2385,14 @@ if st.session_state.page == "chatbot":
     .chat-empty-title {
         font-family: 'Cormorant Garamond', serif;
         font-size: 22px;
-        color: rgba(240,232,204,0.5);
+        color: rgba(240,232,204,0.85);
         margin-bottom: 8px;
         font-weight: 500;
     }
  
     .chat-empty-sub {
         font-size: 12px;
-        color: rgba(200,185,140,0.28);
+        color: rgba(200,185,140,0.85);
         letter-spacing: 0.3px;
         max-width: 340px;
         line-height: 1.6;
@@ -2412,7 +2412,7 @@ if st.session_state.page == "chatbot":
         border-radius: 10px;
         padding: 10px 18px;
         font-size: 12px;
-        color: rgba(212,175,55,0.65);
+        color: rgba(212,175,55,0.85);
         letter-spacing: 0.3px;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -2504,7 +2504,7 @@ if st.session_state.page == "chatbot":
     .msg-time {
         font-family: 'DM Mono', monospace;
         font-size: 9px;
-        color: rgba(200,185,140,0.25);
+        color: rgba(200,185,140,0.85);
         letter-spacing: 0.5px;
         padding: 0 4px;
     }
@@ -2547,7 +2547,7 @@ if st.session_state.page == "chatbot":
     }
  
     [data-testid="stChatInput"]:focus-within {
-        border-color: rgba(212,175,55,0.45) !important;
+        border-color: rgba(212,175,55,1.0) !important;
         box-shadow: 0 0 0 3px rgba(212,175,55,0.06) !important;
     }
  
@@ -2562,7 +2562,7 @@ if st.session_state.page == "chatbot":
     }
  
     [data-testid="stChatInputTextArea"]::placeholder {
-        color: rgba(200,185,140,0.3) !important;
+        color: rgba(200,185,140,0.85) !important;
         letter-spacing: 0.3px !important;
     }
  
