@@ -8,6 +8,7 @@ and repaints win-probability UI every ~30 seconds with zero manual input.
 
 # pyrefly: ignore [missing-import]
 import streamlit as st
+from components.styles import apply_custom_css
 import pandas as pd
 # pyrefly: ignore [missing-import]
 import numpy as np
@@ -27,6 +28,7 @@ st.set_page_config(
     page_icon="🔴",
     layout="wide",
 )
+apply_custom_css("live_match")
 
 # ───────────────────────────────────────────
 #  AUTO-REFRESH (pure JS, no extra dependency)
@@ -56,6 +58,7 @@ if st.session_state.live_auto_refresh:
         unsafe_allow_html=True,
     )
 
+# Luxury CSS is modularized into components/styles.py
 # ───────────────────────────────────────────
 #  LUXURY CSS (matches main app aesthetic)
 # ───────────────────────────────────────────
