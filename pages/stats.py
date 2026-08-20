@@ -242,7 +242,7 @@ st.markdown("""
             color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
     Head-to-Head Record
 </div>
-<div class="section-title">⚔️ Team Matchup</div>
+<div class="section-title">Team Matchup</div>
 """, unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
@@ -340,7 +340,7 @@ st.markdown("""
             color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
     Player Performance by Team
 </div>
-<div class="section-title">🏏 Top Performers</div>
+<div class="section-title">Top Performers</div>
 """, unsafe_allow_html=True)
 
 selected_team = st.selectbox("Select Team", all_teams, key="player_team")
@@ -440,7 +440,7 @@ st.markdown("""
             color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
     Venue Performance
 </div>
-<div class="section-title">🏟️ Ground Analysis</div>
+<div class="section-title">Ground Analysis</div>
 """, unsafe_allow_html=True)
 
 venue_team = st.selectbox("Select Team for Venue Analysis", all_teams, key="venue_team")
