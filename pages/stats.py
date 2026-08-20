@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
+from stats_utils import calculate_head_to_head_record
 #  page config 
 st.set_page_config(
     page_title="CricScope · Stats",
@@ -251,43 +252,33 @@ with col1:
 with col2:
     remaining = [t for t in all_teams if t != team_a]
     team_b = st.selectbox("Team B", remaining, index=remaining.index("Chennai Super Kings") if "Chennai Super Kings" in remaining else 0, key="h2h_b")
-    
-#Example value
-team_a = "Chennai Super KIngs"
-team_b = "Mumbai Indians"
 
-team_a_wins = 11
-team_b_wins = 17
+record = calculate_head_to_head_record(matches, team_a, team_b)
 
-#Pie Chart
-fig = go.Figure(data=[go.Pie(
-    labels=[f"{team_a}Wins",f"{team_b}Wins"],
-    values=[11,17],
-    hole=0.5
-)])
-
-fig.update_layout(
-    paper_bgcolor="#0E1117",
-    font_color="white",
-    margin=dict(l=20,r=20,t=20,b=20))
-
-st.plotly_chart(fig, use_container_width=True)
-# filter h2h matches
-h2h = matches[
-    ((matches["team1"] == team_a) & (matches["team2"] == team_b)) |
-    ((matches["team1"] == team_b) & (matches["team2"] == team_a))
-].copy()
-
-if h2h.empty:
+if record["matches"].empty:
     st.info("No head-to-head matches found between these two teams.")
 else:
-    total = len(h2h)
-    a_wins = (h2h["winner"] == team_a).sum()
-    b_wins = (h2h["winner"] == team_b).sum()
-    no_result = total - a_wins - b_wins
+    # Pie Chart
+    fig = go.Figure(data=[go.Pie(
+        labels=[f"{team_a} Wins", f"{team_b} Wins", "No Result"],
+        values=[record["team_a_wins"], record["team_b_wins"], record["no_result"]],
+        hole=0.5
+    )])
 
-    a_pct = round(a_wins / total * 100, 1) if total else 0
-    b_pct = round(b_wins / total * 100, 1) if total else 0
+    fig.update_layout(
+        paper_bgcolor="#0E1117",
+        font_color="white",
+        margin=dict(l=20,r=20,t=20,b=20))
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    h2h = record["matches"]
+    total = record["total"]
+    a_wins = record["team_a_wins"]
+    b_wins = record["team_b_wins"]
+    no_result = record["no_result"]
+    a_pct = record["team_a_pct"]
+    b_pct = record["team_b_pct"]
 
     ca, cb, cc = st.columns(3)
     with ca:
