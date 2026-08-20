@@ -88,6 +88,31 @@ class TestCricScopeCalculations(unittest.TestCase):
         self.assertEqual(crr, 7.5)
         self.assertEqual(rrr, 0.0)
 
+    def test_extreme_targets_and_scores(self):
+        # Extreme target (e.g. 500 runs) and extremely high overs
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(500, 450, 19.5)
+        self.assertEqual(runs_left, 50)
+        self.assertEqual(balls_left, 3)
+        self.assertAlmostEqual(crr, 450 / 19.5, places=4)
+        self.assertAlmostEqual(rrr, (50 * 6) / 3, places=4)
+
+    def test_negative_runs_left(self):
+        # When target is already exceeded (score > target)
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(100, 120, 15)
+        self.assertEqual(runs_left, -20)
+        self.assertEqual(balls_left, 30)
+        self.assertEqual(crr, 8.0)
+        # RRR should go negative to indicate winning rate is already exceeded
+        self.assertEqual(rrr, -4.0)
+
+    def test_zero_runs_needed_perfect_boundary(self):
+        # Tie-score scenario (score == target)
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(150, 150, 18)
+        self.assertEqual(runs_left, 0)
+        self.assertEqual(balls_left, 12)
+        self.assertEqual(crr, 150 / 18)
+        self.assertEqual(rrr, 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()
