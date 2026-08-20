@@ -2625,35 +2625,63 @@ if st.session_state.page == "chatbot":
             st.rerun()
  
     # ---- MESSAGES CONTAINER ----
-    messages_container = st.container()
- 
+    messages_container = st.container() 
+    CHAT_VISIBLE_COUNT = 15  # tune as needed
+
+    def _render_message(msg):
+        role      = msg["role"]
+        content   = msg["content"]
+        timestamp = msg.get("time", "")
+
+        if role == "user":
+            avatar_html = '<div class="msg-avatar user">You</div>'
+            bubble_cls  = "user"
+            row_cls     = "user"
+        else:
+            avatar_html = '<div class="msg-avatar assistant">◈</div>'
+            bubble_cls  = "assistant"
+            row_cls     = "assistant"
+
+        st.markdown(f"""
+            <div class="msg-row {row_cls}">
+                {avatar_html}
+                <div class="msg-bubble-wrap">
+                    <div class="msg-bubble {bubble_cls}">{content}</div>
+                    <div class="msg-time">{timestamp}</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
     with messages_container:
         if not st.session_state.chat_messages:
             pass
         else:
-            for msg in st.session_state.chat_messages:
-                role      = msg["role"]
-                content   = msg["content"]
-                timestamp = msg.get("time", "")
- 
-                if role == "user":
-                    avatar_html = '<div class="msg-avatar user">You</div>'
-                    bubble_cls  = "user"
-                    row_cls     = "user"
-                else:
-                    avatar_html = '<div class="msg-avatar assistant">◈</div>'
-                    bubble_cls  = "assistant"
-                    row_cls     = "assistant"
- 
-                st.markdown(f"""
-                    <div class="msg-row {row_cls}">
-                        {avatar_html}
+            all_msgs = st.session_state.chat_messages
+            older_msgs  = all_msgs[:-CHAT_VISIBLE_COUNT]
+            recent_msgs = all_msgs[-CHAT_VISIBLE_COUNT:]
+
+            if older_msgs:
+                with st.expander(f"📜 Show earlier messages ({len(older_msgs)})"):
+                    for msg in older_msgs:
+                        _render_message(msg)
+
+            for msg in recent_msgs:
+                _render_message(msg)
+
+            if st.session_state.chat_thinking:
+                st.markdown("""
+                    <div class="msg-row assistant">
+                        <div class="msg-avatar assistant">◈</div>
                         <div class="msg-bubble-wrap">
-                            <div class="msg-bubble {bubble_cls}">{content}</div>
-                            <div class="msg-time">{timestamp}</div>
+                            <div class="msg-bubble assistant thinking">
+                                <div class="thinking-dot"></div>
+                                <div class="thinking-dot"></div>
+                                <div class="thinking-dot"></div>
+                            </div>
                         </div>
                     </div>
-                """, unsafe_allow_html=True)
+                </div>
+            """, unsafe_allow_html=True)
  
             if st.session_state.chat_thinking:
                 st.markdown("""
