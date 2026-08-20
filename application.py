@@ -1275,13 +1275,13 @@ with st.sidebar:
 
     st.markdown('<div class="sidebar-section-label">Navigation</div>', unsafe_allow_html=True)
 
-    if st.button("◈  Dashboard", key="nav_dash"):
+    if st.button("Dashboard", icon=":material/dashboard:", key="nav_dash"):
         st.session_state.page = "Dashboard"
 
-    if st.button("◉  Match Analysis", key="nav_analysis"):
+    if st.button("Match Analysis", icon=":material/analytics:", key="nav_analysis"):
         st.session_state.page = "Analysis"
 
-    if st.button("⚖  Model Performance", key="nav_performance"):
+    if st.button("Model Performance", icon=":material/legend_toggle:", key="nav_performance"):
         st.session_state.page = "Performance"
 
     if st.button("✦  Chatbot", key="nav_chatbot"):
@@ -1791,31 +1791,31 @@ if st.session_state.page == "Analysis":
         
         if score >= target:
             is_match_decided = True
-            verdict_msg = f"🏆 Match Decided: **{batting_team}** has already reached the target of {target} and won the match!"
+            verdict_msg = f"Match Decided: **{batting_team}** has already reached the target of {target} and won the match!"
             verdict_type = "success"
             win = 1.0
             lose = 0.0
         elif wickets >= 10:
             is_match_decided = True
             if score == target - 1:
-                verdict_msg = f"🤝 Match Decided: **{batting_team}** is all out for {score}. The match is a **TIE**!"
+                verdict_msg = f"Match Decided: **{batting_team}** is all out for {score}. The match is a **TIE**!"
                 verdict_type = "warning"
                 win = 0.5
                 lose = 0.5
             else:
-                verdict_msg = f"❌ Match Decided: **{batting_team}** is all out for {score} (target {target}). **{bowling_team}** won by {target - 1 - score} runs!"
+                verdict_msg = f"Match Decided: **{batting_team}** is all out for {score} (target {target}). **{bowling_team}** won by {target - 1 - score} runs!"
                 verdict_type = "error"
                 win = 0.0
                 lose = 1.0
         elif balls_left <= 0:
             is_match_decided = True
             if score == target - 1:
-                verdict_msg = f"🤝 Match Decided: Overs completed. The match is a **TIE**!"
+                verdict_msg = f"Match Decided: Overs completed. The match is a **TIE**!"
                 verdict_type = "warning"
                 win = 0.5
                 lose = 0.5
             else:
-                verdict_msg = f"❌ Match Decided: Overs completed. **{batting_team}** failed to reach the target of {target} and lost by {target - 1 - score} runs!"
+                verdict_msg = f"Match Decided: Overs completed. **{batting_team}** failed to reach the target of {target} and lost by {target - 1 - score} runs!"
                 verdict_type = "error"
                 win = 0.0
                 lose = 1.0
@@ -2007,10 +2007,11 @@ if st.session_state.page == "Analysis":
 
         if not export_df.empty:
             st.download_button(
-                label="⬇️ Download Ball-by-Ball Predictions (CSV)",
+                label="Download Ball-by-Ball Predictions (CSV)",
                 data=export_df.to_csv(index=False),
                 file_name=f"{batting_team}_vs_{bowling_team}_predictions.csv",
-                mime="text/csv"
+                mime="text/csv",
+                icon=":material/download:"
             )
 
         st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
@@ -2024,11 +2025,12 @@ if st.session_state.page == "Analysis":
             csv_data = export_df.to_csv(index=False)
         
         st.download_button(
-            label="📊 Download Ball-by-Ball Prediction Data (CSV)",
+            label="Download Ball-by-Ball Prediction Data (CSV)",
             data=csv_data,
             file_name=f"cricscope_predictions_{batting_team.lower().replace(' ', '_')}.csv",
             mime="text/csv",
-            use_container_width=True
+            use_container_width=True,
+            icon=":material/analytics:"
         )
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
@@ -2066,8 +2068,7 @@ if st.session_state.page == "Team Analysis":
     losses = matches_played - wins
 
     win_rate = round((wins / matches_played) * 100, 1) if matches_played > 0 else 0
-
-    st.title("🏏 Team Analysis")
+    st.title("Team Analysis", icon=":material/sports_cricket:")
 
     if team:
         st.markdown(
@@ -2082,7 +2083,7 @@ if st.session_state.page == "Team Analysis":
     """,
     unsafe_allow_html=True
 )
-         # Team Logo
+          # Team Logo
         if team in team_data:
                 c1, c2, c3 = st.columns([1,2,1])
 
@@ -2106,7 +2107,7 @@ if st.session_state.page == "Team Analysis":
             st.metric("Win Rate", f"{win_rate}%")
         
     # Performance Overview
-        st.subheader("📊 Performance Overview")
+        st.subheader("Performance Overview", icon=":material/bar_chart:")
         
         winning_matches = team_matches[
         team_matches["winner"] == team
@@ -2122,14 +2123,14 @@ if st.session_state.page == "Team Analysis":
         col1, col2, col3 = st.columns(3)
 
         with col1:
-                st.metric("🏟 Best Venue", best_venue)
+                st.metric("Best Venue", best_venue)
 
         with col2:
                 st.metric("Seasons Played", seasons_played)
 
         with col3:
               st.metric(
-        "🏆 Top Performer",
+        "Top Performer",
         top_player,
         f"{top_player_awards} Awards"
 )
@@ -2137,7 +2138,7 @@ if st.session_state.page == "Team Analysis":
         st.markdown("---")
 
      # Team Strength Analysis
-        st.subheader("📈 Team Statistics")
+        st.subheader("Team Statistics", icon=":material/trending_up:")
         
         _, deliveries_df = load_data()
 
@@ -2169,24 +2170,24 @@ if st.session_state.page == "Team Analysis":
        
         # Batting
         st.markdown(
-            f"🏏 **Total Runs** : {total_runs:,} ({batting_strength}%)"
+            f"**Total Runs** : {total_runs:,} ({batting_strength}%)"
         )
         st.progress(batting_strength / 100)
 
         # Bowling
         st.markdown(
-            f"🎯 **Wickets Taken** : {total_wickets} ({bowling_strength}%)"
+            f"**Wickets Taken** : {total_wickets} ({bowling_strength}%)"
         )
         st.progress(bowling_strength / 100)
 
         # Fielding
         st.markdown(
-            f"🧤 **Fielding Dismissals** : {fielding_count} ({fielding_strength}%)"
+            f"**Fielding Dismissals** : {fielding_count} ({fielding_strength}%)"
         )
         st.progress(fielding_strength / 100)
         
     
-        if st.button("⬅ Back to Dashboard"):
+        if st.button("Back to Dashboard", icon=":material/arrow_back:"):
             st.session_state.page = "Dashboard"
             st.rerun()
 if st.session_state.page == "chatbot":
