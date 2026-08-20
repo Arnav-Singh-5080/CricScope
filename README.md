@@ -83,7 +83,7 @@ Built with a fintech-inspired dark UI featuring glassmorphism cards, gold gradie
 
 ## Table of Contents 
 - [Live Demo](#live-demo)
-- [CricScope Documentation](#cricscope-documentation)
+- [CricScope Documentation](#documentation)
 - [Architecture](#architecture)
 - [Model Evaluation Metrics](#model-evaluation-metrics)
 - [Dataset Split](#dataset-split)
