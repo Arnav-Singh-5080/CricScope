@@ -228,6 +228,32 @@ trained on IPL ball-by-ball match data spanning IPL seasons from 2008–2020.
 
 </div>
 
+```text
+cricscope/
+│
+├── assets/
+│   ├── dashboard.png
+│   ├── win-probability-prediction.png
+│   ├── analytics.png
+│   └── cricscope.gif
+│
+├── pages/
+│   ├── stats.py
+│   └── live_match.py
+│
+├── application.py
+├── test_calculations.py
+├── requirements.txt
+├── matches.csv
+├── deliveries.csv
+├── README.md
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+├── SECURITY.md
+└── LICENSE
+```
+
+<br/>
 
 ## Screenshots
 
@@ -247,22 +273,6 @@ trained on IPL ball-by-ball match data spanning IPL seasons from 2008–2020.
 ## Demo
 
 ![Demo](assets/cricscope.gif)
-
-```bash
-cricscope/
-│
-├── assets/
-│   ├── dashboard.png
-│   ├── prediction-page.png
-│   ├── analytics.png
-│   
-├── app.py
-├── matches.csv
-├── deliveries.csv
-├── requirements.txt
-└── README.md
-└── demo_.gif
-```
 
 <br/>
 
