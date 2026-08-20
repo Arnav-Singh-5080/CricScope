@@ -537,6 +537,20 @@ def parse_overs_string(overs_str) -> float:
         return 0.0
 
 
+def validate_match_state(score, target, balls_left, wickets_fallen) -> list[str]:
+    """Return validation errors for an in-progress chase state."""
+    errors = []
+    if target <= 0:
+        errors.append("Target must be greater than zero.")
+    if score >= target:
+        errors.append("Current score has already reached the target.")
+    if balls_left < 0:
+        errors.append("Balls left cannot be negative.")
+    if not 0 <= wickets_fallen <= 10:
+        errors.append("Wickets must be between 0 and 10.")
+    return errors
+
+
 def compute_prediction(batting_team, bowling_team, venue, target,
                        current_score, wickets_fallen, overs_bowled):
     """
@@ -553,7 +567,15 @@ def compute_prediction(batting_team, bowling_team, venue, target,
         balls_in_current_over = int(round((overs_bowled - completed_overs) * 10))
         total_balls_bowled = (completed_overs * 6) + balls_in_current_over
 
-        if total_balls_bowled <= 0 or target <= 0:
+        if total_balls_bowled <= 0:
+            return None
+
+        if validate_match_state(
+            current_score,
+            target,
+            120 - total_balls_bowled,
+            wickets_fallen,
+        ):
             return None
 
         runs_left = target - current_score
@@ -768,6 +790,17 @@ if not user_api_key:
             st.error(
                 f"Invalid match state. {demo_runs} runs cannot be scored in {demo_overs} overs."
             )
+            st.stop()
+
+        validation_errors = validate_match_state(
+            demo_runs,
+            demo_target,
+            120 - balls_bowled,
+            demo_wickets,
+        )
+        if validation_errors:
+            for error in validation_errors:
+                st.error(error)
             st.stop()
 
         result = compute_prediction(
