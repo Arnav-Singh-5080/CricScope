@@ -1973,7 +1973,9 @@ if st.session_state.page == "Analysis":
                     break
 
                 b_left = 120 - total_balls_done
-                c_score = score  # score stays same (projection from current state)
+                # Project score linearly; wickets held constant (fall timing unknown)
+                balls_played = overs * 6
+                c_score = int(score * total_balls_done / balls_played) if balls_played > 0 else score
                 r_left = target - c_score
                 c_crr = c_score / (total_balls_done / 6) if total_balls_done > 0 else 0
                 c_rrr = (r_left * 6) / b_left if b_left > 0 else 0
