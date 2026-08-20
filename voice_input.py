@@ -5,7 +5,10 @@ voice_input.py - uses CSS transform to reposition without breaking click target
 import streamlit as st
 from groq import Groq
 import hashlib
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 
 def voice_input_component() -> str | None:
@@ -383,7 +386,7 @@ div[data-testid="stAudioInput"] > div > *:not(button):not(:has(button)) {
 
     with st.spinner("Transcribing…"):
         try:
-            client = Groq(api_key=api_key)
+            client = Groq(api_key=api_key, timeout=30.0)
             result = client.audio.transcriptions.create(
                 model="whisper-large-v3-turbo",
                 file=("audio.wav", audio_bytes, "audio/wav"),
@@ -392,5 +395,6 @@ div[data-testid="stAudioInput"] > div > *:not(button):not(:has(button)) {
             text = result.text.strip()
             return text if text else None
         except Exception as e:
-            st.warning(f"⚠️ Transcription failed: {str(e)}")
+            logger.exception("Audio transcription failed")
+            st.warning("⚠️ Transcription failed. Please try again.")
             return None

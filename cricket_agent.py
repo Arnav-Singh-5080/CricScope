@@ -1,4 +1,5 @@
 import os
+import logging
 import streamlit as st
 
 try:
@@ -8,6 +9,8 @@ except ImportError:
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
+
+logger = logging.getLogger(__name__)
 
 try:
     from dotenv import load_dotenv
@@ -88,6 +91,7 @@ def get_chain():
         model_name="llama-3.1-8b-instant",
         temperature=0.7,
         max_tokens=1024,
+        timeout=30,
     )
 
     prompt = ChatPromptTemplate.from_messages(
@@ -153,6 +157,7 @@ def run_agent(user_message: str, chat_history: list[dict]) -> str:
 
     except Exception as e:
         err = str(e).lower()
+        logger.exception("Chatbot request failed")
 
         # Friendly error messages for common failure modes
         if "api_key" in err or "authentication" in err or "401" in err:
@@ -162,4 +167,4 @@ def run_agent(user_message: str, chat_history: list[dict]) -> str:
         elif "timeout" in err:
             return "⚠️ Request timed out. Please try again."
         else:
-            return f"⚠️ Something went wrong: {str(e)}"
+            return "⚠️ Something went wrong. Please try again."
