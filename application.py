@@ -1061,7 +1061,7 @@ def train_model(model_name='logistic'):
     df['current_score'] = df.groupby('match_id')['total_runs'].cumsum()
     df['runs_left'] = df['target'] - df['current_score']
     
-    balls_bowled = ((df['over'] - 1) * 6) + df['ball']
+    balls_bowled = ((df['over'] ) * 6) + df['ball']
     df['balls_left'] = (120 - balls_bowled).clip(lower=0)
 
     df['player_dismissed'] = df['player_dismissed'].notna().astype(int)
@@ -1069,7 +1069,7 @@ def train_model(model_name='logistic'):
     df['wickets'] = 10 - df['wickets']
 
     overs_bowled = (df['over'] - 1) + (df['ball'] / 6)
-    df['crr'] = np.where(overs_bowled > 0, df['current_score'] / overs_bowled, 0.0)
+    df['crr'] = df['current_score'] / df['balls_bowled'].clip(lower=1) * 6
     df['rrr'] = np.where(df['balls_left'] > 0, (df['runs_left'] * 6) / df['balls_left'], 0.0)
 
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
