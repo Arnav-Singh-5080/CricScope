@@ -88,6 +88,22 @@ class TestCricScopeCalculations(unittest.TestCase):
         self.assertEqual(crr, 7.5)
         self.assertEqual(rrr, 0.0)
 
+    def test_prediction_inputs_chase_completed(self):
+        # Target reached successfully (e.g. 182 runs scored, target 180, 19.2 overs, which is 116 balls)
+        # 19.2 overs completed in streamlit equals 19.3333 overs in decimal mathematically
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(180, 182, 19.3333)
+        self.assertEqual(runs_left, -2)
+        self.assertAlmostEqual(balls_left, 4, places=2)
+        self.assertAlmostEqual(crr, 182 / 19.3333, places=4)
+        self.assertAlmostEqual(rrr, -3.0, places=2)
+
+    def test_extreme_inputs(self):
+        # Overs past 20 (e.g. due to bad user input or extreme extra balls)
+        runs_left, balls_left, crr, rrr = calculate_prediction_inputs(200, 150, 22)
+        self.assertEqual(balls_left, 0)
+        self.assertEqual(runs_left, 50)
+        self.assertEqual(rrr, 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()
