@@ -1,4 +1,9 @@
+
 import streamlit as st
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+from pathlib import Path
 st.markdown("""
 <style>
 
@@ -1021,8 +1026,9 @@ team_data = {
 # -----------------------------------
 @st.cache_data
 def load_data():
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    BASE_DIR = Path(__file__).resolve().parent
+    matches = pd.read_csv(BASE_DIR / "matches.csv")
+    deliveries = pd.read_csv(BASE_DIR / "deliveries.csv")
     return matches, deliveries
 
 # -----------------------------------
@@ -1579,41 +1585,70 @@ elif st.session_state.page == "Performance":
             </div>
         """), unsafe_allow_html=True)
         
+   
+        # st.markdown(textwrap.dedent(f"""
+        #     <div class="matrix-wrapper">
+        #         <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
+        #         <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
+        #             A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
+        #         </div>
+        #         <div class="matrix-grid">
+        #             <div class="matrix-header">Actual \\ Pred</div>
+        #             <div class="matrix-header">Bowl Win (0)</div>
+        #             <div class="matrix-header">Bat Win (1)</div>
+                    
+        #             <div class="matrix-label">Bowl Win (0)</div>
+        #             <div class="matrix-cell correct">
+        #                 <div class="matrix-value">{metrics['tn']:,}</div>
+        #                 <div class="matrix-cell-lbl">True Neg</div>
+        #             </div>
+        #             <div class="matrix-cell incorrect">
+        #                 <div class="matrix-value">{metrics['fp']:,}</div>
+        #                 <div class="matrix-cell-lbl">False Pos</div>
+        #             </div>
+                    
+        #             <div class="matrix-label">Bat Win (1)</div>
+        #             <div class="matrix-cell incorrect">
+        #                 <div class="matrix-value">{metrics['fn']:,}</div>
+        #                 <div class="matrix-cell-lbl">False Neg</div>
+        #             </div>
+        #             <div class="matrix-cell correct">
+        #                 <div class="matrix-value">{metrics['tp']:,}</div>
+        #                 <div class="matrix-cell-lbl">True Pos</div>
+        #             </div>
+        #         </div>
+        #     </div>
+        # """), unsafe_allow_html=True)
     with col_cm:
-        st.markdown(textwrap.dedent(f"""
-            <div class="matrix-wrapper">
-                <div class="input-label" style="font-size:11px; margin-bottom: 8px;">Confusion Matrix</div>
-                <div style="font-size:12px; color:rgba(220,210,185,0.45); margin-bottom: 20px; line-height:1.4;">
-                    A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
-                </div>
-                <div class="matrix-grid">
-                    <div class="matrix-header">Actual \\ Pred</div>
-                    <div class="matrix-header">Bowl Win (0)</div>
-                    <div class="matrix-header">Bat Win (1)</div>
-                    
-                    <div class="matrix-label">Bowl Win (0)</div>
-                    <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tn']:,}</div>
-                        <div class="matrix-cell-lbl">True Neg</div>
-                    </div>
-                    <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fp']:,}</div>
-                        <div class="matrix-cell-lbl">False Pos</div>
-                    </div>
-                    
-                    <div class="matrix-label">Bat Win (1)</div>
-                    <div class="matrix-cell incorrect">
-                        <div class="matrix-value">{metrics['fn']:,}</div>
-                        <div class="matrix-cell-lbl">False Neg</div>
-                    </div>
-                    <div class="matrix-cell correct">
-                        <div class="matrix-value">{metrics['tp']:,}</div>
-                        <div class="matrix-cell-lbl">True Pos</div>
-                    </div>
-                </div>
-            </div>
-        """), unsafe_allow_html=True)
+        cm = np.array([
+            [metrics['tn'], metrics['fp']],
+            [metrics['fn'], metrics['tp']]
+        ])
 
+        fig, ax = plt.subplots(figsize=(5, 4))
+
+        sns.heatmap(
+            cm,
+            annot=True,
+            fmt="d",
+            cmap="YlOrRd",
+            xticklabels=["Bowl Win (0)", "Bat Win (1)"],
+            yticklabels=["Bowl Win (0)", "Bat Win (1)"],
+            linewidths=1,
+            linecolor="white",
+            cbar=True,
+            ax=ax
+        )
+
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("Actual")
+        ax.set_title("Confusion Matrix Heatmap")
+
+        st.pyplot(fig)
+   
+       
+
+   
     # Fold scores display
     st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="input-label" style="font-size:11px; margin-bottom: 12px; padding-left: 4px;">Stratified 5-Fold Scores</div>', unsafe_allow_html=True)
