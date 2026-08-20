@@ -1820,7 +1820,7 @@ if st.session_state.page == "Analysis":
                 win = 0.0
                 lose = 1.0
 
-        with st.spinner(""):
+        with st.spinner("⚡ Computing Match Intelligence & Win Probabilities..."):
             if is_match_decided:
                 pass
             else:
