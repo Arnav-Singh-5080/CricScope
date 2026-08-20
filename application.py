@@ -1254,11 +1254,15 @@ def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, ta
         
     return pd.DataFrame(records)
 
-def safe_calculate_rates(score, target, overs):
+def safe_calculate_rates(score, target, overs, balls_in_over):
     runs_left = target - score
-    balls_left = max(120 - (overs * 6), 0)
-    crr = score / overs if overs > 0 else 0.0
+    balls_in_over = st.number_input(
+     "Balls in Current Over", min_value=0, max_value=5, value=0, step=1
+         )
     rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
+    total_balls_faced = overs * 6 + balls_in_over
+    crr = (score / total_balls_faced * 6) if total_balls_faced > 0 else 0
+    balls_left = 120 - total_balls_faced
     return runs_left, balls_left, crr, rrr
 
 # -----------------------------------
