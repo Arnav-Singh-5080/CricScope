@@ -118,8 +118,9 @@ def compute_venue_bias(city: str) -> dict:
                 else:
                     bat_second_wins += 1
 
-    bat_first_pct  = round(bat_first_wins  / total * 100, 1) if total > 0 else 50.0
-    bat_second_pct = round(bat_second_wins / total * 100, 1) if total > 0 else 50.0
+    resolved_matches = bat_first_wins + bat_second_wins
+    bat_first_pct  = round(bat_first_wins  / resolved_matches * 100, 1) if resolved_matches > 0 else 50.0
+    bat_second_pct = round(bat_second_wins / resolved_matches * 100, 1) if resolved_matches > 0 else 50.0
 
     # average first innings score from deliveries
     deliveries = load_deliveries()
