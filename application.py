@@ -2030,6 +2030,164 @@ if st.session_state.page == "Analysis":
             mime="text/csv",
             use_container_width=True
         )
+        
+    # ---- MOMENTUM GRAPH SECTION ----
+        st.markdown('<hr style="border-top:1px solid rgba(212,175,55,0.08);margin:32px 0;">', unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
+                    color:rgba(212,175,55,0.4);margin-bottom:8px;font-weight:500;">
+            Match Momentum Graph
+        </div>
+        <div style="font-size:13px;color:rgba(200,185,140,0.4);margin-bottom:20px;">
+            Projected over-by-over win probability across the innings
+        </div>
+        """, unsafe_allow_html=True)
+
+        import plotly.graph_objects as go
+
+        # Simulate over-by-over using ACTUAL match state as anchor
+        momentum_rows = []
+        current_run_rate = score / overs if overs > 0 else 0
+
+        for ov in range(1, 21):
+            if ov <= overs:
+                # Past: interpolate backward from actual current score/wickets
+                frac = ov / overs if overs > 0 else 0
+                sim_score = int(score * frac)
+                sim_wickets_fallen = int(wickets * frac)
+                sim_balls_done = ov * 6
+                sim_balls_left = max(120 - sim_balls_done, 1)
+                sim_runs_left = max(target - sim_score, 0)
+                sim_crr = sim_score / ov if ov > 0 else 0
+                sim_rrr = (sim_runs_left * 6) / sim_balls_left if sim_balls_left > 0 else 0
+
+                sim_df = pd.DataFrame([{
+                    'batting_team': batting_team,
+                    'bowling_team': bowling_team,
+                    'city': selected_city,
+                    'runs_left': sim_runs_left,
+                    'balls_left': sim_balls_left,
+                    'wickets': 10 - sim_wickets_fallen,
+                    'target': target,
+                    'crr': sim_crr,
+                    'rrr': sim_rrr
+                }])
+
+                try:
+                    prob = pipe.predict_proba(sim_df)[0][1]
+                except Exception:
+                    prob = 0.5
+
+                momentum_rows.append({
+                    'over': ov,
+                    'bat_prob': round(prob * 100, 1),
+                    'bowl_prob': round((1 - prob) * 100, 1)
+                })
+
+            else:
+                # Future: flat line from current prediction — we don't know what happens next
+                momentum_rows.append({
+                    'over': ov,
+                    'bat_prob': round(win * 100, 1),
+                    'bowl_prob': round(lose * 100, 1)
+                })
+
+        mom_df = pd.DataFrame(momentum_rows)
+
+        # Pin current over to exact prediction card value
+        if overs > 0:
+            mom_df.loc[mom_df['over'] == overs, 'bat_prob'] = round(win * 100, 1)
+            mom_df.loc[mom_df['over'] == overs, 'bowl_prob'] = round(lose * 100, 1)
+
+        # Mark current over on the graph
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=mom_df['over'], y=mom_df['bat_prob'],
+            name=batting_team,
+            mode='lines+markers',
+            line=dict(color='#d4af37', width=2.5, shape='spline'),
+            marker=dict(size=5, color='#f0d060'),
+            fill='tozeroy',
+            fillcolor='rgba(212,175,55,0.07)',
+            hovertemplate='<b>Over %{x}</b><br>' + batting_team + ': %{y}%<extra></extra>'
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=mom_df['over'], y=mom_df['bowl_prob'],
+            name=bowling_team,
+            mode='lines+markers',
+            line=dict(color='#60a5fa', width=2, shape='spline', dash='dot'),
+            marker=dict(size=4, color='#93c5fd'),
+            hovertemplate='<b>Over %{x}</b><br>' + bowling_team + ': %{y}%<extra></extra>'
+        ))
+
+        # Mark the current match state
+        fig.add_vline(
+            x=overs,
+            line_dash='dash',
+            line_color='rgba(212,175,55,0.4)',
+            annotation_text=f'Now (Over {overs})',
+            annotation_font_color='rgba(212,175,55,0.7)',
+            annotation_font_size=11
+        )
+
+        fig.add_hline(
+            y=50, line_dash='dash',
+            line_color='rgba(255,255,255,0.12)',
+            annotation_text='Even contest',
+            annotation_font_color='rgba(200,185,140,0.4)',
+            annotation_font_size=10
+        )
+
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(255,255,255,0.02)',
+            font=dict(family='DM Sans, sans-serif', color='#e2dfd8'),
+            title=dict(
+                text=f'Win Probability — {batting_team} vs {bowling_team}',
+                font=dict(family='Cormorant Garamond, serif', size=20, color='#f0e8cc'),
+                x=0.01
+            ),
+            xaxis=dict(
+                title=dict(text='Over', font=dict(color='rgba(200,185,140,0.4)', size=11)),
+                tickmode='linear', tick0=1, dtick=2,
+                gridcolor='rgba(255,255,255,0.04)',
+                linecolor='rgba(212,175,55,0.1)',
+                tickfont=dict(color='rgba(200,185,140,0.5)', size=11),
+            ),
+            yaxis=dict(
+                title=dict(text='Win Probability (%)', font=dict(color='rgba(200,185,140,0.4)', size=11)),
+                range=[0, 100],
+                gridcolor='rgba(255,255,255,0.04)',
+                linecolor='rgba(212,175,55,0.1)',
+                tickfont=dict(color='rgba(200,185,140,0.5)', size=11),
+                ticksuffix='%'
+            ),
+            legend=dict(
+                bgcolor='rgba(0,0,0,0)',
+                bordercolor='rgba(212,175,55,0.15)',
+                borderwidth=1,
+                font=dict(size=12, color='rgba(200,185,140,0.7)')
+            ),
+            margin=dict(l=10, r=10, t=50, b=10),
+            hovermode='x unified',
+            hoverlabel=dict(
+                bgcolor='rgba(12,12,12,0.9)',
+                bordercolor='rgba(212,175,55,0.3)',
+                font=dict(color='#e2dfd8', size=12)
+            ),
+            height=420
+        )
+
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+
+        # Key momentum shifts table
+        st.markdown('<div class="input-label" style="margin-top:16px;">Key Momentum Shifts</div>', unsafe_allow_html=True)
+        mom_df['shift'] = mom_df['bat_prob'].diff().abs().fillna(0)
+        top_shifts = mom_df.nlargest(3, 'shift')[['over', 'bat_prob', 'bowl_prob', 'shift']]
+        top_shifts.columns = ['Over', f'{batting_team} Win%', f'{bowling_team} Win%', 'Swing (%)']
+        st.dataframe(top_shifts.round(1).reset_index(drop=True), use_container_width=True, hide_index=True) 
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
     
