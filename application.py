@@ -1076,8 +1076,8 @@ def train_model(model_name='logistic'):
     df['result'] = np.where(df['batting_team'] == df['winner'], 1, 0)
 
     final_df = df[['batting_team', 'bowling_team', 'city',
-                   'runs_left', 'balls_left', 'wickets',
-                   'target', 'crr', 'rrr', 'result']]
+    'runs_left', 'balls_left', 'wickets',
+    'target', 'crr', 'rrr', 'result']]
     final_df.dropna(inplace=True)
 
     X = final_df.drop('result', axis=1)
@@ -1307,6 +1307,7 @@ with st.sidebar:
     st.markdown('<div style="height:1px; background:rgba(212,175,55,0.08); margin:20px 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-section-label">Built By</div>', unsafe_allow_html=True)
 
+<<<<<<< Updated upstream
     st.markdown(
         '<div class="profile-section">'
         '<div class="profile-card">'
@@ -1332,6 +1333,64 @@ with st.sidebar:
         '<div class="sidebar-version">CricScope v2.0 &middot; IPL Edition</div>',
         unsafe_allow_html=True
     )
+=======
+    st.markdown("""
+        <div style="padding:0 18px 8px;">
+            <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(212,175,55,0.12);
+                        border-radius:16px;padding:20px 18px 14px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:0;left:0;right:0;height:60px;
+                            background:radial-gradient(ellipse at 50% 0%,rgba(212,175,55,0.08) 0%,transparent 70%);
+                            pointer-events:none;"></div>
+                <div style="width:44px;height:44px;border-radius:50%;
+                            background:linear-gradient(135deg,#c9a227,#f0d060);
+                            display:flex;align-items:center;justify-content:center;
+                            font-size:16px;font-weight:700;color:#0a0800;
+                            margin-bottom:12px;box-shadow:0 0 18px rgba(212,175,55,0.25);">AS</div>
+                <div style="font-size:17px;font-weight:600;color:#f0e8cc;
+                            letter-spacing:0.5px;margin-bottom:3px;">Arnav Singh</div>
+                <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+                            color:rgba(212,175,55,0.4);margin-bottom:18px;font-weight:500;">ML · Data · Analytics</div>
+                <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin-bottom:12px;"></div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style="padding:0 18px;">
+            <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(212,175,55,0.12);
+                        border-top:none;border-radius:0 0 16px 16px;padding:4px 10px 14px;">
+                <p style="margin:0 0 2px 0;padding:8px 8px;">
+                    <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">✉</span>
+                    <a href="mailto:itsarnav.singh80@gmail.com"
+                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                        itsarnav.singh80@gmail.com
+                    </a>
+                </p>
+                <p style="margin:0 0 2px 0;padding:8px 8px;">
+                    <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">in</span>
+                    <a href="https://www.linkedin.com/in/arnav-singh-a87847351" target="_blank"
+                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                        linkedin.com/in/arnav-singh
+                    </a>
+                </p>
+                <p style="margin:0;padding:8px 8px;">
+                    <span style="color:rgba(212,175,55,0.6);margin-right:8px;font-size:12px;">&#9670;</span>
+                    <a href="https://github.com/Arnav-Singh-5080" target="_blank"
+                    style="color:rgba(200,185,140,0.6);font-size:11px;text-decoration:none;letter-spacing:0.2px;">
+                        Arnav-Singh-5080
+                    </a>
+                </p>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style="text-align:center;margin-top:16px;padding-bottom:24px;font-size:9px;
+                    letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,185,140,0.18);">
+            CricScope v2.0 · IPL Edition
+        </div>
+    """, unsafe_allow_html=True)
+>>>>>>> Stashed changes
 
 # -----------------------------------
 # DASHBOARD PAGE
@@ -1441,7 +1500,7 @@ if st.session_state.page == "Dashboard":
                 <div class="team-card-{i}" onclick="window.__teamClick_{i}=true">
                     <div class="logo-ring-{i}">
                         <img src="{tdata['logo']}"
-                             style="width:100%;height:100%;object-fit:cover;
+                            style="width:100%;height:100%;object-fit:cover;
                                     mix-blend-mode:screen;border-radius:50%;" />
                     </div>
                     <div style="font-family:'Cormorant Garamond',serif; font-size:18px;
@@ -1716,7 +1775,7 @@ if st.session_state.page == "Analysis":
                             box-shadow:0 0 28px {t1['color']}60;
                             display:flex;align-items:center;justify-content:center;">
                     <img src="{t1['logo']}"
-                         style="width:100%;height:100%;object-fit:cover;
+                        style="width:100%;height:100%;object-fit:cover;
                                 mix-blend-mode:screen;" />
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
@@ -1748,7 +1807,7 @@ if st.session_state.page == "Analysis":
                             box-shadow:0 0 28px {t2['color']}60;
                             display:flex;align-items:center;justify-content:center;">
                     <img src="{t2['logo']}"
-                         style="width:100%;height:100%;object-fit:cover;
+                        style="width:100%;height:100%;object-fit:cover;
                                 mix-blend-mode:screen;" />
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;
@@ -2050,10 +2109,41 @@ if st.session_state.page == "Team Analysis":
     
     matches_df, _ = load_data()
 
+<<<<<<< Updated upstream
     team_matches = matches_df[
         (matches_df["team1"] == team) |
         (matches_df["team2"] == team)
     ]
+=======
+            for _, row in shap_df.iterrows():
+                bar_width = min(abs(row['SHAP Value']) * 500, 100)
+                bar_color = '#d4af37' if row['SHAP Value'] > 0 else 'rgba(200,100,100,0.7)'
+                tooltip = feature_tooltips.get(row['Feature'], '')
+                st.markdown(f"""
+                    <div style="margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;
+                                    margin-bottom:6px;">
+                            <span style="font-size:13px;color:#e2dfd8;letter-spacing:0.5px;"
+                                itle="{tooltip}">
+                                {row['Impact']} &nbsp; {row['Feature']}
+                                <span style="font-size:10px;color:rgba(200,185,140,0.35);
+                                            margin-left:6px;">{tooltip}</span>
+                            </span>
+                            <span style="font-family:'DM Mono',monospace;
+                                        font-size:12px;color:rgba(200,185,140,0.6);">
+                                {row['SHAP Value']:+.4f}
+                            </span>
+                        </div>
+                        <div style="height:6px;background:rgba(255,255,255,0.05);
+                                    border-radius:100px;overflow:hidden;">
+                            <div style="height:100%;width:{bar_width}%;
+                                        background:{bar_color};
+                                        border-radius:100px;
+                                        box-shadow:0 0 8px {bar_color};"></div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+>>>>>>> Stashed changes
 
     matches_played = len(team_matches)
 
