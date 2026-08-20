@@ -1096,6 +1096,29 @@ def train_model(model_name='logistic'):
         ('preprocessor', preprocessor),
         ('model', get_model(model_name))
     ])
+    
+
+    scores = cross_val_score(
+        pipe,
+        X_train,
+        y_train,
+        cv=5
+    )
+
+    pipe.fit(X_train, y_train)
+    predictions = pipe.predict(X_test)
+
+    logging.info(f"Cross Validation Scores: {scores}")
+    logging.info(f"Average CV Accuracy: {scores.mean():.4f}")
+    logging.info(
+        f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}"
+    )
+
+    print(
+        f"Test Accuracy: {accuracy_score(y_test, predictions):.4f}"
+    )
+
+    joblib.dump(pipe, model_path)
 
     # Fit pipeline before evaluations to avoid UnboundLocalError
     pipe.fit(X_train, y_train)
