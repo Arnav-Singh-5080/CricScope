@@ -1261,6 +1261,25 @@ def safe_calculate_rates(score, target, overs):
     rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
     return runs_left, balls_left, crr, rrr
 
+# Extract the list of training cities from the fitted OneHotEncoder as a module-level constant
+try:
+    # The 'cat' transformer preprocessor is a OneHotEncoder.
+    # The column index for 'city' is 2 in the ['batting_team', 'bowling_team', 'city'] columns list.
+    MATCH_CITIES = sorted(list(pipe.named_steps['preprocessor'].named_transformers_['cat'].categories_[2]))
+except Exception as e:
+    # Safe fallback if pipeline structure varies or fails to load categories
+    MATCH_CITIES = [
+        "Abu Dhabi", "Bengaluru", "Centurion", "Chennai", "Delhi", 
+        "Durban", "Hyderabad", "Jaipur", "Kolkata", "Mohali", 
+        "Mumbai", "Pune", "Rajkot", "Sharjah", "Visakhapatnam"
+    ]
+
+# Determine default selection index (prefer "Mumbai" as the default to match previous hardcoded behavior)
+try:
+    DEFAULT_CITY_INDEX = MATCH_CITIES.index("Mumbai")
+except ValueError:
+    DEFAULT_CITY_INDEX = 0
+
 # -----------------------------------
 # SIDEBAR
 # -----------------------------------
@@ -1661,9 +1680,16 @@ if st.session_state.page == "Analysis":
 
     with col1:
         st.markdown('<div class="input-card">', unsafe_allow_html=True)
-        st.markdown('<div class="input-label">Teams</div>', unsafe_allow_html=True)
+        st.markdown('<div class="input-label">Teams & Venue</div>', unsafe_allow_html=True)
         batting_team = st.selectbox("Batting Team", teams, key="bat")
         bowling_team = st.selectbox("Bowling Team", [t for t in teams if t != batting_team], key="bowl")
+        
+        selected_city = st.selectbox(
+            "Match Venue (City)",
+            options=MATCH_CITIES,
+            index=DEFAULT_CITY_INDEX,
+            key="city_select"
+        )
         cities = [
             'Abu Dhabi', 'Ahmedabad', 'Bangalore', 'Bengaluru', 'Bloemfontein', 
             'Cape Town', 'Centurion', 'Chandigarh', 'Chennai', 'Cuttack', 
