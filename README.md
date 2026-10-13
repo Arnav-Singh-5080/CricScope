@@ -445,6 +445,10 @@ git push origin feature/your-feature-name
 - Write meaningful commit messages
 - Respect UI consistency
 
+### Local Setup Notes
+
+The app needs `matches.csv` and `deliveries.csv` in the project root before you run it locally. The dataset source and file details are documented in [dataset_info.txt](dataset_info.txt).
+
 ---
 ## 🔐 Security Policy
 
