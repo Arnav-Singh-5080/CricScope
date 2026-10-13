@@ -1203,7 +1203,7 @@ def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, ta
         }
         return pd.DataFrame(data)
 
-    records = []
+    input_rows = []
     for b in range(1, total_balls + 1):
         curr_over = (b - 1) // 6 + 1
         curr_ball = (b - 1) % 6 + 1
@@ -1217,42 +1217,49 @@ def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, ta
         crr = curr_score / (b / 6) if b > 0 else 0.0
         rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0.0
         
-        input_df = pd.DataFrame({
-            'batting_team': [batting_team],
-            'bowling_team': [bowling_team],
-            'city': [selected_city],
-            'runs_left': [runs_left],
-            'balls_left': [balls_left],
-            'wickets': [10 - curr_wickets],
-            'target': [target],
-            'crr': [crr],
-            'rrr': [rrr]
-        })
-        
-        if runs_left <= 0:
-            win = 1.0
-            lose = 0.0
-        elif balls_left <= 0:
-            win = 0.0
-            lose = 1.0
-        else:
-            try:
-                proba = pipe.predict_proba(input_df)[0]
-                if np.isnan(proba).any():
-                    win, lose = 0.5, 0.5
-                else:
-                    win, lose = proba[1], proba[0]
-            except Exception:
-                win, lose = 0.5, 0.5
-            
-        records.append({
+        input_rows.append({
+            'batting_team': batting_team,
+            'bowling_team': bowling_team,
+            'city': selected_city,
+            'runs_left': runs_left,
+            'balls_left': balls_left,
+            'wickets': 10 - curr_wickets,
+            'target': target,
+            'crr': crr,
+            'rrr': rrr,
             'over': curr_over,
-            'ball': curr_ball,
-            'batting_team_prob': round(win, 4),
-            'bowling_team_prob': round(lose, 4)
+            'ball': curr_ball
         })
         
-    return pd.DataFrame(records)
+    df_input = pd.DataFrame(input_rows)
+    
+    if df_input.empty:
+        return pd.DataFrame(columns=['over', 'ball', 'batting_team_prob', 'bowling_team_prob'])
+        
+    X_input = df_input[['batting_team', 'bowling_team', 'city', 'runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr']]
+    
+    try:
+        probas = pipe.predict_proba(X_input)
+    except Exception:
+        probas = np.full((len(df_input), 2), 0.5)
+        
+    win_probs = probas[:, 1]
+    lose_probs = probas[:, 0]
+    
+    win_probs = np.where(df_input['runs_left'] <= 0, 1.0, win_probs)
+    lose_probs = np.where(df_input['runs_left'] <= 0, 0.0, lose_probs)
+    
+    win_probs = np.where((df_input['runs_left'] > 0) & (df_input['balls_left'] <= 0), 0.0, win_probs)
+    lose_probs = np.where((df_input['runs_left'] > 0) & (df_input['balls_left'] <= 0), 1.0, lose_probs)
+    
+    # Handle NaNs from predictions
+    win_probs = np.where(np.isnan(win_probs), 0.5, win_probs)
+    lose_probs = np.where(np.isnan(lose_probs), 0.5, lose_probs)
+    
+    df_input['batting_team_prob'] = np.round(win_probs, 4)
+    df_input['bowling_team_prob'] = np.round(lose_probs, 4)
+    
+    return df_input[['over', 'ball', 'batting_team_prob', 'bowling_team_prob']]
 
 def safe_calculate_rates(score, target, overs):
     runs_left = target - score
@@ -1963,7 +1970,8 @@ if st.session_state.page == "Analysis":
         st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
         # Generate ball-by-ball predictions from current state to end of innings
-        rows = []
+        # Generate ball-by-ball predictions from current state to end of innings
+        input_rows = []
         for ov in range(overs, 20):
             for bl in range(1, 7):
                 total_balls_done = ov * 6 + bl
@@ -1978,32 +1986,34 @@ if st.session_state.page == "Analysis":
                 c_crr = c_score / (total_balls_done / 6) if total_balls_done > 0 else 0
                 c_rrr = (r_left * 6) / b_left if b_left > 0 else 0
 
-                proj_df = pd.DataFrame({
-                    'batting_team': [batting_team],
-                    'bowling_team': [bowling_team],
-                    'city': ['Mumbai'],
-                    'runs_left': [r_left],
-                    'balls_left': [b_left],
-                    'wickets': [10 - wickets],
-                    'target': [target],
-                    'crr': [c_crr],
-                    'rrr': [c_rrr]
+                input_rows.append({
+                    'batting_team': batting_team,
+                    'bowling_team': bowling_team,
+                    'city': 'Mumbai',
+                    'runs_left': r_left,
+                    'balls_left': b_left,
+                    'wickets': 10 - wickets,
+                    'target': target,
+                    'crr': c_crr,
+                    'rrr': c_rrr,
+                    'over': ov + 1,
+                    'ball': bl
                 })
 
-                try:
-                    proj_proba = pipe.predict_proba(proj_df)[0]
-                    bat_prob = round(proj_proba[1] * 100, 2)
-                    bowl_prob = round(proj_proba[0] * 100, 2)
-                except Exception:
-                    bat_prob, bowl_prob = 50.0, 50.0
-                rows.append({
-                    "over": ov + 1,
-                    "ball": bl,
-                    "batting_team_prob": bat_prob,
-                    "bowling_team_prob": bowl_prob
-                })
-
-        export_df = pd.DataFrame(rows)
+        if input_rows:
+            export_df_full = pd.DataFrame(input_rows)
+            X_export = export_df_full[['batting_team', 'bowling_team', 'city', 'runs_left', 'balls_left', 'wickets', 'target', 'crr', 'rrr']]
+            try:
+                probas = pipe.predict_proba(X_export)
+                export_df_full['batting_team_prob'] = np.round(probas[:, 1] * 100, 2)
+                export_df_full['bowling_team_prob'] = np.round(probas[:, 0] * 100, 2)
+            except Exception:
+                export_df_full['batting_team_prob'] = 50.0
+                export_df_full['bowling_team_prob'] = 50.0
+                
+            export_df = export_df_full[['over', 'ball', 'batting_team_prob', 'bowling_team_prob']]
+        else:
+            export_df = pd.DataFrame(columns=['over', 'ball', 'batting_team_prob', 'bowling_team_prob'])
 
         if not export_df.empty:
             st.download_button(
