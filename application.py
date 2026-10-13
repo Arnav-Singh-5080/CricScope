@@ -24,6 +24,8 @@ section[data-testid="stSidebar"] {
 import pandas as pd
 import numpy as np
 import time
+import joblib
+import os
 import os
 import joblib
 import logging
@@ -1038,6 +1040,18 @@ def get_model(model_name='logistic'):
     return LogisticRegression(max_iter=1000)
 
 @st.cache_resource
+def load_model():
+    model_path = "pipe.pkl"
+    if os.path.exists(model_path):
+        return joblib.load(model_path)
+    else:
+        # Fallback to training if pkl is missing (to ensure app still runs)
+        # Note: In production, we'd prefer to raise an error or use a pre-built one.
+        from scripts.train import train_and_save_model
+        train_and_save_model()
+        return joblib.load(model_path)
+
+pipe = load_model()
 def train_model(model_name='logistic'):
     model_path = f"{model_name}_model.pkl"
 
