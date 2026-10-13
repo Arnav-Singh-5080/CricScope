@@ -762,12 +762,6 @@ if not user_api_key:
             st.error(
                 f"Unrealistic match state: {demo_runs}/{demo_wickets} after {demo_overs} overs."
             )
-            st.stop()        
-
-        if demo_runs > max_possible_runs:
-            st.error(
-                f"Invalid match state. {demo_runs} runs cannot be scored in {demo_overs} overs."
-            )
             st.stop()
 
         result = compute_prediction(
