@@ -2,6 +2,8 @@ import unittest
 import pandas as pd
 import numpy as np
 
+from momentum import classify_momentum_regime
+
 # Helper functions replicating the implementation logic in application.py
 def calculate_balls_left_df(over, ball):
     # Replicates pandas training logic
@@ -87,6 +89,28 @@ class TestCricScopeCalculations(unittest.TestCase):
         self.assertEqual(balls_left, 0)
         self.assertEqual(crr, 7.5)
         self.assertEqual(rrr, 0.0)
+
+    def test_classify_momentum_regime(self):
+        self.assertEqual(
+            classify_momentum_regime(0.82, 0.18, 7.8, 6.2, 6, 36)[0],
+            "Batting Dominance"
+        )
+        self.assertEqual(
+            classify_momentum_regime(0.25, 0.75, 5.5, 7.2, 8, 45)[0],
+            "Bowling Dominance"
+        )
+        self.assertEqual(
+            classify_momentum_regime(0.52, 0.48, 7.0, 9.0, 3, 15)[0],
+            "Collapse Risk"
+        )
+        self.assertEqual(
+            classify_momentum_regime(0.55, 0.45, 6.8, 8.4, 7, 14)[0],
+            "Bowling Pressure"
+        )
+        self.assertEqual(
+            classify_momentum_regime(0.5, 0.5, 6.2, 6.0, 6, 40)[0],
+            "Balanced Contest"
+        )
 
 
 if __name__ == '__main__':
