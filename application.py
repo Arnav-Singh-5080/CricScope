@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.express as px
 st.markdown("""
 <style>
 
@@ -1254,6 +1255,57 @@ def generate_ball_by_ball_df(pipe, batting_team, bowling_team, selected_city, ta
         
     return pd.DataFrame(records)
 
+
+def get_local_feature_importance(pipe, input_df):
+    try:
+        model = pipe.named_steps["model"]
+
+        if not hasattr(model, "coef_"):
+            return None
+
+        preprocessor = pipe.named_steps["preprocessor"]
+
+        transformed_input = preprocessor.transform(input_df)
+
+        # Convert sparse matrix to dense array if needed
+        if hasattr(transformed_input, "toarray"):
+            transformed_input = transformed_input.toarray()
+
+        coefficients = model.coef_[0]
+
+        all_features = preprocessor.get_feature_names_out()
+
+        contributions = transformed_input.flatten() * coefficients
+
+        print("features:", len(all_features))
+        print("coefficients:", len(coefficients))
+        print("contributions:", len(contributions))
+
+        feat_df = pd.DataFrame({
+            "feature": all_features,
+            "contribution": contributions
+        })
+
+        # Keep only active features
+        feat_df = feat_df[
+            feat_df["contribution"] != 0
+        ].copy()
+
+        feat_df["abs_contribution"] = (
+            feat_df["contribution"].abs()
+        )
+
+        return feat_df.sort_values(
+            "abs_contribution",
+            ascending=False
+        )
+
+    except Exception as e:
+        logging.error(
+            f"Local feature importance failed: {e}"
+        )
+        return None
+    
 def safe_calculate_rates(score, target, overs):
     runs_left = target - score
     balls_left = max(120 - (overs * 6), 0)
@@ -1959,6 +2011,55 @@ if st.session_state.page == "Analysis":
                 </div>
             </div>
         """, unsafe_allow_html=True)
+        # =====================================
+# FEATURE IMPORTANCE SECTION
+# =====================================
+
+        st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="font-size:10px;
+                    letter-spacing:3px;
+                    text-transform:uppercase;
+                    color:rgba(212,175,55,0.4);
+                    margin-bottom:16px;
+                    font-weight:500;">
+            Model Feature Weights
+        </div>
+        """, unsafe_allow_html=True)
+        
+        feat_df = get_local_feature_importance(pipe, input_df)
+
+        if feat_df is None:
+            st.info(
+                "Feature importance visualization is available only for Logistic Regression."
+            )
+        else:
+            fig = px.bar(
+                feat_df.sort_values("contribution"),
+                x="contribution",
+                y="feature",
+                orientation="h",
+                color="contribution",
+                color_continuous_scale=["#5f4b00", "#d4af37"]
+            )
+       
+            fig.update_layout(
+                title="Current Match Feature Contributions",
+                paper_bgcolor="#E3EC60",
+                plot_bgcolor="#E8EB32",
+                font_color="#0F0C07",
+                title_font_color="#0F0E0E"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+
+
+
+
+
+
         # ---- CSV EXPORT ----
         st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
