@@ -194,6 +194,7 @@ def render_venue_bias_card(city: str):
     apply_gold_theme(fig, "Win % — Batting First vs Second")
     fig.update_layout(height=160, xaxis=dict(range=[0, 100], title="Win %"),
                       showlegend=False, margin=dict(l=80, r=20, t=45, b=20))
+    st.markdown('<p style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 4px;">Horizontal bar chart comparing win percentages when batting first vs batting second at this venue.</p>', unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True)
 
     # Insight callout
@@ -320,6 +321,7 @@ def render_toss_impact(city: str):
             font=dict(color=FONT_COL),
             margin=dict(l=20, r=20, t=20, b=10),
         )
+        st.markdown('<p style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 4px;">Gauge chart showing the percentage of times teams choose to bat or bowl first after winning the toss.</p>', unsafe_allow_html=True)
         st.plotly_chart(fig, use_container_width=True)
 
     if toss["preferred_decision"]:
@@ -404,6 +406,7 @@ def render_target_difficulty(city: str, target: int):
     apply_gold_theme(fig, "Target vs Historical Average")
     fig.update_layout(height=240, showlegend=False,
                       yaxis=dict(range=[0, max(avg_score, target) * 1.2]))
+    st.markdown('<p style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 4px;">Vertical bar chart comparing the set target score to the historical average score at this venue.</p>', unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -486,6 +489,7 @@ def render_h2h_venue(batting_team: str, bowling_team: str, city: str):
                                            x=0.5, y=0.5, showarrow=False,
                                            font=dict(color=GOLD, size=14,
                                                      family="DM Mono, monospace"))])
+        st.markdown('<p style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 4px;">Donut chart showing head-to-head matches win count breakdown between batting and bowling teams at this venue.</p>', unsafe_allow_html=True)
         st.plotly_chart(fig, use_container_width=True)
 
 

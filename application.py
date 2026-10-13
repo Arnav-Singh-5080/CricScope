@@ -115,7 +115,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 11px;
     letter-spacing: 2.5px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.45);
+    color: rgba(212,175,55,0.8);
     font-weight: 400;
 }
 
@@ -129,7 +129,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(180,160,100,0.35);
+    color: rgba(180,160,100,0.75);
     padding: 14px 32px 8px;
     font-weight: 500;
 }
@@ -141,7 +141,7 @@ section[data-testid="stSidebar"] > div {
     background: transparent;
     border: none;
     border-radius: 0;
-    color: rgba(220,210,180,0.65);
+    color: rgba(220,210,180,0.85);
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
     font-weight: 400;
@@ -166,7 +166,8 @@ section[data-testid="stSidebar"] > div {
     color: #f0d060;
     border: none;
     box-shadow: none;
-    outline: none;
+    outline: 2px solid #d4af37 !important;
+    outline-offset: 2px;
 }
 
 /* ---- MAIN CONTENT AREA ---- */
@@ -196,7 +197,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 10px;
     letter-spacing: 4px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.5);
+    color: rgba(212,175,55,0.85);
     margin-bottom: 18px;
     font-weight: 400;
 }
@@ -216,7 +217,7 @@ section[data-testid="stSidebar"] > div {
 
 .hero-subtitle {
     font-size: 15px;
-    color: rgba(220,210,185,0.55);
+    color: rgba(220,210,185,0.85);
     font-weight: 300;
     letter-spacing: 0.3px;
     max-width: 460px;
@@ -287,7 +288,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 10px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(200,185,140,0.4);
+    color: rgba(200,185,140,0.8);
 }
 
 /* ---- ANALYSIS SECTION ---- */
@@ -306,7 +307,7 @@ section[data-testid="stSidebar"] > div {
 
 .section-desc {
     font-size: 13px;
-    color: rgba(200,185,140,0.4);
+    color: rgba(200,185,140,0.8);
     letter-spacing: 0.3px;
 }
 
@@ -329,7 +330,7 @@ section[data-testid="stSidebar"] > div {
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(212,175,55,0.5);
+    color: rgba(212,175,55,0.8);
     margin-bottom: 12px;
     font-weight: 500;
 }
