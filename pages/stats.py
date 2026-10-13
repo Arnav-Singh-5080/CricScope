@@ -1,6 +1,8 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
+from pathlib import Path
+
 #  page config 
 st.set_page_config(
     page_title="CricScope · Stats",
@@ -210,8 +212,10 @@ hr {
 #  data loading 
 @st.cache_data
 def load_data():
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    # pages/ sits one level below the repo root where the CSVs live
+    _base = Path(__file__).parent.parent
+    matches = pd.read_csv(_base / "matches.csv")
+    deliveries = pd.read_csv(_base / "deliveries.csv")
     return matches, deliveries
 
 

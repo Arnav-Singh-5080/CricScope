@@ -28,6 +28,7 @@ import os
 import joblib
 import logging
 import textwrap
+from pathlib import Path
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -1021,8 +1022,9 @@ team_data = {
 # -----------------------------------
 @st.cache_data
 def load_data():
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    _base = Path(__file__).parent
+    matches = pd.read_csv(_base / "matches.csv")
+    deliveries = pd.read_csv(_base / "deliveries.csv")
     return matches, deliveries
 
 # -----------------------------------
@@ -1039,9 +1041,10 @@ def get_model(model_name='logistic'):
 
 @st.cache_resource
 def train_model(model_name='logistic'):
-    model_path = f"{model_name}_model.pkl"
+    _base = Path(__file__).parent
+    model_path = _base / f"{model_name}_model.pkl"
 
-    if os.path.exists(model_path):
+    if model_path.exists():
         try:
             return joblib.load(model_path)
         except Exception as e:
