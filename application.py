@@ -1683,7 +1683,12 @@ if st.session_state.page == "Analysis":
         score = st.number_input("Current Score", min_value=0, max_value=target - 1, value=50, step=1)
         col_ov, col_wk = st.columns(2)
         with col_ov:
-            overs = st.slider("Overs Completed", min_value=0, max_value=20, value=10)
+            ov_col, bl_col = st.columns(2)
+            with ov_col:
+                overs_done = st.number_input("Overs Done", min_value=0, max_value=20, value=10)
+            with bl_col:
+                balls_done = st.number_input("Balls Done", min_value=0, max_value=6, value=0)
+            overs = overs_done + (balls_done / 6)
         with col_wk:
             wickets = st.number_input("Wickets Fallen", min_value=0, max_value=9, value=2)
         st.markdown('</div>', unsafe_allow_html=True)
