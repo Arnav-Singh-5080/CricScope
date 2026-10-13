@@ -37,6 +37,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
+from venue_intelligence import render_venue_intelligence
 
 logging.basicConfig(level=logging.INFO)
 
@@ -2030,6 +2031,9 @@ if st.session_state.page == "Analysis":
             mime="text/csv",
             use_container_width=True
         )
+
+        st.markdown('<div style="height:32px;"></div>', unsafe_allow_html=True)
+        render_venue_intelligence(batting_team, bowling_team, selected_city, target)
 
     st.markdown('</div>', unsafe_allow_html=True)  # close main-pad
     
