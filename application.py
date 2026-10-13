@@ -1587,7 +1587,7 @@ elif st.session_state.page == "Performance":
                     A tabular layout visualizing classification hits and misses. Gold-bordered diagonal cells represent correct predictions.
                 </div>
                 <div class="matrix-grid">
-                    <div class="matrix-header">Actual \\ Pred</div>
+                    <div class="matrix-header">Actual \\\\ Pred</div>
                     <div class="matrix-header">Bowl Win (0)</div>
                     <div class="matrix-header">Bat Win (1)</div>
                     
