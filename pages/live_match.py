@@ -18,6 +18,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from utils.feature_engineering import resolve_city_name
 
 # ───────────────────────────────────────────
 #  PAGE CONFIG
@@ -1028,7 +1029,7 @@ else:
                 bowling_2nd = team1_name if batting_2nd == team2_name else team2_name
 
                 # Extract city from venue
-                city = venue.split(",")[-1].strip() if venue else "Mumbai"
+                city = resolve_city_name(venue)
 
                 result = compute_prediction(
                     batting_2nd, bowling_2nd, city,
