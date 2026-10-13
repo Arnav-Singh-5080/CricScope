@@ -341,6 +341,37 @@ def get_avg_first_innings_score(city: str) -> int:
     bias = compute_venue_bias(city)
     return bias.get("avg_first_inns", 160)
 
+@st.cache_data
+def compute_safe_target(city: str) -> int:
+    matches = load_matches()
+    city_col = "city" if "city" in matches.columns else matches.columns[2]
+    venue_df = matches[matches[city_col].str.lower() == city.lower()].copy()
+    
+    # Filter for matches where the defending team won (win_by_runs > 0)
+    if "win_by_runs" not in venue_df.columns:
+        return 0
+        
+    defended_wins = venue_df[venue_df["win_by_runs"] > 0]
+    match_ids = defended_wins["id"].tolist() if "id" in defended_wins.columns else []
+    
+    if not match_ids:
+        return 0
+        
+    deliveries = load_deliveries()
+    inn_col = "inning" if "inning" in deliveries.columns else "innings"
+    runs_col = "total_runs" if "total_runs" in deliveries.columns else "batsman_runs"
+    
+    first_inn = deliveries[
+        (deliveries["match_id"].isin(match_ids)) &
+        (deliveries[inn_col] == 1)
+    ]
+    
+    if first_inn.empty:
+        return 0
+        
+    scores = first_inn.groupby("match_id")[runs_col].sum()
+    return int(scores.mean())
+
 
 def render_target_difficulty(city: str, target: int):
     _section_header("🎯 Target Difficulty Contextualizer")
@@ -370,12 +401,18 @@ def render_target_difficulty(city: str, target: int):
 
     sign = "+" if diff_pct >= 0 else ""
 
-    c1, c2, c3 = st.columns(3)
+    safe_target = compute_safe_target(city)
+    if safe_target == 0:
+        safe_target = int(avg_score * 1.1) # fallback
+
+    c1, c2, c3, c4 = st.columns(4)
     with c1:
-        _info_card("Venue Avg Target", str(avg_score), "historical 1st inn avg")
+        _info_card("Venue Avg Target", str(avg_score), "historical avg")
     with c2:
-        _info_card("Current Target", str(target), "runs to chase")
+        _info_card("Safe Target", str(safe_target), "defending win avg", color=RED)
     with c3:
+        _info_card("Current Target", str(target), "runs to chase")
+    with c4:
         _info_card("Deviation", f"{sign}{diff_pct}%", "vs historical avg", color=color)
 
     st.markdown(f"""
@@ -401,9 +438,17 @@ def render_target_difficulty(city: str, target: int):
         textfont=dict(color=GOLD_LIGHT, size=13),
         hovertemplate="<b>%{x}</b>: %{y} runs<extra></extra>",
     ))
+    
+    # Add Safe Target line
+    fig.add_hline(y=safe_target, line_dash="dot", line_color=RED, 
+                  annotation_text=f"Safe Target: {safe_target}", 
+                  annotation_position="top right", 
+                  annotation_font_color=RED,
+                  annotation_font_size=11)
+                  
     apply_gold_theme(fig, "Target vs Historical Average")
     fig.update_layout(height=240, showlegend=False,
-                      yaxis=dict(range=[0, max(avg_score, target) * 1.2]))
+                      yaxis=dict(range=[0, max(avg_score, max(target, safe_target)) * 1.2]))
     st.plotly_chart(fig, use_container_width=True)
 
 
